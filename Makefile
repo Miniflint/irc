@@ -7,7 +7,7 @@ OBJS	:= $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
 FLAGS	:= -Wall -Wextra -Werror -std=c++98 -I$(INC_DIR)
 CC		:= /usr/bin/g++
 
-TARGET	:= ircs
+TARGET	:= ft_irc
 
 all: $(TARGET)
 
