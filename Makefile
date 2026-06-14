@@ -1,9 +1,16 @@
 INC_DIR	:= ./incs
 SRC_DIR	:= ./srcs
+PAR_DIR	:= $(SRC_DIR)/parsing
 OBJ_DIR	:= ./objs
+
+VPATH	:= $(SRC_DIR)
+
 SRCS	:= main.cpp
+
 SRC_FILES := $(addprefix $(SRC_DIR)/, $(SRCS))
-OBJS	:= $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
+
+OBJS	:= $(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:%.cpp=%.o)))
+
 FLAGS	:= -Wall -Wextra -Werror -std=c++98 -I$(INC_DIR)
 CC		:= /usr/bin/g++
 
@@ -17,7 +24,7 @@ $(OBJ_DIR):
 $(TARGET): $(OBJ_DIR) $(OBJS)
 	$(CC) $(FLAGS)  $(OBJS) -o $(TARGET)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	$(CC) $(FLAGS) -c $< -o $@
 
 clean:

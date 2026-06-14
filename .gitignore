@@ -1,2 +1,4 @@
 *.o
 ./ircs
+./objs
+ft_irc
