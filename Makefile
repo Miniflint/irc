@@ -3,7 +3,7 @@ SRC_DIR	:= ./srcs
 PAR_DIR	:= $(SRC_DIR)/parsing
 OBJ_DIR	:= ./objs
 
-VPATH	:= $(SRC_DIR)
+VPATH	:= $(SRC_DIR):$(PAR_DIR)
 
 SRCS	:= main.cpp
 
