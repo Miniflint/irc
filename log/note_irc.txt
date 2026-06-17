@@ -1,0 +1,7 @@
+[2026-06-17 18:51:31] 1 : capter le lien entre epoll_wait, recv (a travers fcntl)
+[2026-06-17 18:52:35] 2 : proposer un exercice pour integrer les notion epol ---> ou faire un shema de flux
+[2026-06-17 18:53:09] 3 : comprendre les socket
+[2026-06-17 18:54:09] 4 : voir le reste des fonction autoriser
+[2026-06-17 18:55:06] 5 : se plonger dans la comprehension du rfc irc
+[2026-06-17 18:56:00] !!! regulierement jeter un oeil au sujet !!!
+
