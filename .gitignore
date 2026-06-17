@@ -2,3 +2,5 @@
 ./ircs
 ./objs
 ft_irc
+*.txt
+*.dot
