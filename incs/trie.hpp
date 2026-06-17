@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <fstream> 
 
 template <typename T>
 class Trie {
@@ -13,17 +14,19 @@ class Trie {
 		~Trie();
 		bool		add(std::string key, T element);
 		T			&operator[](std::string key) const;
-		void		create_graph(void) const;
+		void		create_graph(void);
 		std::string	get_key(void) const;
 		void		set_key(std::string key);
-		std::string	get_elem(void) const;
+		T			&get_elem(void);
 		void		set_elem(T element);
 		bool		get_leaf(void) const;
-		Trie		_nodes[256];
+		Trie<T>		*_nodes[256];
 	private:
 		std::string	_key;
 		T			_element;
 		bool		_leaf;
 };
+
+# include "trie.tpp"
 
 #endif

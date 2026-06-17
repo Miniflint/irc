@@ -12,7 +12,7 @@ class Server {
 		std::list<Client>	_clients;
 		std::list<Channel>	_channels;
 	public:
-		Server(unsigned int pid, std::string password, unsigned int port) : _pid(pid), _password(password), _port(port), _ip(std::string("0.0.0.0")) {};
+		Server(unsigned int port, std::string password) : _port(port), _password(password), _ip(std::string("0.0.0.0")) {};
 		~Server();
 		void	nick(std::string nick);
 		void	user(std::string msg);
