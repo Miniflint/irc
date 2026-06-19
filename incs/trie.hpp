@@ -14,7 +14,8 @@ class Trie {
 		Trie(std::string key, T element, bool leaf);
 		~Trie();
 		bool		add(std::string key, T element);
-		bool		add2(std::string key, T element);
+		// bool		add2(std::string key, T element);
+		bool		del(std::string key);
 		void    	add_node(Trie<T> *node);
 		T			&operator[](std::string key) const;
 		void		create_graph(void);

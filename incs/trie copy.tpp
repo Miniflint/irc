@@ -1,5 +1,14 @@
 #include "trie.hpp"
 
+// static int index_diff(std::string s1, std::string s2)
+// {
+// 	int i;
+// 	for (i = 0; s1[i] && s2[i] && s1[i] == s2[i]; i++) ;
+// 	if (s1.length() > s2.length())
+// 		return (-i);
+// 	return (i);
+// }
+
 template <typename T>
 Trie<T>::Trie() : _key(""), _element(), _leaf(false)
 {
@@ -72,9 +81,52 @@ void	Trie<T>::set_leaf(bool leaf)
 	this->_leaf = leaf;
 }
 
+// template <typename T>
+// bool	recur(Trie<T> *root, std::string key, T element)
+// {
+// 	int	i;
+
+// 	if (key.empty())
+// 		return (false);
+// 	Trie<T>	*next_node = root->_nodes[static_cast<unsigned char>(key[0])];
+// 	if (!next_node) {
+// 		root->_nodes[static_cast<unsigned char>(key[0])] = new Trie<T>(key, element, true);
+// 		return (true);
+// 	}
+// 	i = index_diff(next_node->get_key(), key);
+// 	if (i > 0)
+// 	{
+// 		std::string	leftover = next_node->get_key().substr(i, next_node->get_key().length() - i);
+// 		if (!leftover.empty())
+// 		{
+// 			recur(root, next_node->get_key().substr(0, next_node->get_key().length() - leftover.length()), next_node->get_elem());
+// 			return (recur(root, key, element));
+// 		}
+// 		return (recur(next_node, key.substr(i, key.length() - i), element));
+// 	}
+// 	else if (i < 0)
+// 	{
+// 		next_node->set_key(next_node->get_key().c_str() - i);
+// 		Trie<T> *inserted = new Trie<T>(key.substr(0, -i), element, next_node->get_leaf());
+// 		inserted->_nodes[static_cast<unsigned char>(next_node->get_key()[0])] = next_node;
+// 		root->_nodes[static_cast<unsigned char>(key[0])] = inserted;
+// 		return (recur(inserted, key.substr(-i, key.length() + i), element), 0);
+// 	} else
+// 		next_node->set_elem(element);
+// 	return (true);
+// }
+
+// template <typename T>
+// bool    Trie<T>::add2(std::string key, T element)
+// {
+// 	return (recur(this, key, element));
+// }
+
 template <typename T>
 void	Trie<T>::add_node(Trie<T> *node)
 {
+	// if (this->_nodes[static_cast<unsigned char>(node->get_key()[0])])
+	// 	delete this->_nodes[static_cast<unsigned char>(node->get_key()[0])];
 	this->_nodes[static_cast<unsigned char>(node->get_key()[0])] = node;
 }
 
@@ -97,6 +149,8 @@ bool    Trie<T>::add(std::string new_key, T element)
 	int diff_i = diff_index(key, new_key);
 	key.erase(0, diff_i);
 	new_key.erase(0, diff_i);
+	// key = key.c_str() + diff_i;
+	// new_key = new_key.c_str() + diff_i;
 	Trie<T>	*new_node;
 	if (key.empty())
 		new_node = next_node;
@@ -144,6 +198,57 @@ bool	Trie<T>::del(std::string key) {
 	}
 	return (false);
 }
+
+// template <typename T>
+// bool    Trie<T>::add(std::string new_key, T element)
+// {
+// 	int	diff_i;
+// 	std::string	com_key;
+// 	std::string	key;
+
+//     Trie<T>    *next_node = this->_nodes[static_cast<unsigned char>(new_key[0])]; //get next node with first letter in common
+// 	if (!next_node) { // si !next_node com_key vide, autrement rempli dans tout les cas
+// 		this->_nodes[static_cast<unsigned char>(new_key[0])] = new Trie<T>(new_key, element, true);
+//         return (true);
+// 	}
+// 	key = next_node->get_key();
+// 	diff_i = diff_index(key, new_key); //When the new_key and key diff
+// 	com_key = key.substr(0, diff_i); // common part of the two keys
+// 	key = key.c_str() + diff_i; // non common part of key
+// 	new_key = new_key.c_str() + diff_i; // non common part of new_key
+// 	if (key.empty()) // no inbetween node
+// 	{
+// 		if (new_key.empty()) // Meme key qu'une autre (ou node de division == a la key) [LEAF]
+// 		{
+// 			next_node->set_elem(element);
+// 			next_node->set_leaf(true);
+// 			return (true);
+// 		}
+// 		return (next_node->add(new_key, element));
+// 	}
+// 	// key pas empty, insert com_key
+// 	Trie<T>	*new_node = new Trie<T>(com_key);
+// 	next_node->set_key(key); // change next key with end of key
+// 	new_node->add_node(next_node); //reconnect lost next node to the new node
+// 	this->_nodes[static_cast<unsigned char>(com_key[0])] = new_node; //replace next node with new_node
+// 	if (new_key.empty()) // new_node est une leaf car == a com_key
+// 	{
+// 		new_node->set_elem(element);
+// 		new_node->set_leaf(true);
+// 		return (true);
+// 	}
+// 	return (new_node->add(new_key, element)); // new_node contient next_node, on ajoute le nouvel element avec un autre add
+// 	return (false);
+// }
+
+// template <typename T>
+// T 			&Trie<T>::operator[](std::string key) const
+// {
+// 	if (this->_key.length() > key.length())
+// 		throw std::exception();
+// 	int	i_diff = index_diff(this->_key, key);
+// 	if (i_diff == this->_key.length() && i_diff == this->_key.length())
+// }
 
 template <typename T>
 T 			&Trie<T>::operator[](std::string key) const
