@@ -26,7 +26,7 @@ int	main(int ac, char **argv)
 	//test_multi.create_graph();
 	for (unsigned int i = 0; i < 15; i++)
 	{
-		test_multi.add2(key_list[i], i);
+		test_multi.add(key_list[i], i);
 		try
 		{
 			//std::cout << test_multi[key_list[i]] << std::endl;

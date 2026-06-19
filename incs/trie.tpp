@@ -125,10 +125,13 @@ bool	Trie<T>::del(std::string key) {
 		}
 		return (true);
 	}
+	int	i_diff = diff_index(this->_key, key);
+	if (i_diff < this->_key.length())
+		return (false);
+	key.erase(0, i_diff);
 	Trie<T>		*next_node = this->_nodes[static_cast<unsigned char>(key[0])];
 	if (next_node) {
-		int	i_diff = diff_index(this->_key, key);
-		if (next_node->del(key.c_str() + i_diff))
+		if (next_node->del(key))
 		{
 			delete this->_nodes[static_cast<unsigned char>(key[0])];
 			this->_nodes[static_cast<unsigned char>(key[0])] = NULL;
