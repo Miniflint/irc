@@ -40,8 +40,9 @@ int	main(int ac, char **argv)
 	else if (i > 1)
 		return (1);
 	Server	serv(atoi(argv[1]), argv[2]);
-	std::string t(argv[3]);
-	serv.do_command(t);
+	std::string arg(argv[3]);
+	std::string rest(argv[4]);
+	serv.do_command(arg, rest);
 	
 	return (0);
 }

@@ -37,11 +37,11 @@ Server::~Server()
 {
 }
 
-Server::cmdFn	Server::do_command(std::string &lookup)
+Server::cmdFn	Server::do_command(std::string &lookup, std::string &rest)
 {
     cmdFn t = this->_commands[lookup];
 
-    std::string test("its a rest");
+    std::string test(rest);
     (this->*t)(test);
     return (t);
 }

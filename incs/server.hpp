@@ -16,7 +16,7 @@ class Server {
 	public:
 		Server(unsigned int port, std::string password);
 		~Server();
-		Server::cmdFn	do_command(std::string &lookup);
+		Server::cmdFn	do_command(std::string &lookup, std::string &rest);
 		// c'est horrible
 		bool handle_admin(std::string &rest);
 		bool handle_away(std::string &rest);
