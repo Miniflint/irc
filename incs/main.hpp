@@ -428,6 +428,7 @@ enum E_commands {
 	END
 };
 
+typedef bool (*cmdFn)(std::string);
 class Client;
 class Server;
 class Channel;
