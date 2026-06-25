@@ -281,39 +281,23 @@ SERVICE
 Syntax:
 SERVLIST
 SQUERY
-
-Syntax:
-
-    SQUERY <servicename> <text>
-
+Syntax: SQUERY <servicename> <text>
 Identical to PRIVMSG except the recipient must be a service.[37] Defined in RFC 2812.
+
 SQUIT
-
-Syntax:
-
-    SQUIT <server> <comment>
-
+Syntax: SQUIT <server> <comment>
 Causes <server> to quit the network.[38] Defined in RFC 1459.
+
 SETNAME
-
-Syntax:
-
-    SETNAME <new real name>
-
+Syntax: SETNAME <new real name>
 Allows a client to change the "real name" specified when registering a connection.
-
 This command is not formally defined by an RFC, but is in use by some IRC daemons. Support is indicated in a RPL_ISUPPORT reply (numeric 005) with the SETNAME keyword
 SILENCE
 
-Syntax:
-
-    SILENCE [+/-<hostmask>]
-
+Syntax: SILENCE [+/-<hostmask>]
 Adds or removes a host mask to a server-side ignore list that prevents matching users from sending the client messages. More than one mask may be specified in a space-separated list, each item prefixed with a "+" or "-" to designate whether it is being added or removed. Sending the command with no parameters returns the entries in the client's ignore list.
-
 This command is not formally defined in an RFC, but is supported by most[which?] major IRC daemons. Support is indicated in a RPL_ISUPPORT reply (numeric 005) with the SILENCE keyword and the maximum number of entries a client may have in its ignore list. For example:
-
-    :irc.server.net 005 WiZ WALLCHOPS WATCH=128 SILENCE=15 MODES=12 CHANTYPES=#
+:irc.server.net 005 WiZ WALLCHOPS WATCH=128 SILENCE=15 MODES=12 CHANTYPES=#
 
 STATS
 Syntax: STATS <query> [<server>]
@@ -354,11 +338,7 @@ Requests the direct IP address of the user with the specified nickname. This com
 This command is not formally defined by an RFC, but is in use by some IRC daemons. Support is indicated in a RPL_ISUPPORT reply (numeric 005) with the USERIP keyword.
 
 USERS
-
-Syntax:
-
-    USERS [<server>]
-
+Syntax: USERS [<server>]
 Returns a list of users and information about those users in a format similar to the UNIX commands who, rusers and finger.[48] Defined in RFC 1459.
 
 VERSION
@@ -391,64 +371,60 @@ Defined in RFC 1459.
 
 //(ADMI, IR, N)
 enum E_commands {
-	ADMIN,
-	ADMIRN,
-	ADMRIS, // to remove
-	AWAY, 
-	CNOTICE,
-	CPRIVMSG,
-	CONNECT,
-	DIE,
-	ENCAP,
-	ERROR,
-	HELP,
-	INFO,
-	INVITE,
-	ISON,
-	JOIN,
-	KICK,
-	KILL,
-	KNOCK,
-	LINKS,
-	LIST,
-	LUSERS,
-	MODE,
-	MOTD,
-	NAMES,
-	NICK,
-	NOTICE,
-	OPER,
-	PART,
-	PASS,
-	PING,
-	PONG,
-	PRIVMSG,
-	QUIT,
-	QUOTE,
-	REHASH,
-	RULES,
-	SERVER,
-	SERVICE,
-	SERVLIST,
-	SQUERY,
-	SQUIT,
-	SETNAME,
-	SILENCE,
-	STATS,
-	SUMMON,
-	TIME,
-	TOPIC,
-	TRACE,
-	USER,
-	USERHOST,
-	USERIP,
-	USERS,
-	VERSION,
-	WALLOPS,
-	WATCH,
-	WHO,
-	WHOIS,
-	WHOWAS,
+	ADMIN, // ADMIN [<target>]
+	AWAY, // AWAY [<message>]
+	CNOTICE, // CNOTICE <nickname> <channel> :<message>
+	CPRIVMSG, // CPRIVMSG <nickname> <channel> :<message>
+	CONNECT, // CONNECT <target server> [<port> [<remote server>]] (RFC 1459)
+	DIE, // DIE
+	ERROR, // ERROR <error message>
+	HELP, // HELP
+	INFO, // INFO [<target>]
+	INVITE, // INVITE <nickname> <channel>
+	ISON, // ISON <nicknames>
+	JOIN, // JOIN <channels> [<keys>]
+	KICK, // KICK <channel> <client> :[<message>]
+	KILL, // KILL <client> <comment>
+	KNOCK, // KNOCK <channel> [<message>]
+	LINKS, // LINKS [<remote server> [<server mask>]]
+	LIST, // LIST [<channels> [<server>]]
+	LUSERS, // LUSERS [<mask> [<server>]]
+	MODE, // MODE <nickname> <flags> (user)
+	MOTD, // MOTD [<server>]
+	NAMES, // NAMES [<channels>] (RFC 1459)
+	NICK, // NICK <nickname> [<hopcount>] (RFC 1459)
+	NOTICE, // NOTICE <msgtarget> <message>
+	OPER, // OPER <username> <password>
+	PART, // PART <channels> [<message>]
+	PASS, // PASS <password>
+	PING, // PING <server1> [<server2>]
+	PONG, // PONG <server1> [<server2>]
+	PRIVMSG, // PRIVMSG <msgtarget> :<message>
+	QUIT, // QUIT [<message>]
+	QUOTE, // QUOTE
+	REHASH, // REHASH
+	RULES, // RULES
+	SERVER, // SERVER <servername> <hopcount> <info>
+	SQUERY, // SQUERY
+	SQUERY, // SQUERY <servicename> <text>
+	SQUIT, // SQUIT <server> <comment>
+	SETNAME, // SETNAME <new real name>
+	SILENCE, // SILENCE [+/-<hostmask>]
+	STATS, // STATS <query> [<server>]
+	SUMMON, // SUMMON <user> [<server>] (RFC 1459)
+	TIME, // TIME [<server>]
+	TOPIC, // TOPIC <channel> [<topic>]
+	TRACE, // TRACE [<target>]
+	USER, // USER <username> <hostname> <servername> <realname> (RFC 1459)
+	USERHOST, // USERHOST <nickname> [<nickname> <nickname> ...]
+	USERIP, // USERIP <nickname>
+	USERS, // USERS [<server>]
+	VERSION, // VERSION [<server>]
+	WALLOPS, // WALLOPS <message>
+	WATCH, // WATCH [+/-<nicknames>]
+	WHO, // WHO [<name> ["o"]]
+	WHOIS, // WHOIS [<server>] <nicknames>
+	WHOWAS, // WHOWAS <nickname> [<count> [<server>]]
 	END
 };
 
