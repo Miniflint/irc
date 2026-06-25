@@ -13,10 +13,10 @@ class Server {
 		Trie<Server::cmdFn>		_commands;
 		std::list<Client>		_clients;
 		std::list<Channel>		_channels;
-		std::string				outfile;
 	public:
 		Server(unsigned int port, std::string password);
 		~Server();
+		Server::cmdFn	do_command(std::string &lookup);
 		// c'est horrible
 		bool handle_admin(std::string &rest);
 		bool handle_away(std::string &rest);

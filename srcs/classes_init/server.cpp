@@ -36,3 +36,12 @@ Server::Server(unsigned int port, std::string password) : _port(port), _password
 Server::~Server()
 {
 }
+
+Server::cmdFn	Server::do_command(std::string &lookup)
+{
+    cmdFn t = this->_commands[lookup];
+
+    std::string test("its a rest");
+    (this->*t)(test);
+    return (t);
+}

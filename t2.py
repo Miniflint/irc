@@ -34,7 +34,6 @@ REHASH,
 RULES,
 SERVER,
 SQUERY,
-SQUERY,
 SQUIT,
 SETNAME,
 SILENCE,
@@ -56,5 +55,7 @@ WHOWAS
 """
 	t = r.strip().split(",\n")
 	for l in t:
-		print(f"&Handlers::handle_{l.lower()}(std::string &rest),")
+		print(r'bool Server::handle_' + l.lower() + '(std::string &rest) \n{\n \
+	std::cout << "In " << "' + l.lower() + '" << " and this is the rest: " << rest << std::endl;' +
+		"\n\treturn (true);\n}")
 main()

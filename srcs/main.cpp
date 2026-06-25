@@ -25,6 +25,8 @@ int	parse_av(int ac, char **argv)
 		return (display_help(argv[0]), 1);
 	if (ac == 3)
 		return (0);
+	if (ac > 3)
+		return (0);
 	else
 		return (std::cout << argv[0] << " <port> <password>" << std::endl, 2);
 	return (2);
@@ -38,5 +40,8 @@ int	main(int ac, char **argv)
 	else if (i > 1)
 		return (1);
 	Server	serv(atoi(argv[1]), argv[2]);
+	std::string t(argv[3]);
+	serv.do_command(t);
+	
 	return (0);
 }
