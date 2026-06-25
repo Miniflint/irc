@@ -12,6 +12,7 @@ Server::Server(unsigned int port, std::string password) : _port(port), _password
     "SILENCE", "STATS", "SUMMON", "TIME", "TOPIC", "TRACE", "USER", "USERHOST",
     "USERIP", "USERS", "VERSION", "WALLOPS", "WATCH", "WHO", "WHOIS", "WHOWAS",
     }
+
     for (std::list<std::string>::iterator i = t.begin(); i != t.end(); i++)
         this->_commands.add(*i, nullptr);
 }
