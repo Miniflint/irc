@@ -7,7 +7,7 @@ class Channel {
 	protected:
 		std::string		_nick;
 		std::string		_topic;
-		std::list<Client> _clients;
+		Trie<Client>	_clients;
 	public:
 		Channel(unsigned int socket);
 		~Channel();

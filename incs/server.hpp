@@ -9,10 +9,11 @@ class Server {
 		unsigned int		_port;
 		std::string			_password;
 		std::string			_ip;
-		std::list<Client>	_clients;
+		std::list<cmdFn>	_commands;
+		std::list<Client *>	_clients;
 		std::list<Channel>	_channels;
 	public:
-		Server(unsigned int port, std::string password) : _port(port), _password(password), _ip(std::string("0.0.0.0")) {};
+		Server(unsigned int port, std::string password);;
 		~Server();
 		void	nick(std::string nick);
 		void	user(std::string msg);
