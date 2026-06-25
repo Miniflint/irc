@@ -1,15 +1,19 @@
 INC_DIR	:= ./incs
 SRC_DIR	:= ./srcs
 PAR_DIR	:= $(SRC_DIR)/parsing
+INI_DIR	:= $(SRC_DIR)/classes_init
 OBJ_DIR	:= ./objs
 
-VPATH	:= $(SRC_DIR):$(PAR_DIR)
+VPATH	:= $(SRC_DIR):$(PAR_DIR):$(INI_DIR)
 
 SRCS	:= main.cpp
+INITS	:= server.cpp server_handler.cpp channel.cpp client.cpp
 
 SRC_FILES := $(addprefix $(SRC_DIR)/, $(SRCS))
+INI_FILES := $(addprefix $(INI_DIR)/, $(INITS))
 
-OBJS	:= $(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:%.cpp=%.o)))
+OBJS	:=	$(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:%.cpp=%.o))) \
+			$(addprefix $(OBJ_DIR)/, $(notdir $(INITS:%.cpp=%.o)))
 
 FLAGS	:= -Wall -Wextra -Werror -std=c++98 -I$(INC_DIR)
 CC		:= /usr/bin/g++

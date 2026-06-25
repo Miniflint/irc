@@ -1,15 +1,15 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include "main.hpp"
+# include "trie.hpp"
 
 class Client {
 	protected:
-		std::string		_nick;
-		std::string		_about;
 		unsigned int	_fd;
+		std::string		_nick;
 	public:
-		Client(unsigned int socket);
+		Client();
+		Client(unsigned int socket, std::string &nick);
 		~Client();
 };
 
