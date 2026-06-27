@@ -8,3 +8,5 @@ IRC : gestion des clients avec epoll : shema de flux
 		________________________
 		|while(1)
 		|
+
+fcntl --> permet controler les propriete d'un fd
