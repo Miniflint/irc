@@ -37,4 +37,11 @@ int	main {
 
 	while (1) {
 		int nfds = epoll_wait(epoll_fd, events, MAX_EVENT, -1);
-		if (nfds == -1)
+		if (nfds == -1) {
+			// print l'erreur // "epoll_wait failed"
+			exit(EXIT_FALURE);
+		}
+		for (int i = 0; i < nfds; i++) {
+			int	fd = events[i].data.fd;
+			if (
+	
