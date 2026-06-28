@@ -19,7 +19,7 @@ int	main {
 /////////// creation de l'instance epoll
 	int epfd = epoll_create1(0);
 	if (epoll_fd == -1) {
-		// throw une erreur ou juste la print // "epoll_create1() failed"
+		//throw une erreur ou juste la print //"epoll_create1() failed"
 		exit(EXIT_FAILURE);
 	}
 
@@ -28,7 +28,7 @@ int	main {
 	server_event.events = EPOLLIN;
 	server_event.data.fd = server_socket;
 	if (epoll_ctl(epfd, EPOLL_CTL_ADD, server_socket, &server_event) == -1) {
-		// throw une erreur ou la print // "epoll_ctl failed for serveur
+		//throw une erreur ou la print //"epoll_ctl failed for serveur"
 		exit(EXIT_FAILURE);
 	}
 
@@ -39,9 +39,17 @@ int	main {
 		int nfds = epoll_wait(epoll_fd, events, MAX_EVENT, -1);
 		if (nfds == -1) {
 			// print l'erreur // "epoll_wait failed"
-			exit(EXIT_FALURE);
+			break;
 		}
 		for (int i = 0; i < nfds; i++) {
 			int	fd = events[i].data.fd;
+////////// cas 1 : ajout d'un client au server
+			if (fd == server_socket) {
+				//bloc ajout de client
+			}
+///////// cas 2 : envoi d'un message
+			if (envents[i].events & EPOLLIN) {
+				//bloc d'envoi d'un message
+			}
 			if (
 	
