@@ -1,19 +1,11 @@
 IRC : gestion des clients avec epoll : shema de flux
-
-			________________
-			|epoll_create(1)| -------> return : epfd (epoll fd) : int : !!!!!!close(epfd)!!!!!!!
-			|_______________| -------> param : nombre de fd (socket) a surveiller : ignore car maintenant le kernel gere de facon dynamique
-					|		  -------> descr. : cree une instance epoll
-					|
-		________________________
-		|while(1)
-		|
+	
 
 fcntl --> permet controler les propriete d'un fd
 
 +---------------------------------------------+
 | 1. Création de l'instance epoll             |
-|    int epfd = epoll_create1(0);             |
+|    int epfd = epoll_create1(0);             | epfd : epoll file descriptor : reference pour l'instance epoll : struct eventpoll : struct rb_root rbr (arbre des fd surveilles), struct list_head rdllist (liste chaine des evenement pret)
 +---------------------------------------------+
                          |
                          v
