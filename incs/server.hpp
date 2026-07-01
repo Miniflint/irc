@@ -2,6 +2,8 @@
 # define SERVER_HPP
 
 # include "main.hpp"
+# include <map>
+# define FD_SET_MAX 2048
 
 class Server {
 	typedef bool (Server::*cmdFn)(std::string &rest);
@@ -16,7 +18,8 @@ class Server {
 	public:
 		Server(unsigned int port, std::string password);
 		~Server();
-		Server::cmdFn	do_command(std::string &lookup, std::string &rest);
+		bool new_connection();
+		Server::cmdFn	do_command(std::size_t fd, std::string &lookup, std::string &rest);
 		// c'est horrible
 		bool handle_admin(std::string &rest);
 		bool handle_away(std::string &rest);
@@ -71,6 +74,7 @@ class Server {
 		bool handle_who(std::string &rest);
 		bool handle_whois(std::string &rest);
 		bool handle_whowas(std::string &rest);
+		bool handle_message(std::string &rest);
 };
 
 #endif

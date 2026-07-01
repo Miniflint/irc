@@ -9,7 +9,7 @@ Server::Server(unsigned int port, std::string password) : _port(port), _password
     "PART","PASS","PING","PONG","PRIVMSG","QUIT","QUOTE","REHASH","RULES",
     "SERVER","SQUERY","SQUIT","SETNAME","SILENCE","STATS","SUMMON",
     "TIME","TOPIC","TRACE","USER","USERHOST","USERIP","USERS","VERSION",
-    "WALLOPS","WATCH","WHO","WHOIS","WHOWAS"
+    "WALLOPS","WATCH","WHO","WHOIS","WHOWAS", ":"
     };
 
     const Server::cmdFn func_list[] = {
@@ -21,14 +21,14 @@ Server::Server(unsigned int port, std::string password) : _port(port), _password
         &Server::handle_names, &Server::handle_nick, &Server::handle_notice, &Server::handle_oper,
         &Server::handle_part, &Server::handle_pass, &Server::handle_ping, &Server::handle_pong,
         &Server::handle_privmsg, &Server::handle_quit, &Server::handle_quote, &Server::handle_rehash,
-        &Server::handle_rules, &Server::handle_server, &Server::handle_squery,
-        &Server::handle_squit, &Server::handle_setname, &Server::handle_silence, &Server::handle_stats,
-        &Server::handle_summon, &Server::handle_time, &Server::handle_topic, &Server::handle_trace,
-        &Server::handle_user, &Server::handle_userhost, &Server::handle_userip, &Server::handle_users,
-        &Server::handle_version, &Server::handle_wallops, &Server::handle_watch, &Server::handle_who,
-        &Server::handle_whois, &Server::handle_whowas
+        &Server::handle_rules, &Server::handle_server, &Server::handle_squery, &Server::handle_squit,
+        &Server::handle_setname, &Server::handle_silence, &Server::handle_stats, &Server::handle_summon,
+        &Server::handle_time, &Server::handle_topic, &Server::handle_trace, &Server::handle_user,
+        &Server::handle_userhost, &Server::handle_userip, &Server::handle_users, &Server::handle_version,
+        &Server::handle_wallops, &Server::handle_watch, &Server::handle_who, &Server::handle_whois,
+        &Server::handle_whowas, &Server::handle_message
     };
-    for (unsigned int i = 0; i < END; i++)
+    for (unsigned int i = 0; i <= END; i++)
         this->_commands.add(t[i], func_list[i]);
     this->_commands.create_graph();
 }
@@ -37,7 +37,7 @@ Server::~Server()
 {
 }
 
-Server::cmdFn	Server::do_command(std::string &lookup, std::string &rest)
+Server::cmdFn	Server::do_command(std::size_t fd, std::string &lookup, std::string &rest)
 {
     cmdFn t = this->_commands[lookup];
 
@@ -45,3 +45,11 @@ Server::cmdFn	Server::do_command(std::string &lookup, std::string &rest)
     (this->*t)(test);
     return (t);
 }
+
+bool Server::new_connection()
+{
+    std::size_t t;
+
+    t = 5;
+    Client c(t);
+};

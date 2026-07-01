@@ -5,11 +5,13 @@
 
 class Client {
 	protected:
-		unsigned int	_fd;
+		unsigned long	_fd;
 		std::string		_nick;
 	public:
 		Client();
-		Client(unsigned int socket, std::string &nick);
+		Client(unsigned long socket);
+		Client(std::size_t socket);
+		void		set_nick(std::string nick);
 		~Client();
 };
 

@@ -42,7 +42,6 @@ int	main(int ac, char **argv)
 	Server	serv(atoi(argv[1]), argv[2]);
 	std::string arg(argv[3]);
 	std::string rest(argv[4]);
-	serv.do_command(arg, rest);
-	
+	serv.do_command(5, arg, rest);
 	return (0);
 }

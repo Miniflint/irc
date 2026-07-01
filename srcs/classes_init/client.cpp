@@ -6,7 +6,11 @@ Client::Client()
 	this->_nick = "dflt";
 }
 
-Client::Client(unsigned int socket, std::string &nick) : _fd(socket), _nick(nick)
+Client::Client(unsigned long socket) : _fd(socket)
+{
+
+}
+Client::Client(std::size_t socket) : _fd(socket)
 {
 
 }
@@ -14,4 +18,9 @@ Client::Client(unsigned int socket, std::string &nick) : _fd(socket), _nick(nick
 Client::~Client()
 {
 
+}
+
+void		Client::set_nick(std::string nick)
+{
+	this->_nick = nick;
 }
