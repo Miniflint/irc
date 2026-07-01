@@ -265,3 +265,8 @@ bool Server::handle_whowas(std::string &rest)
     std::cout << "In " << "whowas" << " and this is the rest: " << rest << std::endl;
     return (true);
 }
+bool Server::handle_message(std::string &rest) 
+{
+    std::cout << "In " << "message" << " and this is the rest: " << rest << std::endl;
+    return (true);
+}
