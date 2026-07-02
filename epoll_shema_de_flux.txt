@@ -1,28 +1,36 @@
 IRC : gestion des clients avec epoll : shema de flux
 	
 
-fcntl --> permet controler les propriete d'un fd
+fcntl --> permet controler les propriete d'un fd                +---------------------------------------------+
+                                                               | fcntl : permet controler les proprietes     |
+                                                               | d'un fd                                     |
+                                                               +---------------------------------------------+
 
-+---------------------------------------------+
-| 1. Création de l'instance epoll             |
-|    int epfd = epoll_create1(0);             | epfd : epoll file descriptor : reference pour l'instance epoll : struct eventpoll : struct rb_root rbr (arbre des fd surveilles), struct list_head rdllist (liste chaine des evenement pret), ...
-+---------------------------------------------+
++---------------------------------------------+                +---------------------------------------------+
+| 1. Création de l'instance epoll             |                | epfd : epoll file descriptor                |
+|    int epfd = epoll_create1(0);             |                | reference pour l'instance epoll             |
++---------------------------------------------+                +---------------------------------------------+
                          |
                          v
-+---------------------------------------------+
-| 2. Ajout du socket serveur à epoll          |
-|    struct epoll_event sever_event           | struct epoll_event {uint32_t events; epoll_data_t data;};
-|    server_event.events = EPOLLIN            | events : masque des evenements a surveiller : EPOLLIN (donnee dispo pour lecture), EPOLLOUT (pret pour send()), EPOLLERR (erreur sur le fd), EPOLLHUP (connexion fermee par le client)
-|    server_event.data.fd = server_socket     | typedef union epoll_data {void *ptr; int fd; uint32_t u32; uint64_t u64;}; : *ptr (pointeur que l'on peut utiliser pour associer a un objet client par exemple, fd (fd du socket)
-|    epoll_ctl(epfd, EPOLL_CTL_ADD,           | int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
-|              server_socket, &server_event); |
-+---------------------------------------------+
++---------------------------------------------+                +-----------------------------------------+          +-----------------------------------------+
+| 2. Ajout du socket serveur à epoll          |                | struct epoll_event : contient le masque |          | struct epoll_event {                    |
+|    struct epoll_event sever_event           |                | des evenements a surveiller             |          |     uint32_t events;                    |
+|    server_event.events = EPOLLIN            |                | EPOLLIN, EPOLLOUT, EPOLLERR, EPOLLHUP   |          |     epoll_data_t data;                  |
+|    server_event.data.fd = server_socket     |                | typedef union epoll_data : associe les  |          | };                                      |
+|    epoll_ctl(epfd, EPOLL_CTL_ADD,           |                | donnees au fd                           |          +-----------------------------------------+
+|              server_socket, &server_event); |                | int epoll_ctl(int epfd, int op, int fd, |          | typedef union epoll_data {              |
++---------------------------------------------+                +-----------------------------------------+          |     void *ptr;                          |
+                                                                                                                    |     int fd;                             |
+                                                                                                                    |     uint32_t u32;                       |
+                                                                                                                    |     uint64_t u64;                       |
+                                                                                                                    | };                                      |
+                                                                                                                    +-----------------------------------------+
                          |
                          v
-+---------------------------------------------+
-| 3. Déclaration du tableau d'événements      |
-|    struct epoll_event events[MAX_EVENTS];   | Tableau pour recevoir les événements prêts (ex: EPOLLIN, EPOLLOUT) retournés par epoll_wait(), server_event n'est plus utilise
-+---------------------------------------------+
++---------------------------------------------+                +---------------------------------------------+
+| 3. Déclaration du tableau d'événements      |                | Tableau pour recevoir les événements prêts   |
+|    struct epoll_event events[MAX_EVENTS];   |                | retournés par epoll_wait                     |
++---------------------------------------------+                +---------------------------------------------+
                          |
                          v
 +---------------------------------------------+
@@ -30,10 +38,10 @@ fcntl --> permet controler les propriete d'un fd
 |    while (1) {                              |
 |                                             |
 |    +-------------------------------------+  |
-|    | 4.1. Appel à epoll_wait             |  |
-|    |                                     |  |
-|    | int nfds = epoll_wait(epfd,         |  | int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
-|    |                      events,        |  |
+|    | 4.1. Appel à epoll_wait             |  |                +---------------------------------------------+
+|    |                                     |  |                | int epoll_wait(int epfd, struct epoll_event |
+|    | int nfds = epoll_wait(epfd,         |  |                | *events, int maxevents, int timeout);       |
+|    |                      events,        |  |                +---------------------------------------------+
 |    |                      MAX_EVENTS,    |  |
 |    |                      -1);           |  |
 |    +-------------------------------------+  |
@@ -52,10 +60,10 @@ fcntl --> permet controler les propriete d'un fd
 |    | +---------------------------------+ |  |
 |    |                                     |  |
 |    | +---------------------------------+ |  |
-|    | | 4.2.2. Données à lire ?         | |  |
-|    | | if (events[i].events & EPOLLIN) | |  | comparaison binaire pour detecte la presence du masque EPOLLIN
-|    | | {                               | |  |
-|    | |     recv(...);                  | |  |
+|    | | 4.2.2. Données à lire ?         | |  |                +---------------------------------------------+
+|    | | if (events[i].events & EPOLLIN) | |  |                | comparaison binaire pour detecter          |
+|    | | {                               | |  |                | la presence du masque EPOLLIN              |
+|    | |     recv(...);                  | |  |                +---------------------------------------------+
 |    | |     Traiter les données;        | |  |
 |    | | }                               | |  |
 |    | +---------------------------------+ |  |
