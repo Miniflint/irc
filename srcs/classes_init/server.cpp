@@ -41,6 +41,7 @@ Server::cmdFn	Server::do_command(std::size_t fd, std::string &lookup, std::strin
 {
     cmdFn t = this->_commands[lookup];
 
+    (void)fd;
     std::string test(rest);
     (this->*t)(test);
     return (t);
@@ -52,4 +53,6 @@ bool Server::new_connection()
 
     t = 5;
     Client c(t);
+    this->_clients.push_front(c);
+    return (0);
 };
