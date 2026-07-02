@@ -3,13 +3,8 @@
 Client::Client()
 {
 	this->_fd = 0;
-	this->_nick = "dflt";
 }
 
-Client::Client(unsigned long socket) : _fd(socket)
-{
-
-}
 Client::Client(std::size_t socket) : _fd(socket)
 {
 
