@@ -1,11 +1,6 @@
 IRC : gestion des clients avec epoll : shema de flux
 	
 
-fcntl --> permet controler les propriete d'un fd                +---------------------------------------------+
-                                                               | fcntl : permet controler les proprietes     |
-                                                               | d'un fd                                     |
-                                                               +---------------------------------------------+
-
 +---------------------------------------------+                +---------------------------------------------+
 | 1. Création de l'instance epoll             |                | epfd : epoll file descriptor                |
 |    int epfd = epoll_create1(0);             |                | reference pour l'instance epoll             |
@@ -20,11 +15,11 @@ fcntl --> permet controler les propriete d'un fd                +---------------
 |    epoll_ctl(epfd, EPOLL_CTL_ADD,           |                | donnees au fd                           |          +-----------------------------------------+
 |              server_socket, &server_event); |                | int epoll_ctl(int epfd, int op, int fd, |          | typedef union epoll_data {              |
 +---------------------------------------------+                +-----------------------------------------+          |     void *ptr;                          |
-                                                                                                                    |     int fd;                             |
-                                                                                                                    |     uint32_t u32;                       |
-                                                                                                                    |     uint64_t u64;                       |
-                                                                                                                    | };                                      |
-                                                                                                                    +-----------------------------------------+
+                                                               | op : EPOLL_CTL_ADD (new epfd)           |          |     int fd;                             |
+                                                               |      EPOLL_CTL_MOD (changer EPOLLIN/EPO)|          |     uint32_t u32;                       |
+                                                               |      EPOLL_CTL_DEL (delete epfd)        |          |     uint64_t u64;                       |
+                                                               |                                                     | };                                      |
+                                                               |                                                     +-----------------------------------------+
                          |
                          v
 +---------------------------------------------+                +---------------------------------------------+
