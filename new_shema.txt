@@ -1,0 +1,97 @@
++-----------------------------------------------------------+     +---------------------------------------------------+
+| 1. Création de l'instance epoll                           |     | epfd : epoll file descriptor                      |
+|                                                           |     | Référence de l'instance epoll                     |
+| int epfd = epoll_create1(0);                              |     +---------------------------------------------------+
++-----------------------------------------------------------+
+                            |
+                            v
++-----------------------------------------------------------+     +---------------------------------------------------+     +---------------------------------------------+
+| 2. Création et configuration du socket serveur            |     | struct epoll_event                                |     | struct epoll_event {                        |
+|                                                           |     | Contient le masque des événements à surveiller    |     |     uint32_t events;                        |
+| int server_socket = socket(AF_INET, SOCK_STREAM, 0);      |     | (EPOLLIN, EPOLLOUT, EPOLLERR, EPOLLHUP...)        |     |     epoll_data_t data;                      |
+| bind(server_socket, ...);                                 |     |                                                   |     | };                                          |
+| listen(server_socket, SOMAXCONN);                         |     | epoll_ctl(epfd, op, fd, &event)                   |     +---------------------------------------------+
+|                                                           |     |   EPOLL_CTL_ADD : ajout                           |
+| struct epoll_event server_event;                          |     |   EPOLL_CTL_MOD : modification                    |     +---------------------------------------------+
+| server_event.events = EPOLLIN;                            |     |   EPOLL_CTL_DEL : suppression                     |     | typedef union epoll_data {                  |
+| server_event.data.fd = server_socket;                     |     +---------------------------------------------------+     |     void    *ptr;                           |
+|                                                           |                                                               |     int      fd;                            |
+| epoll_ctl(epfd, EPOLL_CTL_ADD,                            |                                                               |     uint32_t u32;                           |
+|           server_socket, &server_event);                  |                                                               |     uint64_t u64;                           |
++-----------------------------------------------------------+                                                               | };                                          |
+                            |                                                                                               +---------------------------------------------+
+                            v
++-----------------------------------------------------------+     +---------------------------------------------------+
+| 3. Déclaration du tableau d'événements                    |     | Tableau recevant les événements retournés par     |
+|                                                           |     | epoll_wait()                                      |
+| struct epoll_event events[MAX_EVENTS];                    |     +---------------------------------------------------+
++-----------------------------------------------------------+
+                            |
+                            v
++-----------------------------------------------------------+
+| 4. BOUCLE PRINCIPALE                                      |
+| while (1) {                                               |
+|                                                           |
+|   +---------------------------------------------------+   |     +---------------------------------------------------+
+|   | 4.1. Attente des événements                       |   |     | int epoll_wait(epfd, events,                      |
+|   |                                                   |   |     |                maxevents, timeout);               |
+|   | int nfds = epoll_wait(epfd,                       |   |     +---------------------------------------------------+
+|   |                      events,                      |   |     | nfds = nombre d'événements prêts                  |
+|   |                      MAX_EVENTS,                  |   |     +---------------------------------------------------+
+|   |                      -1);                         |   |
+|   +---------------------------------------------------+   |
+|                         |                                 |
+|                         v                                 |
+|   +---------------------------------------------------+   |
+|   | 4.2. Traitement des événements                    |   |
+|   |                                                   |   |
+|   | for (int i = 0; i < nfds; i++) {                  |   |
+|   |                                                   |   |
+|   |   +-------------------------------------------+   |   |
+|   |   | 4.2.1. Nouvelle connexion ?               |   |   |
+|   |   | if (fd == server_socket) {                |   |   |
+|   |   |   client_socket = accept(...);            |   |   |
+|   |   |   fcntl(client_socket,                    |   |   |
+|   |   |         F_SETFL, O_NONBLOCK);             |   |   |
+|   |   |                                           |   |   |
+|   |   |   client_event.events =                   |   |   |
+|   |   |       EPOLLIN | EPOLLET;                  |   |   |
+|   |   |   client_event.data.fd =                  |   |   |
+|   |   |       client_socket;                      |   |   |
+|   |   |                                           |   |   |
+|   |   |   epoll_ctl(epfd, EPOLL_CTL_ADD,          |   |   |
+|   |   |             client_socket,                |   |   |
+|   |   |             &client_event);               |   |   |
+|   |   | }                                         |   |   |
+|   |   +-------------------------------------------+   |   |
+|   |                                                   |   |
+|   |   +-------------------------------------------+   |   |     +---------------------------------------------------+
+|   |   | 4.2.2. Données à lire ?                   |   |   |     | events[i].events & EPOLLIN                        |
+|   |   | if (events[i].events & EPOLLIN) {         |   |   |     | → données disponibles pour lecture                |
+|   |   |   bytes = recv(fd, buffer,                |   |   |     +---------------------------------------------------+
+|   |   |                sizeof(buffer),            |   |   |
+|   |   |                0);                        |   |   |
+|   |   |   Traiter les données;                    |   |   |
+|   |   | }                                         |   |   |
+|   |   +-------------------------------------------+   |   |
+|   |                                                   |   |
+|   |   +-------------------------------------------+   |   |
+|   |   | 4.2.3. Prêt à écrire ?                    |   |   |
+|   |   | if (events[i].events & EPOLLOUT) {        |   |   |
+|   |   |   send(fd, buffer, bytes, 0);             |   |   |
+|   |   | }                                         |   |   |
+|   |   +-------------------------------------------+   |   |
+|   |                                                   |   |
+|   |   +-------------------------------------------+   |   |
+|   |   | 4.2.4. Erreur ou fermeture ?              |   |   |
+|   |   | if (events[i].events &                    |   |   |
+|   |   |     (EPOLLERR | EPOLLHUP)) {              |   |   |
+|   |   |   close(fd);                              |   |   |
+|   |   |   epoll_ctl(epfd, EPOLL_CTL_DEL,          |   |   |
+|   |   |             fd, NULL);                    |   |   |
+|   |   | }                                         |   |   |
+|   |   +-------------------------------------------+   |   |
+|   | }                                                 |   |
+|   +---------------------------------------------------+   |
+| }                                                         |
++-----------------------------------------------------------+
