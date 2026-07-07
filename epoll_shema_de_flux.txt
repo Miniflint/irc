@@ -18,8 +18,8 @@ IRC : gestion des clients avec epoll : shema de flux
                                                                | op : EPOLL_CTL_ADD (new epfd)           |          |     int fd;                             |
                                                                |      EPOLL_CTL_MOD (changer EPOLLIN/EPO)|          |     uint32_t u32;                       |
                                                                |      EPOLL_CTL_DEL (delete epfd)        |          |     uint64_t u64;                       |
-                                                               |                                                     | };                                      |
-                                                               |                                                     +-----------------------------------------+
+                                                               +-----------------------------------------+          | };                                      |
+                                                                                                                    +-----------------------------------------+
                          |
                          v
 +---------------------------------------------+                +---------------------------------------------+
@@ -37,8 +37,8 @@ IRC : gestion des clients avec epoll : shema de flux
 |    |                                     |  |                | int epoll_wait(int epfd, struct epoll_event |
 |    | int nfds = epoll_wait(epfd,         |  |                | *events, int maxevents, int timeout);       |
 |    |                      events,        |  |                +---------------------------------------------+
-|    |                      MAX_EVENTS,    |  |
-|    |                      -1);           |  |
+|    |                      MAX_EVENTS,    |  |                | nfds : nombre d'evenement dans la ready-list|
+|    |                      -1);           |  |                +---------------------------------------------+
 |    +-------------------------------------+  |
 |                     |                       |
 |                     v                       |
