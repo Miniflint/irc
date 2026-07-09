@@ -3,8 +3,10 @@
 
 # include "main.hpp"
 # include <map>
+# include <sys/socket.h>
 # define FD_SET_MAX 2048
 # define MAX_EVENTS 10
+# define SOCK_DOMAIN AF_LOCAL
 
 class Server {
 	typedef bool (Server::*cmdFn)(std::string &rest);
@@ -17,9 +19,9 @@ class Server {
 		std::string			_password;
 		std::string			_ip;
 		Trie<Server::cmdFn>	_commands;
-		Trie<Client>		_clientNick;
-		std::list<Client>	_clients;
-		std::list<Channel>	_channels;
+		Trie<Client>		_clients;
+		Trie<Client>		_clientsAnon;
+		Trie<Channel>		_channels;
 		bool				_socketInit();
 		bool				_epollInit();
 		bool				_init();
@@ -30,7 +32,7 @@ class Server {
 	public:
 		Server(size_t port, std::string password);
 		~Server();
-		std::pair<size_t, std::string>	getVal();
+		std::pair<size_t, std::string>	getVals();
 		bool 							new_connection();
 		bool							run();
 		Server::cmdFn					do_command(std::size_t fd, std::string &lookup, std::string &rest);

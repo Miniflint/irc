@@ -1,28 +1,28 @@
 #include "trie.hpp"
 
 template <typename T>
-Trie<T>::Trie() : _key(""), _element(), _leaf(false)
+Trie<T>::Trie() : _key(""), _element(), _leaf(false), _del(NULL)
 {
 	for (unsigned int i = 0; i < 256; i++)
 		this->_nodes[i] = NULL;
 }
 
 template <typename T>
-Trie<T>::Trie(std::string key) : _key(key), _element(), _leaf(false)
+Trie<T>::Trie(std::string key) : _key(key), _element(), _leaf(false), _del(NULL)
 {
 	for (unsigned int i = 0; i < 256; i++)
 		this->_nodes[i] = NULL;
 }
 
 template <typename T>
-Trie<T>::Trie(std::string key, T element) : _key(key), _element(element), _leaf(false)
+Trie<T>::Trie(std::string key, T element) : _key(key), _element(element), _leaf(false), _del(NULL)
 {
 	for (unsigned int i = 0; i < 256; i++)
 		this->_nodes[i] = NULL;
 }
 
 template <typename T>
-Trie<T>::Trie(std::string key, T element, bool leaf) : _key(key), _element(element), _leaf(leaf)
+Trie<T>::Trie(std::string key, T element, bool leaf) : _key(key), _element(element), _leaf(leaf), _del(NULL)
 {
 	for (unsigned int i = 0; i < 256; i++)
 		this->_nodes[i] = NULL;

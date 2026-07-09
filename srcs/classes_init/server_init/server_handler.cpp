@@ -1,4 +1,4 @@
-#include "server.hpp"
+#include "Server.hpp"
 
 bool Server::handle_admin(std::string &rest) 
 {

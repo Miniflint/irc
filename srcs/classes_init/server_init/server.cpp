@@ -63,13 +63,37 @@ bool            Server::_epollLoop()
         {
             if (this->events[i].data.fd == this->_sockServerFD)
             {
-                if (!this->clientAdd())
-                    return (false);
+                this->clientAdd()
             }
-            else if
-            
+            else if (events[i].events & EPOLLIN)
+            {
+
+            }
+            else if (events[i].events & EPOLLOUT)
+            {
+
+            }
+            else if (events[i].events & EPOLLHUP || events[i].events & EPOLLERR)
+            {
+
+            }
+        }
     }
 }
+
+bool        Server::run()
+{
+    
+}
+bool Server::_clientAdd()
+{
+    std::size_t t;
+
+    t = 5;
+    Client c(t);
+    this->_clients.push_front(c);
+    return (0);
+};
 
 Server::cmdFn	Server::do_command(std::size_t fd, std::string &lookup, std::string &rest)
 {
@@ -81,12 +105,3 @@ Server::cmdFn	Server::do_command(std::size_t fd, std::string &lookup, std::strin
     return (t);
 }
 
-bool Server::new_connection()
-{
-    std::size_t t;
-
-    t = 5;
-    Client c(t);
-    this->_clients.push_front(c);
-    return (0);
-};
