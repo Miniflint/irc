@@ -4,22 +4,36 @@
 # include "main.hpp"
 # include <map>
 # define FD_SET_MAX 2048
+# define MAX_EVENTS 10
 
 class Server {
 	typedef bool (Server::*cmdFn)(std::string &rest);
 	private:
-		unsigned int			_pid;
-		unsigned int			_port;
-		std::string				_password;
-		std::string				_ip;
-		Trie<Server::cmdFn>		_commands;
-		std::list<Client>		_clients;
-		std::list<Channel>		_channels;
+		size_t				_pid;
+		size_t				_port;
+		int					_sockServerFD;
+		int					_epfd;
+		struct epoll_event	_events[MAX_EVENTS];
+		std::string			_password;
+		std::string			_ip;
+		Trie<Server::cmdFn>	_commands;
+		Trie<Client>		_clientNick;
+		std::list<Client>	_clients;
+		std::list<Channel>	_channels;
+		bool				_socketInit();
+		bool				_epollInit();
+		bool				_init();
+		bool				_epollLoop();
+		bool				_clientAdd();
+		Server() {};
+		Server(const Server &src) {};
 	public:
-		Server(unsigned int port, std::string password);
+		Server(size_t port, std::string password);
 		~Server();
-		bool new_connection();
-		Server::cmdFn	do_command(std::size_t fd, std::string &lookup, std::string &rest);
+		std::pair<size_t, std::string>	getVal();
+		bool 							new_connection();
+		bool							run();
+		Server::cmdFn					do_command(std::size_t fd, std::string &lookup, std::string &rest);
 		// c'est horrible
 		bool handle_admin(std::string &rest);
 		bool handle_away(std::string &rest);

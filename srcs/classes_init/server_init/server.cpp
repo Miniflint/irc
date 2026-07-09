@@ -1,5 +1,6 @@
 #include "Server.hpp"
 
+
 Server::Server(size_t port, std::string password) : _port(port), _password(password), _ip(std::string("0.0.0.0"))
 {
     const std::string t[] = {
@@ -37,17 +38,37 @@ Server::~Server()
 {
 }
 
-bool            Server::epollInit()
+bool            Server::_epollInit()
 {
-    struct epoll_event      sever_event;
-    
+    struct epoll_event      server_event;
+
     this->_epfd = epoll_create1(0);
     if (this->_epfd == -1)
         return (false);
     server_event.events = EPOLLIN;
     server_event.data.fd = this->_sockServerFD;
+    epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_sockServerFD, &server_event);
+    return (true);
+}
 
-
+bool            Server::_epollLoop()
+{
+    int     nfds;
+    while (1)
+    {
+        nfds = epoll_wait(this->_epfd, this->events, MAX_EVENTS, -1);
+        if (nfds == -1)
+            return (false);
+        for (int i = 0; i < nfds; ++i)
+        {
+            if (this->events[i].data.fd == this->_sockServerFD)
+            {
+                if (!this->clientAdd())
+                    return (false);
+            }
+            else if
+            
+    }
 }
 
 Server::cmdFn	Server::do_command(std::size_t fd, std::string &lookup, std::string &rest)
