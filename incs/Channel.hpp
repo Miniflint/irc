@@ -2,7 +2,7 @@
 # define CHANNEL_HPP
 
 # include "trie.hpp"
-# include "client.hpp"
+# include "Client.hpp"
 
 class Channel {
 	protected:
