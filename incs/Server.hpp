@@ -2,95 +2,102 @@
 # define SERVER_HPP
 
 # include "main.hpp"
-# include <map>
-# include <sys/socket.h>
-# define FD_SET_MAX 2048
-# define MAX_EVENTS 10
+# include "Trie.hpp"
+# include "Server.hpp"
+# include "Client.hpp"
+# include "Channel.hpp"
+# include <iostream>
+# include <sstream>
 # define SOCK_DOMAIN AF_LOCAL
 
+# define  MAX_SOCKET_FD 2048U
+# define  MAX_EVENTS 10U
+
 class Server {
-	typedef bool (Server::*cmdFn)(std::string &rest);
+	typedef bool (Server::*cmdFn)(Client &c, std::istringstream &rest);
 	private:
-		size_t				_pid;
-		size_t				_port;
-		int					_sockServerFD;
-		int					_epfd;
-		struct epoll_event	_events[MAX_EVENTS];
-		std::string			_password;
-		std::string			_ip;
-		Trie<Server::cmdFn>	_commands;
-		Trie<Client>		_clients;
-		Trie<Client>		_clientsAnon;
-		Trie<Channel>		_channels;
-		bool				_socketInit();
-		bool				_epollInit();
-		bool				_init();
-		bool				_epollLoop();
-		bool				_clientAdd();
+		size_t					_pid;
+		size_t					_port;
+		int						_sockServerFD;
+		int						_epfd;
+		struct epoll_event		_events[MAX_EVENTS];
+		std::string				_password;
+		std::string				_ip;
+		Trie<Server::cmdFn>		_commands;
+		Trie<Client>			_userNickname;
+		std::vector<Client *>	_clients;
+		Trie<Channel>			_channels;
+		bool					_socketInit();
+		bool					_epollInit();
+		bool					_init();
+		bool					_epollLoop();
+		bool					_clientAdd();
+		bool					_sockServerInit();
 		Server() {};
-		Server(const Server &src) {};
+		Server(const Server &src) {(void)src;};
 	public:
 		Server(size_t port, std::string password);
 		~Server();
 		std::pair<size_t, std::string>	getVals();
-		bool 							new_connection();
+		bool 							new_connection(size_t fd);
 		bool							run();
-		Server::cmdFn					do_command(std::size_t fd, std::string &lookup, std::string &rest);
+		void							doCommand(size_t fd);
+		Client							&getClient(size_t fd);
 		// c'est horrible
-		bool handle_admin(std::string &rest);
-		bool handle_away(std::string &rest);
-		bool handle_cnotice(std::string &rest);
-		bool handle_cprivmsg(std::string &rest);
-		bool handle_connect(std::string &rest);
-		bool handle_die(std::string &rest);
-		bool handle_error(std::string &rest);
-		bool handle_help(std::string &rest);
-		bool handle_info(std::string &rest);
-		bool handle_invite(std::string &rest);
-		bool handle_ison(std::string &rest);
-		bool handle_join(std::string &rest);
-		bool handle_kick(std::string &rest);
-		bool handle_kill(std::string &rest);
-		bool handle_knock(std::string &rest);
-		bool handle_links(std::string &rest);
-		bool handle_list(std::string &rest);
-		bool handle_lusers(std::string &rest);
-		bool handle_mode(std::string &rest);
-		bool handle_motd(std::string &rest);
-		bool handle_names(std::string &rest);
-		bool handle_nick(std::string &rest);
-		bool handle_notice(std::string &rest);
-		bool handle_oper(std::string &rest);
-		bool handle_part(std::string &rest);
-		bool handle_pass(std::string &rest);
-		bool handle_ping(std::string &rest);
-		bool handle_pong(std::string &rest);
-		bool handle_privmsg(std::string &rest);
-		bool handle_quit(std::string &rest);
-		bool handle_quote(std::string &rest);
-		bool handle_rehash(std::string &rest);
-		bool handle_rules(std::string &rest);
-		bool handle_server(std::string &rest);
-		bool handle_squery(std::string &rest);
-		bool handle_squit(std::string &rest);
-		bool handle_setname(std::string &rest);
-		bool handle_silence(std::string &rest);
-		bool handle_stats(std::string &rest);
-		bool handle_summon(std::string &rest);
-		bool handle_time(std::string &rest);
-		bool handle_topic(std::string &rest);
-		bool handle_trace(std::string &rest);
-		bool handle_user(std::string &rest);
-		bool handle_userhost(std::string &rest);
-		bool handle_userip(std::string &rest);
-		bool handle_users(std::string &rest);
-		bool handle_version(std::string &rest);
-		bool handle_wallops(std::string &rest);
-		bool handle_watch(std::string &rest);
-		bool handle_who(std::string &rest);
-		bool handle_whois(std::string &rest);
-		bool handle_whowas(std::string &rest);
-		bool handle_message(std::string &rest);
+		bool handle_admin(Client &c, std::istringstream &rest);
+		bool handle_away(Client &c, std::istringstream &rest);
+		bool handle_cnotice(Client &c, std::istringstream &rest);
+		bool handle_cprivmsg(Client &c, std::istringstream &rest);
+		bool handle_connect(Client &c, std::istringstream &rest);
+		bool handle_die(Client &c, std::istringstream &rest);
+		bool handle_error(Client &c, std::istringstream &rest);
+		bool handle_help(Client &c, std::istringstream &rest);
+		bool handle_info(Client &c, std::istringstream &rest);
+		bool handle_invite(Client &c, std::istringstream &rest);
+		bool handle_ison(Client &c, std::istringstream &rest);
+		bool handle_join(Client &c, std::istringstream &rest);
+		bool handle_kick(Client &c, std::istringstream &rest);
+		bool handle_kill(Client &c, std::istringstream &rest);
+		bool handle_knock(Client &c, std::istringstream &rest);
+		bool handle_links(Client &c, std::istringstream &rest);
+		bool handle_list(Client &c, std::istringstream &rest);
+		bool handle_lusers(Client &c, std::istringstream &rest);
+		bool handle_mode(Client &c, std::istringstream &rest);
+		bool handle_motd(Client &c, std::istringstream &rest);
+		bool handle_names(Client &c, std::istringstream &rest);
+		bool handle_nick(Client &c, std::istringstream &rest);
+		bool handle_notice(Client &c, std::istringstream &rest);
+		bool handle_oper(Client &c, std::istringstream &rest);
+		bool handle_part(Client &c, std::istringstream &rest);
+		bool handle_pass(Client &c, std::istringstream &rest);
+		bool handle_ping(Client &c, std::istringstream &rest);
+		bool handle_pong(Client &c, std::istringstream &rest);
+		bool handle_privmsg(Client &c, std::istringstream &rest);
+		bool handle_quit(Client &c, std::istringstream &rest);
+		bool handle_quote(Client &c, std::istringstream &rest);
+		bool handle_rehash(Client &c, std::istringstream &rest);
+		bool handle_rules(Client &c, std::istringstream &rest);
+		bool handle_server(Client &c, std::istringstream &rest);
+		bool handle_squery(Client &c, std::istringstream &rest);
+		bool handle_squit(Client &c, std::istringstream &rest);
+		bool handle_setname(Client &c, std::istringstream &rest);
+		bool handle_silence(Client &c, std::istringstream &rest);
+		bool handle_stats(Client &c, std::istringstream &rest);
+		bool handle_summon(Client &c, std::istringstream &rest);
+		bool handle_time(Client &c, std::istringstream &rest);
+		bool handle_topic(Client &c, std::istringstream &rest);
+		bool handle_trace(Client &c, std::istringstream &rest);
+		bool handle_user(Client &c, std::istringstream &rest);
+		bool handle_userhost(Client &c, std::istringstream &rest);
+		bool handle_userip(Client &c, std::istringstream &rest);
+		bool handle_users(Client &c, std::istringstream &rest);
+		bool handle_version(Client &c, std::istringstream &rest);
+		bool handle_wallops(Client &c, std::istringstream &rest);
+		bool handle_watch(Client &c, std::istringstream &rest);
+		bool handle_who(Client &c, std::istringstream &rest);
+		bool handle_whois(Client &c, std::istringstream &rest);
+		bool handle_whowas(Client &c, std::istringstream &rest);
+		bool handle_message(Client &c, std::istringstream &rest);
 };
 
 #endif

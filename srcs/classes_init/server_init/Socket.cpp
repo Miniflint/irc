@@ -9,4 +9,5 @@ bool        Server::_clientAdd()
 	struct sockaddr	addr;
 	socklen_t		addrLen;
     accept(this->_sockServerFD, &addr, &addrLen);
+	return (true);
 }

@@ -1,8 +1,9 @@
 #include "Server.hpp"
-
+#include <algorithm>
 
 Server::Server(size_t port, std::string password) : _port(port), _password(password), _ip(std::string("0.0.0.0"))
 {
+    this->_clients.assign(MAX_SOCKET_FD, NULL);
     const std::string t[] = {
     "ADMIN", "AWAY", "CNOTICE", "CPRIVMSG", "CONNECT", "DIE", "ERROR",
     "HELP", "INFO", "INVITE", "ISON", "JOIN", "KICK", "KILL", "KNOCK",
@@ -29,6 +30,7 @@ Server::Server(size_t port, std::string password) : _port(port), _password(passw
         &Server::handle_wallops, &Server::handle_watch, &Server::handle_who, &Server::handle_whois,
         &Server::handle_whowas, &Server::handle_message
     };
+
     for (unsigned int i = 0; i <= END; i++)
         this->_commands.add(t[i], func_list[i]);
     this->_commands.create_graph();
@@ -36,72 +38,54 @@ Server::Server(size_t port, std::string password) : _port(port), _password(passw
 
 Server::~Server()
 {
+    const std::vector<Client *>::const_iterator end = this->_clients.end();
+    for (std::vector<Client *>::iterator it = this->_clients.begin(); it != end; it++)
+        if (*it) { delete *it; *it = NULL; }
+    this->_clients.clear();
 }
 
 bool            Server::_epollInit()
 {
     struct epoll_event      server_event;
-
+    
     this->_epfd = epoll_create1(0);
     if (this->_epfd == -1)
         return (false);
     server_event.events = EPOLLIN;
     server_event.data.fd = this->_sockServerFD;
-    epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_sockServerFD, &server_event);
+    (void)server_event;
     return (true);
 }
 
-bool            Server::_epollLoop()
+void	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 {
-    int     nfds;
-    while (1)
-    {
-        nfds = epoll_wait(this->_epfd, this->events, MAX_EVENTS, -1);
-        if (nfds == -1)
-            return (false);
-        for (int i = 0; i < nfds; ++i)
-        {
-            if (this->events[i].data.fd == this->_sockServerFD)
-            {
-                this->clientAdd()
-            }
-            else if (events[i].events & EPOLLIN)
-            {
-
-            }
-            else if (events[i].events & EPOLLOUT)
-            {
-
-            }
-            else if (events[i].events & EPOLLHUP || events[i].events & EPOLLERR)
-            {
-
-            }
-        }
-    }
+    Client *c = this->_clients[fd];
+    if (!c || c->buffer.size() < 2 || c->buffer.compare(c->buffer.length() - 2, std::string::npos, "\r\n"))
+        return ;
+    std::istringstream  iss(c->buffer);
+    std::string         cmd;
+    cmdFn               func;
+    iss >> cmd;
+    try {
+        func = this->_commands[cmd];
+    } catch (std::exception &e) {
+        const int warnings = c->get_warning();
+        std::cerr << "Command: " << cmd << " does not exist. You get a warning(" << warnings << ")" << std::endl;
+        // kick user
+        if (warnings > 2)
+            {}
+        c->set_warning(warnings + 1);
+        return ;
+    };
+    (this->*func)(*c, iss);
 }
 
-bool        Server::run()
+bool Server::new_connection(size_t fd)
 {
-    
-}
-bool Server::_clientAdd()
-{
-    std::size_t t;
-
-    t = 5;
-    Client c(t);
-    this->_clients.push_front(c);
-    return (0);
-};
-
-Server::cmdFn	Server::do_command(std::size_t fd, std::string &lookup, std::string &rest)
-{
-    cmdFn t = this->_commands[lookup];
-
-    (void)fd;
-    std::string test(rest);
-    (this->*t)(test);
-    return (t);
+    return ((this->_clients[fd] = new Client(fd, "")) != NULL);
 }
 
+Client	&Server::getClient(size_t fd)
+{
+    return (*(this->_clients[fd]));
+}

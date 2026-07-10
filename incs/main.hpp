@@ -7,15 +7,19 @@
 
 # define LOCALHOST "127.0.0.1"
 
-# include "trie.hpp"
+# include <sys/epoll.h>
+# include <sys/socket.h>
+
 
 class Client;
 class Server;
 class Channel;
 
-# include "server.hpp"
-# include "client.hpp"
-# include "channel.hpp"
+# include "Trie.hpp"
+
+# include "Server.hpp"
+# include "Client.hpp"
+# include "Channel.hpp"
 
 enum E_commands {
 	ADMIN, // ADMIN [<target>]
@@ -74,28 +78,29 @@ enum E_commands {
 	END
 };
 
+/*
 enum E_codes {
-	RPL_WELCOME = 001,
-	RPL_YOURHOST = 002,
-	RPL_CREATED = 003,
-	RPL_MYINFO = 004,
-	RPL_MYINFO = 004,
-	RPL_BOUNCE = 005,
-	RPL_ISUPPORT = 005,
-	RPL_MAP = 006,
-	RPL_MAPEND = 007,
-	RPL_SNOMASK = 008,
-	RPL_STATMEMTOT = 009,
-	RPL_BOUNCE = 010,
-	RPL_STATMEM = 010,
-	RPL_YOURCOOKIE = 014,
-	RPL_MAP = 015,
-	RPL_MAPMORE = 016,
-	RPL_MAPEND = 017,
-	RPL_YOURID = 042,
-	RPL_SAVENICK = 043,
-	RPL_ATTEMPTINGJUNC = 050,
-	RPL_ATTEMPTINGREROUTE = 051,
+	RPL_WELCOME = 1,
+	RPL_YOURHOST = 2,
+	RPL_CREATED = 3,
+	RPL_MYINFO = 4,
+	RPL_MYINFO = 4,
+	RPL_BOUNCE = 5,
+	RPL_ISUPPORT = 5,
+	RPL_MAP = 6,
+	RPL_MAPEND = 7,
+	RPL_SNOMASK = 8,
+	RPL_STATMEMTOT = 9,
+	RPL_BOUNCE = 10,
+	RPL_STATMEM = 10,
+	RPL_YOURCOOKIE = 14,
+	RPL_MAP = 15,
+	RPL_MAPMORE = 16,
+	RPL_MAPEND = 17,
+	RPL_YOURID = 42,
+	RPL_SAVENICK = 43,
+	RPL_ATTEMPTINGJUNC = 50,
+	RPL_ATTEMPTINGREROUTE = 51,
 	RPL_TRACELINK = 200,
 	RPL_TRACECONNECTING = 201,
 	RPL_TRACEHANDSHAKE = 202,
@@ -230,7 +235,6 @@ enum E_codes {
 	RPL_CHANINFO_KICKS = 296,
 	RPL_END_CHANINFO = 299,
 	RPL_NONE = 300,
-	RPL_AWAY = 301,
 	RPL_AWAY = 301,
 	RPL_USERHOST = 302,
 	RPL_ISON = 303,
@@ -577,6 +581,7 @@ enum E_codes {
 	ERR_TEXTTOOSHORT = 983,
 	ERR_NUMERIC_ERR = 999,
 	CODES_END
-}
+};
+*/ 
 
 #endif

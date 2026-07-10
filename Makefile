@@ -8,8 +8,8 @@ OBJ_DIR	:= ./objs
 VPATH	:= $(SRC_DIR):$(PAR_DIR):$(INI_DIR):$(SRV_DIR)
 
 SRCS	:= main.cpp
-INITS	:= channel.cpp client.cpp
-SRVS	:= server.cpp server_handler.cpp socket.cpp
+INITS	:= Channel.cpp Client.cpp
+SRVS	:= Server.cpp Handler.cpp Socket.cpp
 
 SRC_FILES := $(addprefix $(SRC_DIR)/, $(SRCS))
 INI_FILES := $(addprefix $(INI_DIR)/, $(INITS))
@@ -23,6 +23,14 @@ FLAGS	:= -Wall -Wextra -Werror -std=c++98 -I$(INC_DIR)
 CC		:= /usr/bin/g++
 
 TARGET	:= ft_irc
+
+ifeq ($(OPTI),yes)
+	FLAGS += -O3
+endif
+
+ifeq ($(HARD),yes)
+	FLAGS += -Winit-self -Wold-style-cast -Woverloaded-virtual -Wuninitialized -Winit-self -ansi -fno-elide-constructors -pedantic-errors
+endif
 
 all: $(TARGET)
 

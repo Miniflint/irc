@@ -1,28 +1,28 @@
-#include "trie.hpp"
+#include "Trie.hpp"
 
 template <typename T>
-Trie<T>::Trie() : _key(""), _element(), _leaf(false), _del(NULL)
+Trie<T>::Trie() : _key(""), _element(), _leaf(false)
 {
 	for (unsigned int i = 0; i < 256; i++)
 		this->_nodes[i] = NULL;
 }
 
 template <typename T>
-Trie<T>::Trie(std::string key) : _key(key), _element(), _leaf(false), _del(NULL)
+Trie<T>::Trie(std::string key) : _key(key), _element(), _leaf(false)
 {
 	for (unsigned int i = 0; i < 256; i++)
 		this->_nodes[i] = NULL;
 }
 
 template <typename T>
-Trie<T>::Trie(std::string key, T element) : _key(key), _element(element), _leaf(false), _del(NULL)
+Trie<T>::Trie(std::string key, T element) : _key(key), _element(element), _leaf(false)
 {
 	for (unsigned int i = 0; i < 256; i++)
 		this->_nodes[i] = NULL;
 }
 
 template <typename T>
-Trie<T>::Trie(std::string key, T element, bool leaf) : _key(key), _element(element), _leaf(leaf), _del(NULL)
+Trie<T>::Trie(std::string key, T element, bool leaf) : _key(key), _element(element), _leaf(leaf)
 {
 	for (unsigned int i = 0; i < 256; i++)
 		this->_nodes[i] = NULL;
@@ -94,7 +94,7 @@ bool    Trie<T>::add(std::string new_key, T element)
 		return (true);
 	}
 	std::string key = next_node->get_key();
-	int diff_i = diff_index(key, new_key);
+	const int diff_i = diff_index(key, new_key);
 	key.erase(0, diff_i);
 	new_key.erase(0, diff_i);
 	Trie<T>	*new_node;

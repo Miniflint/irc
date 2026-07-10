@@ -14,7 +14,6 @@ class Trie {
 		Trie(std::string key, T element, bool leaf);
 		~Trie();
 		bool		add(std::string key, T element);
-		// bool		add2(std::string key, T element);
 		bool		del(std::string key);
 		void    	add_node(Trie<T> *node);
 		T			&operator[](std::string key) const;
@@ -32,6 +31,6 @@ class Trie {
 		bool		_leaf;
 };
 
-# include "trie.tpp"
+# include "Trie.tpp"
 
 #endif
