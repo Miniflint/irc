@@ -11,6 +11,8 @@
 
 typedef uint8_t AccessType;
 
+class Channel;
+
 class Client {
 	protected:
 		size_t			_fd;
@@ -36,8 +38,8 @@ class Client {
 		const std::string	&getServerName() const;
 		void				setRealName(std::string realName);
 		const std::string	&getRealName() const;
-		void				set_warning(int warn_lvl);
-		int					get_warning() const;
+		void				setWarning(int warn_lvl);
+		int					getWarning() const;
 		~Client();
 		std::string	buffer;
 };

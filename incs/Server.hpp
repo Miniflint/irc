@@ -69,7 +69,7 @@ class Server {
 		bool handle_mode(Client &c, std::istringstream &rest);
 		bool handle_motd(Client &c, std::istringstream &rest);
 		bool handle_names(Client &c, std::istringstream &rest);
-		bool handle_nick(Client &c, std::istringstream &rest);
+		bool handleNick(Client &c, std::istringstream &rest);
 		bool handle_notice(Client &c, std::istringstream &rest);
 		bool handle_oper(Client &c, std::istringstream &rest);
 		bool handle_part(Client &c, std::istringstream &rest);
@@ -91,7 +91,7 @@ class Server {
 		bool handle_time(Client &c, std::istringstream &rest);
 		bool handle_topic(Client &c, std::istringstream &rest);
 		bool handle_trace(Client &c, std::istringstream &rest);
-		bool handle_user(Client &c, std::istringstream &rest);
+		bool handleUser(Client &c, std::istringstream &rest);
 		bool handle_userhost(Client &c, std::istringstream &rest);
 		bool handle_userip(Client &c, std::istringstream &rest);
 		bool handle_users(Client &c, std::istringstream &rest);
@@ -101,6 +101,7 @@ class Server {
 		bool handle_who(Client &c, std::istringstream &rest);
 		bool handle_whois(Client &c, std::istringstream &rest);
 		bool handle_whowas(Client &c, std::istringstream &rest);
+		bool handleDcc(Client &c, std::istringstream &rest);
 		bool handle_message(Client &c, std::istringstream &rest);
 };
 

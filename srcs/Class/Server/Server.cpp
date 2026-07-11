@@ -11,7 +11,7 @@ Server::Server(size_t port, std::string password) : _port(port), _password(passw
     "PART","PASS","PING","PONG","PRIVMSG","QUIT","QUOTE","REHASH","RULES",
     "SERVER","SQUERY","SQUIT","SETNAME","SILENCE","STATS","SUMMON",
     "TIME","TOPIC","TRACE","USER","USERHOST","USERIP","USERS","VERSION",
-    "WALLOPS","WATCH","WHO","WHOIS","WHOWAS", ":"
+    "WALLOPS","WATCH","WHO","WHOIS","WHOWAS", "DCC", ":"
     };
 
     const Server::cmdFn func_list[] = {
@@ -20,15 +20,15 @@ Server::Server(size_t port, std::string password) : _port(port), _password(passw
         &Server::handle_info, &Server::handle_invite, &Server::handle_ison, &Server::handle_join,
         &Server::handle_kick, &Server::handle_kill, &Server::handle_knock, &Server::handle_links,
         &Server::handle_list, &Server::handle_lusers, &Server::handle_mode, &Server::handle_motd,
-        &Server::handle_names, &Server::handle_nick, &Server::handle_notice, &Server::handle_oper,
+        &Server::handle_names, &Server::handleNick, &Server::handle_notice, &Server::handle_oper,
         &Server::handle_part, &Server::handle_pass, &Server::handle_ping, &Server::handle_pong,
         &Server::handle_privmsg, &Server::handle_quit, &Server::handle_quote, &Server::handle_rehash,
         &Server::handle_rules, &Server::handle_server, &Server::handle_squery, &Server::handle_squit,
         &Server::handle_setname, &Server::handle_silence, &Server::handle_stats, &Server::handle_summon,
-        &Server::handle_time, &Server::handle_topic, &Server::handle_trace, &Server::handle_user,
+        &Server::handle_time, &Server::handle_topic, &Server::handle_trace, &Server::handleUser,
         &Server::handle_userhost, &Server::handle_userip, &Server::handle_users, &Server::handle_version,
         &Server::handle_wallops, &Server::handle_watch, &Server::handle_who, &Server::handle_whois,
-        &Server::handle_whowas, &Server::handle_message
+        &Server::handle_whowas, &Server::handleDcc, &Server::handle_message
     };
 
     for (unsigned int i = 0; i <= END; i++)
@@ -96,8 +96,8 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
     iss >> cmd;
     if (!this->_validateCommand(func, cmd) || !this->_validateAccess(c, cmd))
     {
-        const int warnings = c->get_warning() + 1;
-        c->set_warning(warnings);
+        const int warnings = c->getWarning() + 1;
+        c->setWarning(warnings);
         // kick user
         if (warnings > 2)
             {}

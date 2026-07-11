@@ -28,12 +28,12 @@ const std::string	&Client::getUserName() const
 	return (this->_userName);
 }
 
-void		Client::set_warning(int warn_lvl)
+void		Client::setWarning(int warn_lvl)
 {
 	this->_avertissements = warn_lvl;
 }
 
-int		Client::get_warning() const
+int		Client::getWarning() const
 {
 	return (this->_avertissements);
 }

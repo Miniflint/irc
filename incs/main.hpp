@@ -75,6 +75,7 @@ enum E_commands {
 	WHO, // WHO [<name> ["o"]]
 	WHOIS, // WHOIS [<server>] <nicknames>
 	WHOWAS, // WHOWAS <nickname> [<count> [<server>]]
+	DCC,
 	END
 };
 

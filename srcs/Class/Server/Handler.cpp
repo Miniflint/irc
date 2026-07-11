@@ -178,18 +178,17 @@ bool Server::handle_names(Client &c, std::istringstream &iss)
     std::cout << "In " << "names: " << token << std::endl;
     return (true);
 }
-bool Server::handle_nick(Client &c, std::istringstream &iss) 
+bool Server::handleNick(Client &c, std::istringstream &iss) 
 {
     std::string token;
-    if (!iss)
-        return (std::cerr << "[ERROR]: istringstream somehow empty" << std::endl, false);
+
     iss >> token >> std::noskipws;
     if (iss.fail())
         return (std::cerr << "[ERROR]: istringstream formatting error" << std::endl, false);
     if (token.empty() || token.length() > 9)
         return (std::cerr << "[ERROR]: Invalid nickname" << std::endl, false);
     if (!_checkClientExist(this->_userNickname, token))
-        return (false);
+        return (std::cerr << "[ERROR]: User Already exist" << std::endl, false);
     std::string old_username(c.getNick());
     if (!_checkClientExist(this->_userNickname, old_username))
     {
@@ -373,15 +372,13 @@ bool Server::handle_trace(Client &c, std::istringstream &iss)
     std::cout << "In " << "trace: " << token << std::endl;
     return (true);
 }
-bool Server::handle_user(Client &c, std::istringstream &iss) 
+bool Server::handleUser(Client &c, std::istringstream &iss) 
 {
     if (!c.getUserName().empty() || !c.getHostName().empty() ||
         !c.getServerName().empty() || !c.getRealName().empty())
         return (std::cerr << "[ERROR]: already has USER" << std::endl, false);
 
     std::string userName, hostName, serverName, realName;
-    if (!iss)
-        return (std::cerr << "[ERROR]: istringstream somehow empty" << std::endl, false);
     if (!(iss >> userName >> hostName >> serverName) || iss.fail())
         return (std::cerr << "[ERROR]: istringstream parsing failed" << std::endl, false);
     std::getline(iss, realName, '\r');
@@ -391,7 +388,6 @@ bool Server::handle_user(Client &c, std::istringstream &iss)
     if (indexTrim == std::string::npos || realName[indexTrim] != ':')
         return (std::cerr << "[ERROR]: problem parsing realName" << std::endl, false);
     realName.erase(0, indexTrim + 1);
-    std::cout << userName << " " << hostName << " " << serverName << " [" << realName << "]" << std::endl;
     if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1)
         return (std::cerr << "[ERROR]: problem parsing" << std::endl, false);
     c.setUserName(userName);
@@ -480,6 +476,14 @@ bool Server::handle_whowas(Client &c, std::istringstream &iss)
     std::string token;
     iss >> token;
     std::cout << "In " << "whowas: " << token << std::endl;
+    return (true);
+}
+bool Server::handleDcc(Client &c, std::istringstream &iss) 
+{
+    (void)c;
+    std::string token;
+    iss >> token;
+    std::cout << "In " << "dcc: " << token << std::endl;
     return (true);
 }
 bool Server::handle_message(Client &c, std::istringstream &iss) 
