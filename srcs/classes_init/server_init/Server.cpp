@@ -57,6 +57,34 @@ bool            Server::_epollInit()
     return (true);
 }
 
+bool    Server::_validateAccess(Client *c, std::string &command)
+{
+    if (command == "NICK" || command == "USER")
+        return (true);
+    try {
+        const std::string nick = c->get_nick();
+        if (c->get_user().empty() || nick.empty())
+            throw std::exception();
+        (void)this->_userNickname[nick];
+    } catch (std::exception &e) {
+        std::cerr << "[ERROR]: User not authorized" << std::endl;
+        c->buffer = "";
+        return (false);
+    }
+    return (true);
+}
+
+bool    Server::_validateCommand(cmdFn &func, std::string &command)
+{
+    try {
+        func = this->_commands[command];
+    } catch (std::exception &e) {
+        std::cerr << "[ERROR]: " << command << " does not exist" << std::endl;
+        return (false);
+    };
+    return (true);
+}
+
 void	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 {
     Client *c = this->_clients[fd];
@@ -66,17 +94,16 @@ void	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
     std::string         cmd;
     cmdFn               func;
     iss >> cmd;
-    try {
-        func = this->_commands[cmd];
-    } catch (std::exception &e) {
-        const int warnings = c->get_warning();
-        std::cerr << "Command: " << cmd << " does not exist. You get a warning(" << warnings << ")" << std::endl;
+    if (!this->_validateCommand(func, cmd) || !this->_validateAccess(c, cmd))
+    {
+        const int warnings = c->get_warning() + 1;
         // kick user
+        c->set_warning(warnings);
         if (warnings > 2)
             {}
-        c->set_warning(warnings + 1);
+        std::cout << "You get a warning (" << warnings << ")" << std::endl;
         return ;
-    };
+    }
     (this->*func)(*c, iss);
 }
 

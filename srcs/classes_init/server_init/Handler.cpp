@@ -1,5 +1,15 @@
 #include "Server.hpp"
 
+static bool _checkClientExist(Trie<Client> &trie, const std::string &toCheck)
+{
+    try {
+        (void)trie[toCheck];
+    } catch (std::exception &e) {
+        return (true);
+    }
+    return (false);
+}
+
 bool Server::handle_admin(Client &c, std::istringstream &iss) 
 {
     (void)c;
@@ -170,10 +180,23 @@ bool Server::handle_names(Client &c, std::istringstream &iss)
 }
 bool Server::handle_nick(Client &c, std::istringstream &iss) 
 {
-    (void)c;
     std::string token;
-    iss >> token;
-    std::cout << "In " << "nick: " << token << std::endl;
+    if (!iss)
+        return (std::cerr << "[ERROR]: istringstream somehow empty" << std::endl, false);
+    iss >> token >> std::noskipws;
+    if (iss.fail())
+        return (std::cerr << "[ERROR]: istringstream formatting error" << std::endl, false);
+    if (token.empty() || token.length() > 9)
+        return (std::cerr << "[ERROR]: Invalid nickname" << std::endl, false);
+    if (!_checkClientExist(this->_userNickname, token))
+        return (false);
+    std::string old_username(c.get_nick());
+    if (!_checkClientExist(this->_userNickname, old_username))
+        this->_userNickname.del(old_username);
+    c.set_nick(token);
+    if (!c.get_user().empty())
+        this->_userNickname.add(token, c);
+    std::cout << "[SUCCESS]: Changing nickname - " << token << std::endl;
     return (true);
 }
 bool Server::handle_notice(Client &c, std::istringstream &iss) 
@@ -348,8 +371,21 @@ bool Server::handle_user(Client &c, std::istringstream &iss)
 {
     (void)c;
     std::string token;
-    iss >> token;
+    if (!iss)
+        return (std::cerr << "[ERROR]: istringstream somehow empty" << std::endl, false);
+    std::getline(iss, token);
+    token = token.substr(1, token.length() - 2);
+    if (token.empty())
+        return (std::cerr << "[ERROR]: empty nickname" << std::endl, false);
     std::cout << "In " << "user: " << token << std::endl;
+    c.set_user(token);
+    std::string nick(c.get_nick());
+    if (!nick.empty() && _checkClientExist(this->_userNickname, nick))
+    {
+        std::cout << "[SUCCESS]: Adding to trie (nick) - " << nick << std::endl;
+        this->_userNickname.add(nick, c);
+    }
+    std::cout << "[SUCCESS]: Changing username - " << token << std::endl;
     return (true);
 }
 bool Server::handle_userhost(Client &c, std::istringstream &iss) 

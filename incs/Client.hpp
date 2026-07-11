@@ -22,9 +22,12 @@ class Client {
 		Client();
 		Client(size_t socket);
 		Client(size_t socket, std::string nick);
-		void		set_nick(std::string nick);
-		void		set_warning(int warn_lvl);
-		int		get_warning() const;
+		void				set_nick(std::string nick);
+		const std::string	&get_nick() const;
+		void				set_user(std::string user);
+		const std::string	&get_user() const;
+		void				set_warning(int warn_lvl);
+		int					get_warning() const;
 		~Client();
 		std::string	buffer;
 };

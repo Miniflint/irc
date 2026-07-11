@@ -33,6 +33,9 @@ class Server {
 		bool					_epollLoop();
 		bool					_clientAdd();
 		bool					_sockServerInit();
+
+		bool					_validateAccess(Client *c, std::string &command);
+		bool    				_validateCommand(cmdFn &func, std::string &command);
 		Server() {};
 		Server(const Server &src) {(void)src;};
 	public:

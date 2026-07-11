@@ -11,7 +11,22 @@ void		Client::set_nick(std::string nick)
 {
 	this->_nick = nick;
 }
-#include <iostream>
+
+const std::string	&Client::get_nick() const
+{
+	return (this->_nick);
+}
+
+void		Client::set_user(std::string user)
+{
+	this->_user = user;
+}
+
+const std::string	&Client::get_user() const
+{
+	return (this->_user);
+}
+
 void		Client::set_warning(int warn_lvl)
 {
 	this->_avertissements = warn_lvl;

@@ -34,11 +34,15 @@ int	main(int ac, char **argv)
 	if (i >= 1)
 		return (i - 1);
 	Server	serv(atoi(argv[1]), argv[2]);
-	serv.new_connection(5);
-	serv.getClient(5).buffer = argv[3];
-	serv.getClient(5).buffer += "\r\n";
-	serv.doCommand(5);
-	serv.doCommand(5);
-	serv.doCommand(5);
+	serv.new_connection(0);
+	while (1)
+	{
+		std::cout << "Enter your command: ";
+		std::string input;
+		std::getline(std::cin, input);
+		std::cout << std::endl;
+		serv.getClient(0).buffer = input + "\r\n";
+		serv.doCommand(0);
+	}
 	return (0);
 }

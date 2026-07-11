@@ -125,7 +125,7 @@ bool	Trie<T>::del(std::string key) {
 		}
 		return (true);
 	}
-	int	i_diff = diff_index(this->_key, key);
+	size_t	i_diff = diff_index(this->_key, key);
 	if (i_diff < this->_key.length())
 		return (false);
 	key.erase(0, i_diff);
@@ -187,6 +187,17 @@ template <typename T>
 void	Trie<T>::create_graph(void)
 {
 	std::ofstream f("t.dot");
+
+	f << "digraph viz {" << std::endl;
+	create_graph_root(this, f);
+	f << "}" << std::endl;
+	f.close();
+}
+
+template <typename T>
+void	Trie<T>::create_graph(const char *filename)
+{
+	std::ofstream f(filename);
 
 	f << "digraph viz {" << std::endl;
 	create_graph_root(this, f);

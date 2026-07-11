@@ -18,6 +18,7 @@ class Trie {
 		void    	add_node(Trie<T> *node);
 		T			&operator[](std::string key) const;
 		void		create_graph(void);
+		void		create_graph(const char *filename);
 		std::string	get_key(void) const;
 		void		set_key(std::string key);
 		T			&get_elem(void);
