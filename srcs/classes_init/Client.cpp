@@ -3,28 +3,29 @@
 Client::Client() : _fd(0), _avertissements(0) {}
 
 Client::Client(size_t socket) : _fd(socket), _avertissements(0) {}
-Client::Client(size_t socket, std::string nick) : _fd(socket), _nick(nick), _user(nick), _avertissements(0) {}
+Client::Client(size_t socket, std::string nickName) : _fd(socket), _nick(nickName), _avertissements(0) {}
+Client::Client(size_t socket, std::string nickName, std::string hostName) : _fd(socket), _nick(nickName), _hostName(hostName), _avertissements(0) {}
 
 Client::~Client() {}
 
-void		Client::set_nick(std::string nick)
+void		Client::setNick(std::string nick)
 {
 	this->_nick = nick;
 }
 
-const std::string	&Client::get_nick() const
+const std::string	&Client::getNick() const
 {
 	return (this->_nick);
 }
 
-void		Client::set_user(std::string user)
+void		Client::setUserName(std::string userName)
 {
-	this->_user = user;
+	this->_userName = userName;
 }
 
-const std::string	&Client::get_user() const
+const std::string	&Client::getUserName() const
 {
-	return (this->_user);
+	return (this->_userName);
 }
 
 void		Client::set_warning(int warn_lvl)
@@ -35,4 +36,34 @@ void		Client::set_warning(int warn_lvl)
 int		Client::get_warning() const
 {
 	return (this->_avertissements);
+}
+
+void		Client::setHostName(std::string hostName)
+{
+	this->_hostName = hostName;
+}
+
+const std::string	&Client::getHostName() const
+{
+	return (this->_hostName);
+}
+
+void		Client::setServerName(std::string serverName)
+{
+	this->_serverName = serverName;
+}
+
+const std::string	&Client::getServerName() const
+{
+	return (this->_serverName);
+}
+
+void		Client::setRealName(std::string realName)
+{
+	this->_realName = realName;
+}
+
+const std::string	&Client::getRealName() const
+{
+	return (this->_realName);
 }

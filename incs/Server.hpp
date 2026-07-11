@@ -46,6 +46,7 @@ class Server {
 		bool							run();
 		void							doCommand(size_t fd);
 		Client							&getClient(size_t fd);
+		bool							sendMessage(Client &source);
 		// c'est horrible
 		bool handle_admin(Client &c, std::istringstream &rest);
 		bool handle_away(Client &c, std::istringstream &rest);

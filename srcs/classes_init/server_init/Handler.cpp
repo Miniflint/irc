@@ -190,12 +190,18 @@ bool Server::handle_nick(Client &c, std::istringstream &iss)
         return (std::cerr << "[ERROR]: Invalid nickname" << std::endl, false);
     if (!_checkClientExist(this->_userNickname, token))
         return (false);
-    std::string old_username(c.get_nick());
+    std::string old_username(c.getNick());
     if (!_checkClientExist(this->_userNickname, old_username))
+    {
+        std::cout << "[SUCCESS]: Deleting into trie (nickName)" << std::endl;
         this->_userNickname.del(old_username);
-    c.set_nick(token);
-    if (!c.get_user().empty())
+    }
+    c.setNick(token);
+    if (!c.getUserName().empty())
+    {
+        std::cout << "[SUCCESS]: Adding to trie (nickName)" << std::endl;
         this->_userNickname.add(token, c);
+    }
     std::cout << "[SUCCESS]: Changing nickname - " << token << std::endl;
     return (true);
 }
@@ -369,23 +375,40 @@ bool Server::handle_trace(Client &c, std::istringstream &iss)
 }
 bool Server::handle_user(Client &c, std::istringstream &iss) 
 {
-    (void)c;
-    std::string token;
+    if (!c.getUserName().empty() && !c.getHostName().empty() &&
+        !c.getServerName().empty() && !c.getRealName().empty())
+        return (std::cerr << "[ERROR]: already has USER" << std::endl, false);
+
+    std::string userName, hostName, serverName, realName;
     if (!iss)
         return (std::cerr << "[ERROR]: istringstream somehow empty" << std::endl, false);
-    std::getline(iss, token);
-    token = token.substr(1, token.length() - 2);
-    if (token.empty())
+    iss >> userName >> hostName >> serverName;
+    if (iss.fail())
+        return (std::cerr << "[ERROR]: istringstream somehow empty" << std::endl, false);
+    std::getline(iss, realName, '\r');
+    if (realName.empty())
         return (std::cerr << "[ERROR]: empty nickname" << std::endl, false);
-    std::cout << "In " << "user: " << token << std::endl;
-    c.set_user(token);
-    std::string nick(c.get_nick());
-    if (!nick.empty() && _checkClientExist(this->_userNickname, nick))
+    if (realName[1] != ':')
+        return (std::cerr << "[ERROR]: problem parsing realName" << std::endl, false);
+    realName.erase(0, 2);
+    std::cout << userName << " " << hostName << " " << serverName << " [" << realName << "]" << std::endl;
+    if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1)
+        return (std::cerr << "[ERROR]: problem parsing" << std::endl, false);
+
+    c.setUserName(userName);
+    c.setHostName(hostName);
+    c.setServerName(serverName);
+    c.setRealName(realName);
+    const std::string &nickName(c.getNick());
+    if (!nickName.empty() && _checkClientExist(this->_userNickname, nickName))
     {
-        std::cout << "[SUCCESS]: Adding to trie (nick) - " << nick << std::endl;
-        this->_userNickname.add(nick, c);
+        std::cout << "[SUCCESS]: Adding to trie (nickName) - " << nickName << std::endl;
+        this->_userNickname.add(nickName, c);
     }
-    std::cout << "[SUCCESS]: Changing username - " << token << std::endl;
+    std::cout << "[SUCCESS]: Setting userName - " << userName << std::endl;
+    std::cout << "[SUCCESS]: Setting hostName - " << hostName << std::endl;
+    std::cout << "[SUCCESS]: Setting serverName - " << serverName << std::endl;
+    std::cout << "[SUCCESS]: Setting realName - " << realName << std::endl;
     return (true);
 }
 bool Server::handle_userhost(Client &c, std::istringstream &iss) 
