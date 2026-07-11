@@ -85,11 +85,11 @@ bool    Server::_validateCommand(cmdFn &func, std::string &command)
     return (true);
 }
 
-void	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
+bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 {
     Client *c = this->_clients[fd];
     if (!c || c->buffer.size() < 2 || c->buffer.compare(c->buffer.length() - 2, std::string::npos, "\r\n"))
-        return ;
+        return (false);
     std::istringstream  iss(c->buffer);
     std::string         cmd;
     cmdFn               func;
@@ -102,9 +102,9 @@ void	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
         if (warnings > 2)
             {}
         std::cout << "You get a warning (" << warnings << ")" << std::endl;
-        return ;
+        return (false);
     }
-    (this->*func)(*c, iss);
+    return ((this->*func)(*c, iss));
 }
 
 bool Server::new_connection(size_t fd)

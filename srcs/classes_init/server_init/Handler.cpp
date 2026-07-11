@@ -375,26 +375,25 @@ bool Server::handle_trace(Client &c, std::istringstream &iss)
 }
 bool Server::handle_user(Client &c, std::istringstream &iss) 
 {
-    if (!c.getUserName().empty() && !c.getHostName().empty() &&
-        !c.getServerName().empty() && !c.getRealName().empty())
+    if (!c.getUserName().empty() || !c.getHostName().empty() ||
+        !c.getServerName().empty() || !c.getRealName().empty())
         return (std::cerr << "[ERROR]: already has USER" << std::endl, false);
 
     std::string userName, hostName, serverName, realName;
     if (!iss)
         return (std::cerr << "[ERROR]: istringstream somehow empty" << std::endl, false);
-    iss >> userName >> hostName >> serverName;
-    if (iss.fail())
-        return (std::cerr << "[ERROR]: istringstream somehow empty" << std::endl, false);
+    if (!(iss >> userName >> hostName >> serverName) || iss.fail())
+        return (std::cerr << "[ERROR]: istringstream parsing failed" << std::endl, false);
     std::getline(iss, realName, '\r');
     if (realName.empty())
         return (std::cerr << "[ERROR]: empty nickname" << std::endl, false);
-    if (realName[1] != ':')
+    size_t indexTrim = realName.find_first_not_of(' ');
+    if (indexTrim == std::string::npos || realName[indexTrim] != ':')
         return (std::cerr << "[ERROR]: problem parsing realName" << std::endl, false);
-    realName.erase(0, 2);
+    realName.erase(0, indexTrim + 1);
     std::cout << userName << " " << hostName << " " << serverName << " [" << realName << "]" << std::endl;
     if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1)
         return (std::cerr << "[ERROR]: problem parsing" << std::endl, false);
-
     c.setUserName(userName);
     c.setHostName(hostName);
     c.setServerName(serverName);

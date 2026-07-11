@@ -35,7 +35,6 @@ int	main(int ac, char **argv)
 		return (i - 1);
 	Server	serv(atoi(argv[1]), argv[2]);
 	serv.new_connection(0);
-	serv.getClient(0).setHostName("0.0.0.0");
 	while (1)
 	{
 		std::cout << "Enter your command: ";
@@ -43,7 +42,7 @@ int	main(int ac, char **argv)
 		std::getline(std::cin, input);
 		std::cout << std::endl;
 		serv.getClient(0).buffer = input + "\r\n";
-		serv.doCommand(0);
+		(void)serv.doCommand(0);
 	}
 	return (0);
 }

@@ -44,7 +44,7 @@ class Server {
 		std::pair<size_t, std::string>	getVals();
 		bool 							new_connection(size_t fd);
 		bool							run();
-		void							doCommand(size_t fd);
+		bool							doCommand(size_t fd);
 		Client							&getClient(size_t fd);
 		bool							sendMessage(Client &source);
 		// c'est horrible
