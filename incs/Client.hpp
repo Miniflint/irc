@@ -15,17 +15,27 @@ class Client {
 	protected:
 		size_t			_fd;
 		std::string		_nick;
-		std::string		_user;
-		Trie<std::pair<Channel *, AccessType> >	_channel;
+		std::string		_userName;
+		std::string		_hostName;
+		std::string		_serverName;
+		std::string		_realName;
 		int				_avertissements;
+		Trie<std::pair<Channel *, AccessType> >	_channel;
 	public:
 		Client();
 		Client(size_t socket);
 		Client(size_t socket, std::string nick);
-		void				set_nick(std::string nick);
-		const std::string	&get_nick() const;
-		void				set_user(std::string user);
-		const std::string	&get_user() const;
+		Client(size_t socket, std::string nick, std::string host);
+		void				setNick(std::string nick);
+		const std::string	&getNick() const;
+		void				setUserName(std::string user);
+		const std::string	&getUserName() const;
+		void				setHostName(std::string host);
+		const std::string	&getHostName() const;
+		void				setServerName(std::string serverName);
+		const std::string	&getServerName() const;
+		void				setRealName(std::string realName);
+		const std::string	&getRealName() const;
 		void				set_warning(int warn_lvl);
 		int					get_warning() const;
 		~Client();

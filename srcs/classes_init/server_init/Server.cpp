@@ -62,8 +62,8 @@ bool    Server::_validateAccess(Client *c, std::string &command)
     if (command == "NICK" || command == "USER")
         return (true);
     try {
-        const std::string nick = c->get_nick();
-        if (c->get_user().empty() || nick.empty())
+        const std::string nick = c->getNick();
+        if (c->getUserName().empty() || nick.empty())
             throw std::exception();
         (void)this->_userNickname[nick];
     } catch (std::exception &e) {
@@ -97,8 +97,8 @@ void	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
     if (!this->_validateCommand(func, cmd) || !this->_validateAccess(c, cmd))
     {
         const int warnings = c->get_warning() + 1;
-        // kick user
         c->set_warning(warnings);
+        // kick user
         if (warnings > 2)
             {}
         std::cout << "You get a warning (" << warnings << ")" << std::endl;
