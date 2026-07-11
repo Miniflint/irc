@@ -1,7 +1,7 @@
 *.o
 ./ircs
 ./objs
-ft_irc
+ircserv
 *.txt
 *.dot
 .DS_Store
