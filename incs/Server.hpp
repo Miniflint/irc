@@ -24,9 +24,10 @@ class Server {
 		std::string				_password;
 		std::string				_ip;
 		Trie<Server::cmdFn>		_commands;
-		Trie<Client>			_userNickname;
+		Trie<size_t>			_clientTrie;
 		std::vector<Client *>	_clients;
-		Trie<Channel>			_channels;
+		Trie<size_t>			_channelTrie;
+		std::vector<Channel>	_channel;
 		bool					_socketInit();
 		bool					_epollInit();
 		bool					_init();
@@ -46,7 +47,7 @@ class Server {
 		bool							run();
 		bool							doCommand(size_t fd);
 		Client							&getClient(size_t fd);
-		bool							sendMessage(Client &source);
+		bool							sendToClient(Client &source);
 		// c'est horrible
 		bool handle_admin(Client &c, std::istringstream &rest);
 		bool handle_away(Client &c, std::istringstream &rest);

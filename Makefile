@@ -1,11 +1,10 @@
 INC_DIR	:= ./incs
 SRC_DIR	:= ./srcs
-PAR_DIR	:= $(SRC_DIR)/parsing
-INI_DIR	:= $(SRC_DIR)/classes_init
-SRV_DIR	:= $(INI_DIR)/server_init
+INI_DIR	:= $(SRC_DIR)/Class
+SRV_DIR	:= $(INI_DIR)/Server
 OBJ_DIR	:= ./objs
 
-VPATH	:= $(SRC_DIR):$(PAR_DIR):$(INI_DIR):$(SRV_DIR)
+VPATH	:= $(SRC_DIR):$(INI_DIR):$(SRV_DIR)
 
 SRCS	:= main.cpp
 INITS	:= Channel.cpp Client.cpp

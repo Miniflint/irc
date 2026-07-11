@@ -67,3 +67,13 @@ const std::string	&Client::getRealName() const
 {
 	return (this->_realName);
 }
+
+void	Client::setFd(size_t fd)
+{
+	this->_fd = fd;
+}
+
+size_t	Client::getFd() const
+{
+	return (this->_fd);
+}

@@ -38,6 +38,8 @@ class Client {
 		const std::string	&getServerName() const;
 		void				setRealName(std::string realName);
 		const std::string	&getRealName() const;
+		void				setFd(size_t fd);
+		size_t				getFd() const;
 		void				setWarning(int warn_lvl);
 		int					getWarning() const;
 		~Client();

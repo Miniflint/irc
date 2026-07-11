@@ -40,9 +40,9 @@ int	main(int ac, char **argv)
 		std::cout << "Enter your command: ";
 		std::string input;
 		std::getline(std::cin, input);
-		std::cout << std::endl;
 		serv.getClient(0).buffer = input + "\r\n";
 		(void)serv.doCommand(0);
+		std::cout << std::endl;
 	}
 	return (0);
 }
