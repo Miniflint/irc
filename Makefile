@@ -22,7 +22,7 @@ OBJS	:=	$(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:%.cpp=%.o))) \
 FLAGS	:= -Wall -Wextra -Werror -std=c++98 -I$(INC_DIR)
 CC		:= /usr/bin/g++
 
-TARGET	:= ft_irc
+TARGET	:= ircserv
 
 ifeq ($(OPTI),yes)
 	FLAGS += -O3
