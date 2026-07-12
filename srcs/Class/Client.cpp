@@ -66,12 +66,17 @@ const std::string	&Client::getRealName() const
 	return (this->_realName);
 }
 
-void									Client::setBufferOut(std::string bufferOut)
+void		Client::setBufferOut(std::string bufferOut)
 {
 	this->_bufferOut = bufferOut;
 }
 
-std::string								Client::getBufferOut() const
+void		Client::addBufferOut(std::string bufferOut)
+{
+	this->_bufferOut += bufferOut;
+}
+
+std::string	Client::getBufferOut() const
 {
 	return (this->_bufferOut);
 }

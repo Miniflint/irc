@@ -322,21 +322,24 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		}
 		clients.push_back(targetClient);
 	}
-	std::string		prefix(_formatBaseRelayMessage(c, "PRIVMSG") + realTarget);
-	const size_t	diff = MAX_PACKET_SIZE - prefix.length() - 2;
-	std::string 	msg(message, 0, diff);
-	std::string		full(prefix);
-	full.append(msg).append("\r\n");
-
+	std::string		full(_formatBaseRelayMessage(c, "PRIVMSG"));
+	const size_t	overhead = full.length() + 2;
+	if (MAX_PACKET_SIZE > overhead) {
+		const size_t	diff = MAX_PACKET_SIZE - overhead;
+		full.reserve(MAX_PACKET_SIZE);
+		full.append(message.c_str(), diff).append("\r\n");
+	}
+	else
+    	full.resize(MAX_PACKET_SIZE - 2);
+	full.append("\r\n");
 	std::vector<size_t>::const_iterator end = clients.cend();
 	for (std::vector<size_t>::const_iterator it = clients.cbegin(); it != end; it++) {
-		
 		if (c.getFd() == *it)
 			continue ;
 		Client *curr = this->_clients[*it];
 		if (!curr)
 			continue ;
-		curr->setBufferOut(full);
+		curr->addBufferOut(full);
 		/* A CHANGER 
 		const void *ptr = full.data();
 		size_t byteRemaining = full.length();
