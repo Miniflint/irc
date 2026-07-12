@@ -340,21 +340,6 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		if (!curr)
 			continue ;
 		curr->addBufferOut(full);
-		/* A CHANGER 
-		const void *ptr = full.data();
-		size_t byteRemaining = full.length();
-		while (byteRemaining > 0)
-		{
-			const size_t byteSent = send(*it, ptr, byteRemaining, MSG_NOSIGNAL);
-			if (byteSent == -1)
-			{
-				if (errno == EINTR)
-					continue ;
-				return (std::cerr << "[ERROR]: Send error" << std::endl, false);
-			}
-			byteRemaining -= byteSent;
-			ptr += byteSent;
-		}*/
 	}
 	return (true);
 }
