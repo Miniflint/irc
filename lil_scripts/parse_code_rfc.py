@@ -6,7 +6,8 @@ def main():
         splitted = line.split(" \t")
         code = splitted[0]
         msg = splitted[1]
-        if (t[3] is not None):
-            print(f"{msg} = {code},")
+        test = splitted[2]
+        if (len(test) > 6 and test[0] == 'R'):
+            print(f"\t{msg} = {code},")
 
 main()
