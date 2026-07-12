@@ -6,9 +6,7 @@
 # include <list>
 
 # define LOCALHOST "127.0.0.1"
-
-# include <sys/epoll.h>
-# include <sys/socket.h>
+# define MAX_PACKET_SIZE 512U
 
 
 class Client;

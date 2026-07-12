@@ -11,42 +11,37 @@
 # define SOCK_DOMAIN AF_LOCAL
 
 # define  MAX_SOCKET_FD 2048U
-# define  MAX_EVENTS 10U
 
 class Server {
 	typedef bool (Server::*cmdFn)(Client &c, std::istringstream &rest);
 	private:
-		size_t					_pid;
-		size_t					_port;
+		uint16_t				_port;
 		int						_sockServerFD;
-		int						_epfd;
-		struct epoll_event		_events[MAX_EVENTS];
 		std::string				_password;
 		std::string				_ip;
 		Trie<Server::cmdFn>		_commands;
 		Trie<size_t>			_clientTrie;
 		std::vector<Client *>	_clients;
-		Trie<size_t>			_channelTrie;
-		std::vector<Channel>	_channel;
-		bool					_socketInit();
-		bool					_epollInit();
+		Trie<Channel *>			_channelTrie;
+		std::list<Channel>		_channel;
 		bool					_init();
-		bool					_epollLoop();
 		bool					_clientAdd();
-		bool					_sockServerInit();
 
 		bool					_validateAccess(Client *c, std::string &command);
 		bool    				_validateCommand(cmdFn &func, std::string &command);
 		Server() {};
 		Server(const Server &src) {(void)src;};
 	public:
-		Server(size_t port, std::string password);
+		Server(uint16_t port, std::string password);
 		~Server();
 		std::pair<size_t, std::string>	getVals();
-		bool 							new_connection(size_t fd);
+		int 							newConnection();
 		bool							run();
 		bool							doCommand(size_t fd);
 		Client							&getClient(size_t fd);
+		void							setClient(size_t fd);
+		std::string						getIp(void) const;
+		void							setIp(std::string ip);
 		bool							sendToClient(Client &source);
 		// c'est horrible
 		bool handle_admin(Client &c, std::istringstream &rest);
@@ -77,7 +72,7 @@ class Server {
 		bool handle_pass(Client &c, std::istringstream &rest);
 		bool handle_ping(Client &c, std::istringstream &rest);
 		bool handle_pong(Client &c, std::istringstream &rest);
-		bool handle_privmsg(Client &c, std::istringstream &rest);
+		bool handlePrivMsg(Client &c, std::istringstream &rest);
 		bool handle_quit(Client &c, std::istringstream &rest);
 		bool handle_quote(Client &c, std::istringstream &rest);
 		bool handle_rehash(Client &c, std::istringstream &rest);
