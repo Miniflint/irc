@@ -13,12 +13,26 @@ static	bool _checkInTrieExist(Trie<T> &trie, const std::string &toCheck)
 
 static std::string	_formatBaseRelayMessage(Client &c, std::string functionName)
 {
-	return (":" + c.getNick() + "!" + c.getUserName() + "@" + c.getHostName() + " " + functionName + " ");
+	std::string rtn;
+	const size_t totalSize = rtn.size() + 5 + c.getNick().size() +
+		c.getUserName().size() + c.getHostName().size() + functionName.size();
+
+	rtn.reserve(totalSize);
+	rtn.append(1, ':').append(c.getNick()).append(1, '!').append(c.getUserName())
+		.append(1, '@').append(c.getHostName()).append(1, ' ').append(functionName)
+		.append(1, ' ');
+	return (rtn);
 }
 
 static std::string	_formatBaseServerMessage(Server &serv, Client &c, std::string code)
 {
-	return (":" + serv.getIp() + " " + code + "@" + c.getNick() + " :");
+	std::string rtn;
+
+	const size_t totalSize = 5 + serv.getIp().size() + code.size() + c.getNick().size();
+	rtn.reserve(totalSize);
+	rtn.append(" ").append(serv.getIp()).append(" ").append(code)
+		.append("@").append(c.getNick()).append(1, ' ').append(1, ':');
+	return (rtn);
 }
 
 bool	Server::handle_admin(Client &c, std::istringstream &iss) 
@@ -311,7 +325,8 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 	std::string		prefix(_formatBaseRelayMessage(c, "PRIVMSG") + realTarget);
 	const size_t	diff = MAX_PACKET_SIZE - prefix.length() - 2;
 	std::string 	msg(message, 0, diff);
-	std::string		full = prefix + msg + "\r\n";
+	std::string		full(prefix);
+	full.append(msg).append("\r\n");
 
 	std::vector<size_t>::const_iterator end = clients.cend();
 	for (std::vector<size_t>::const_iterator it = clients.cbegin(); it != end; it++) {
