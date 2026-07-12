@@ -1,6 +1,7 @@
 #include "Server.hpp"
-
-static	bool _checkClientExist(Trie<size_t> &trie, const std::string &toCheck)
+#include <cstring>
+template <typename T>
+static	bool _checkInTrieExist(Trie<T> &trie, const std::string &toCheck)
 {
 	try {
 		(void)trie[toCheck];
@@ -8,6 +9,16 @@ static	bool _checkClientExist(Trie<size_t> &trie, const std::string &toCheck)
 		return (true);
 	}
 	return (false);
+}
+
+static std::string	_formatBaseRelayMessage(Client &c, std::string functionName)
+{
+	return (":" + c.getNick() + "!" + c.getUserName() + "@" + c.getHostName() + " " + functionName + " ");
+}
+
+static std::string	_formatBaseServerMessage(Server &serv, Client &c, std::string code)
+{
+	return (":" + serv.getIp() + " " + code + "@" + c.getNick() + " :");
 }
 
 bool	Server::handle_admin(Client &c, std::istringstream &iss) 
@@ -187,18 +198,18 @@ bool	Server::handleNick(Client &c, std::istringstream &iss)
 		return (std::cerr << "[ERROR]: istringstream formatting error" << std::endl, false);
 	if (token.empty() || token.length() > 9)
 		return (std::cerr << "[ERROR]: Invalid nickname" << std::endl, false);
-	if (!_checkClientExist(this->_clientTrie, token))
+	if (!_checkInTrieExist(this->_clientTrie, token))
 		return (std::cerr << "[ERROR]: User Already exist" << std::endl, false);
-	std::string old_username(c.getNick());
-	if (!_checkClientExist(this->_clientTrie, old_username))
+	std::string oldUserName(c.getNick());
+	if (!_checkInTrieExist(this->_clientTrie, oldUserName))
 	{
-		std::cout << "[SUCCESS]: Deleting into trie (nickName)" << std::endl;
-		this->_clientTrie.del(old_username);
+		std::cout << "[SUCCESS]: Deleting into trie (nickName) - " << oldUserName << std::endl;
+		this->_clientTrie.del(oldUserName);
 	}
 	c.setNick(token);
 	if (!c.getUserName().empty())
 	{
-		std::cout << "[SUCCESS]: Adding to trie (nickName)" << std::endl;
+		std::cout << "[SUCCESS]: Adding to trie (nickName) - " << token << std::endl;
 		this->_clientTrie.add(token, c.getFd());
 	}
 	std::cout << "[SUCCESS]: Changing nickname - " << token << std::endl;
@@ -252,12 +263,81 @@ bool	Server::handle_pong(Client &c, std::istringstream &iss)
 	std::cout << "In " << "pong: " << token << std::endl;
 	return (true);
 }
-bool	Server::handle_privmsg(Client &c, std::istringstream &iss) 
+bool	Server::handlePrivMsg(Client &c, std::istringstream &iss) 
 {
-	(void)c;
-	std::string token;
-	iss >> token;
-	std::cout << "In " << "privmsg: " << token << std::endl;
+	std::string target, message;
+	iss >> target;
+	if (iss.fail() || target.empty())
+		return (std::cerr << "[ERROR]: Could not parse the target" << std::endl, false);
+	std::getline(iss, message);
+	if (message.empty())
+		return (std::cerr << "[ERROR]: Could not parse the message" << std::endl, false);
+	size_t index = message.find_first_not_of(' ');
+	if (index == std::string::npos || message[index] != ':')
+		return (std::cerr << "[ERROR]: Message is in wrong format" << std::endl, false);
+
+	std::vector<size_t>	clients;
+	std::string realTarget(target);
+	if (target[0] == '#')
+	{
+		target.erase(0, 1);
+		Channel	*targetChannel = NULL;
+		try {
+			targetChannel = c.getChannel()[target].first;
+		} catch (std::exception &e) {
+			try {
+				targetChannel = this->_channelTrie[target];
+			} catch (std::exception &e) {
+				return (std::cerr << "[ERROR]: Channel does not exist" << std::endl, false);
+			}
+			if (!targetChannel->checkMode(CHANNEL_NOT_EXTERNAL))
+				return (std::cerr << "[ERROR]: User no write access" << std::endl, false);
+		}
+		if (targetChannel->checkMode(CHANNEL_MODERATED) && 
+			!((c.checkFlag(target, CHANNEL_USER_OPERATOR) || c.checkFlag(target, CHANNEL_USER_VOICE))))
+				return (std::cerr << "[ERROR]: User no write access" << std::endl, false);
+		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
+	}
+	else
+	{
+		size_t targetClient	= 0;
+		try {
+			targetClient = this->_clientTrie[target];
+		} catch (std::exception &e) {
+			return (std::cerr << "[ERROR]: User does not exist" << std::endl, false);
+		}
+		clients.push_back(targetClient);
+	}
+	std::string		prefix(_formatBaseRelayMessage(c, "PRIVMSG") + realTarget);
+	const size_t	diff = MAX_PACKET_SIZE - prefix.length() - 2;
+	std::string 	msg(message, 0, diff);
+	std::string		full = prefix + msg + "\r\n";
+
+	std::vector<size_t>::const_iterator end = clients.cend();
+	for (std::vector<size_t>::const_iterator it = clients.cbegin(); it != end; it++) {
+		
+		if (c.getFd() == *it)
+			continue ;
+		Client *curr = this->_clients[*it];
+		if (!curr)
+			continue ;
+		curr->setBufferOut(full);
+		/* A CHANGER 
+		const void *ptr = full.data();
+		size_t byteRemaining = full.length();
+		while (byteRemaining > 0)
+		{
+			const size_t byteSent = send(*it, ptr, byteRemaining, MSG_NOSIGNAL);
+			if (byteSent == -1)
+			{
+				if (errno == EINTR)
+					continue ;
+				return (std::cerr << "[ERROR]: Send error" << std::endl, false);
+			}
+			byteRemaining -= byteSent;
+			ptr += byteSent;
+		}*/
+	}
 	return (true);
 }
 bool	Server::handle_quit(Client &c, std::istringstream &iss) 
@@ -381,7 +461,7 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 	std::string userName, hostName, serverName, realName;
 	if (!(iss >> userName >> hostName >> serverName) || iss.fail())
 		return (std::cerr << "[ERROR]: istringstream parsing failed" << std::endl, false);
-	std::getline(iss, realName, '\r');
+	std::getline(iss, realName);
 	if (realName.empty())
 		return (std::cerr << "[ERROR]: empty nickname" << std::endl, false);
 	size_t indexTrim = realName.find_first_not_of(' ');
@@ -395,7 +475,7 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 	c.setServerName(serverName);
 	c.setRealName(realName);
 	const std::string &nickName(c.getNick());
-	if (!nickName.empty() && _checkClientExist(this->_clientTrie, nickName))
+	if (!nickName.empty() && _checkInTrieExist(this->_clientTrie, nickName))
 	{
 		std::cout << "[SUCCESS]: Adding to trie (nickName) - " << nickName << std::endl;
 		this->_clientTrie.add(nickName, c.getFd());

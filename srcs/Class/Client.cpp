@@ -1,10 +1,8 @@
 #include "Client.hpp"
 
-Client::Client() : _fd(0), _avertissements(0) {}
+Client::Client() {}
 
-Client::Client(size_t socket) : _fd(socket), _avertissements(0) {}
-Client::Client(size_t socket, std::string nickName) : _fd(socket), _nick(nickName), _avertissements(0) {}
-Client::Client(size_t socket, std::string nickName, std::string hostName) : _fd(socket), _nick(nickName), _hostName(hostName), _avertissements(0) {}
+Client::Client(int socket, struct sockaddr addr, socklen_t addrLen) : _fd(socket), _nick(""), _userName(""), _hostName(""), _serverName(""), _realName(""), _addr(addr), _addrLen(addrLen), _avertissements(0), buffer("") {}
 
 Client::~Client() {}
 
@@ -68,6 +66,16 @@ const std::string	&Client::getRealName() const
 	return (this->_realName);
 }
 
+void									Client::setBufferOut(std::string bufferOut)
+{
+	this->_bufferOut = bufferOut;
+}
+
+std::string								Client::getBufferOut() const
+{
+	return (this->_bufferOut);
+}
+
 void	Client::setFd(size_t fd)
 {
 	this->_fd = fd;
@@ -76,4 +84,32 @@ void	Client::setFd(size_t fd)
 size_t	Client::getFd() const
 {
 	return (this->_fd);
+}
+
+void	Client::addAccess(const std::string &toCheck, AccessType flag)
+{
+	this->_channel[toCheck].second |= flag;
+}
+
+void	Client::delAccess(const std::string &toCheck, AccessType flag) const
+{
+	this->_channel[toCheck].second &= ~flag;
+}
+
+bool				Client::checkFlag(const std::string &toCheck, AccessType mode) const
+{
+	return ((this->_channel[toCheck].second & mode) == mode);
+}
+
+Trie<std::pair<Channel *, AccessType> >	Client::getChannel(void) const
+{
+	return (this->_channel);
+}
+
+struct sockaddr							&Client::getAddr() {
+	return (this->_addr);
+}
+
+socklen_t								&Client::getAddrLen() {
+	return (this->_addrLen);
 }

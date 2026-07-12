@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include <algorithm>
 
-Server::Server(size_t port, std::string password) : _port(port), _password(password), _ip(std::string("0.0.0.0"))
+Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _ip(std::string("0.0.0.0"))
 {
 	this->_clients.assign(MAX_SOCKET_FD, NULL);
 	const std::string t[] = {
@@ -22,7 +22,7 @@ Server::Server(size_t port, std::string password) : _port(port), _password(passw
 		&Server::handle_list, &Server::handle_lusers, &Server::handle_mode, &Server::handle_motd,
 		&Server::handle_names, &Server::handleNick, &Server::handle_notice, &Server::handle_oper,
 		&Server::handle_part, &Server::handle_pass, &Server::handle_ping, &Server::handle_pong,
-		&Server::handle_privmsg, &Server::handle_quit, &Server::handle_quote, &Server::handle_rehash,
+		&Server::handlePrivMsg, &Server::handle_quit, &Server::handle_quote, &Server::handle_rehash,
 		&Server::handle_rules, &Server::handle_server, &Server::handle_squery, &Server::handle_squit,
 		&Server::handle_setname, &Server::handle_silence, &Server::handle_stats, &Server::handle_summon,
 		&Server::handle_time, &Server::handle_topic, &Server::handle_trace, &Server::handleUser,
@@ -42,19 +42,6 @@ Server::~Server()
 	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != end; it++)
 		if (*it) { delete *it; *it = NULL; }
 	this->_clients.clear();
-}
-
-bool            Server::_epollInit()
-{
-	struct epoll_event      server_event;
-	
-	this->_epfd = epoll_create1(0);
-	if (this->_epfd == -1)
-		return (false);
-	server_event.events = EPOLLIN;
-	server_event.data.fd = this->_sockServerFD;
-	(void)server_event;
-	return (true);
 }
 
 bool    Server::_validateAccess(Client *c, std::string &command)
@@ -90,6 +77,7 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 	Client *c = this->_clients[fd];
 	if (!c || c->buffer.size() < 2 || c->buffer.compare(c->buffer.length() - 2, std::string::npos, "\r\n"))
 		return (false);
+	c->buffer.replace(c->buffer.length() - 1 , 2, "\n");
 	std::istringstream	iss(c->buffer);
 	std::string			cmd;
 	cmdFn				func;
@@ -107,12 +95,23 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 	return ((this->*func)(*c, iss));
 }
 
-bool Server::new_connection(size_t fd)
-{
-	return ((this->_clients[fd] = new Client(fd, "")) != NULL);
-}
-
 Client	&Server::getClient(size_t fd)
 {
 	return (*(this->_clients[fd]));
 }
+
+void	Server::setClient(size_t fd)
+{
+	this->_clients[fd] = new Client(fd);
+}
+
+std::string						Server::getIp(void) const
+{
+	return (this->_ip);
+}
+
+void							Server::setIp(std::string ip)
+{
+	this->_ip = ip;
+}
+

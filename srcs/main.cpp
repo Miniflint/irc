@@ -28,13 +28,24 @@ int	parse_av(int ac, char **argv)
 	return (0);
 }
 
+void	createUserAndRegister(Server &serv, size_t fd, std::string first, std::string sec)
+{
+	serv.setClient(fd);
+	serv.getClient(fd).buffer = first + "\r\n";
+	(void)serv.doCommand(fd);
+	serv.getClient(fd).buffer = sec + "\r\n";
+	(void)serv.doCommand(fd);
+}
+
 int	main(int ac, char **argv)
 {
 	unsigned int i = parse_av(ac, argv);
 	if (i >= 1)
 		return (i - 1);
 	Server	serv(atoi(argv[1]), argv[2]);
-	serv.new_connection(0);
+	serv.setClient(0);
+	createUserAndRegister(serv, 5, "NICK Xavier", "USER Xav * * :Dup");
+	createUserAndRegister(serv, 0, "NICK amy", "USER am * * :dupdup");
 	while (1)
 	{
 		std::cout << "Enter your command: ";
