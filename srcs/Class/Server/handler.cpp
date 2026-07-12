@@ -30,8 +30,8 @@ static std::string	_formatBaseServerMessage(Server &serv, Client &c, std::string
 
 	const size_t totalSize = 5 + serv.getIp().size() + code.size() + c.getNick().size();
 	rtn.reserve(totalSize);
-	rtn.append(" ").append(serv.getIp()).append(" ").append(code)
-		.append("@").append(c.getNick()).append(1, ' ').append(1, ':');
+	rtn.append(1, ' ').append(serv.getIp()).append(1, ' ').append(code)
+		.append(1, ' ').append(c.getNick()).append(1, ' ').append(1, ':');
 	return (rtn);
 }
 
