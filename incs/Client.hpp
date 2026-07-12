@@ -42,7 +42,7 @@ class Client {
 		const std::string						&getRealName() const;
 		void									setBufferOut(std::string bufferOut);
 		void									addBufferOut(std::string bufferOut);
-		std::string								getBufferOut() const;
+		const std::string						&getBufferOut() const;
 		Trie<std::pair<Channel *, AccessType> >	getChannel(void) const;
 		void									setFd(size_t fd);
 		size_t									getFd() const;

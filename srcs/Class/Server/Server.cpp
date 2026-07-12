@@ -100,10 +100,10 @@ Client	&Server::getClient(size_t fd)
 	return (*(this->_clients[fd]));
 }
 
-void	Server::setClient(size_t fd)
-{
-	this->_clients[fd] = new Client(fd);
-}
+// void	Server::setClient(size_t fd)
+// {
+// 	this->_clients[fd] = new Client(fd);
+// }
 
 std::string						Server::getIp(void) const
 {

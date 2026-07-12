@@ -76,7 +76,7 @@ void		Client::addBufferOut(std::string bufferOut)
 	this->_bufferOut += bufferOut;
 }
 
-std::string	Client::getBufferOut() const
+const std::string	&Client::getBufferOut() const
 {
 	return (this->_bufferOut);
 }

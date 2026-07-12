@@ -31,7 +31,7 @@ static int	initListenSocket(int port) {
 int Server::newConnection()
 {
 	struct sockaddr	addr;
-	socklen_t		addrLen;
+	socklen_t		addrLen = sizeof(addr);
 	int	clientSock = accept(this->_sockServerFD, &addr, &addrLen);
 	if (clientSock == -1)
 		return (-1);
@@ -48,6 +48,15 @@ int Server::newConnection()
 
 #ifdef __APPLE__
 #elif defined(__linux__)
+
+static void	setEpollMode(int epfd, int fd, uint16_t mode, uint32_t flag) {
+	struct epoll_event ev;
+	std::memset(&ev, 0, sizeof(ev));
+	ev.events = flag;
+	ev.data.fd = fd;
+	epoll_ctl(epfd, mode, fd, &ev);
+}
+
 bool	Server::run() {
 	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)
 		return (false);
@@ -66,20 +75,36 @@ bool	Server::run() {
 		int nEvents = epoll_wait(epfd, events, MAX_EVENTS, -1);
 		for (int i = 0; i < nEvents; ++i) {
 			if (events[i].data.fd == this->_sockServerFD) {
-				int	newClientFD = this->newConnection();
-				struct epoll_event evClient;
-				std::memset(&ev, 0, sizeof(evClient));
-				ev.events = EPOLLIN;
-				ev.data.fd = newClientFD;
-				epoll_ctl(epfd, EPOLL_CTL_ADD, newClientFD, &evClient);
+				int	newClientFd = this->newConnection();
+				setEpollMode(epfd, newClientFd, EPOLL_CTL_ADD, EPOLLIN);
 			} else {
-				char	buffer[BUFFER_SIZE];
-				size_t	readN = recv(events[i].data.fd, buffer, BUFFER_SIZE + 1, 0);
-				if (readN == -1)
-					continue ;
-				buffer[readN]= '\0';
-				this->_clients[events[i].data.fd]->buffer += buffer;
-				this->doCommand(events[i].data.fd);
+				if (events[i].events & EPOLLIN) {
+					char	buffer[BUFFER_SIZE + 1];
+					ssize_t	readN = recv(events[i].data.fd, buffer, BUFFER_SIZE, 0);
+					if (readN < 1) {
+						close(events[i].data.fd);
+    					delete this->_clients[events[i].data.fd];
+    					this->_clients[events[i].data.fd] = NULL;
+    					continue ;
+					}
+					buffer[readN]= '\0';
+					this->_clients[events[i].data.fd]->buffer += buffer;
+					this->doCommand(events[i].data.fd);
+					while (!this->poolOut.empty()) {
+						int	outFd = this->poolOut.front();
+						setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+						this->poolOut.pop();
+					}
+				}
+				if (events[i].events & EPOLLOUT) {
+					int	outFd = events[i].data.fd;
+					int	buffSize = this->_clients[outFd]->getBufferOut().size() > BUFFER_SIZE + 1 ? BUFFER_SIZE + 1 : this->_clients[outFd]->getBufferOut().size();
+					ssize_t	writeN = send(outFd, this->_clients[outFd].getBufferOut().c_str(), buffSize, 0);
+					if (writeN != -1)
+						this->_clients[outFd]->getBufferOut().erase(0, writeN);
+					if (this->_clients[outFd]->getBufferOut().empty())
+						setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN);
+				}
 			}
 		}
 	}

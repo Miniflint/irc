@@ -8,6 +8,7 @@
 # include "Channel.hpp"
 # include <iostream>
 # include <sstream>
+# include <queue>
 # define SOCK_DOMAIN AF_LOCAL
 
 # define  MAX_SOCKET_FD 2048U
@@ -39,10 +40,12 @@ class Server {
 		bool							run();
 		bool							doCommand(size_t fd);
 		Client							&getClient(size_t fd);
-		void							setClient(size_t fd);
+		// void							setClient(size_t fd);
 		std::string						getIp(void) const;
 		void							setIp(std::string ip);
-		bool							sendToClient(Client &source);
+		// bool							sendToClient(Client &source);
+		std::queue<int>					poolOut;
+		// std::vector<int>				poolInt;
 		// c'est horrible
 		bool handle_admin(Client &c, std::istringstream &rest);
 		bool handle_away(Client &c, std::istringstream &rest);
