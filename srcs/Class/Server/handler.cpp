@@ -324,13 +324,14 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 	}
 	std::string		full(_formatBaseRelayMessage(c, "PRIVMSG"));
 	const size_t	overhead = full.length() + 2;
-	if (MAX_PACKET_SIZE > overhead) {
+	if (MAX_PACKET_SIZE > overhead)
+	{
 		const size_t	diff = MAX_PACKET_SIZE - overhead;
 		full.reserve(MAX_PACKET_SIZE);
 		full.append(message.c_str(), diff).append("\r\n");
 	}
 	else
-    	full.resize(MAX_PACKET_SIZE - 2);
+		full.resize(MAX_PACKET_SIZE - 2);
 	full.append("\r\n");
 	std::vector<size_t>::const_iterator end = clients.cend();
 	for (std::vector<size_t>::const_iterator it = clients.cbegin(); it != end; it++) {
