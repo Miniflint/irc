@@ -8,7 +8,7 @@ VPATH	:= $(SRC_DIR):$(INI_DIR):$(SRV_DIR)
 
 SRCS	:= main.cpp
 INITS	:= Channel.cpp Client.cpp
-SRVS	:= Server.cpp handler.cpp events.cpp
+SRVS	:= Server.cpp handler.cpp events.cpp replyMsg.cpp
 
 SRC_FILES := $(addprefix $(SRC_DIR)/, $(SRCS))
 INI_FILES := $(addprefix $(INI_DIR)/, $(INITS))
