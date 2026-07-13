@@ -2,7 +2,7 @@
 
 Client::Client() {}
 
-Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(""), _serverName(""), _realName(""), _host(host), _port(port), _avertissements(0), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin{0}
+Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(""), _serverName(""), _realName(""), _host(host), _port(port), _avertissements(0), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(0) {}
 
 Client::~Client() {}
 
@@ -99,7 +99,6 @@ void	Client::setFd(size_t fd)
 size_t	Client::getFd() const
 {
 	return (this->_fd);
-		uint8_t			_flagsLogin;
 }
 
 void	Client::addAccess(const std::string &toCheck, AccessType flag)
