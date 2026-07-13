@@ -11,6 +11,15 @@ static	bool _checkInTrieExist(Trie<T> &trie, const std::string &toCheck)
 	return (false);
 }
 
+static bool _constantTimeCheck(const std::string &pass, const std::string &toCheck)
+{
+	unsigned char diff = 0;
+	for (unsigned int i = 0; i < pass.size(); i++) {
+		diff |= static_cast<unsigned char>(pass[i] ^ toCheck[i]);
+	}
+	return (diff == 0);
+}
+
 static std::string	_formatBaseRelayMessage(Client &c, std::string functionName)
 {
 	std::string rtn;
@@ -225,6 +234,9 @@ bool	Server::handleNick(Client &c, std::istringstream &iss)
 	{
 		std::cout << "[SUCCESS]: Adding to trie (nickName) - " << token << std::endl;
 		this->_clientTrie.add(token, c.getFd());
+		this->addRPLToClient(c, RPL_WELCOME);
+		this->addRPLToClient(c, RPL_YOURHOST);
+		this->sendRPLToClient(c, RPL_CREATED);
 	}
 	std::cout << "[SUCCESS]: Changing nickname - " << token << std::endl;
 	return (true);
@@ -258,7 +270,10 @@ bool	Server::handle_pass(Client &c, std::istringstream &iss)
 	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "pass: " << token << std::endl;
+	if (iss.fail() || token.empty())
+		return (std::cerr << "Failed to parse token" << std::endl, false);
+	if (this->_password.size() != token.size() || !_constantTimeCheck(this->_password, token))
+		return (this->sendRPLToClient(c, ERR_PASSWDMISMATCH), false);
 	return (true);
 }
 bool	Server::handle_ping(Client &c, std::istringstream &iss) 
@@ -318,7 +333,7 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		try {
 			targetClient = this->_clientTrie[target];
 		} catch (std::exception &e) {
-			return (std::cerr << "[ERROR]: User does not exist" << std::endl, false);
+			return (this->sendRPLToClient(c, ERR_USERNOTINCHANNEL), false);
 		}
 		clients.push_back(targetClient);
 	}

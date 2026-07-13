@@ -6,9 +6,6 @@
 # include "Channel.hpp"
 # include <sys/socket.h>
 
-# define ACCESS_ADM 0x4
-# define ACCESS_OPR 0x2
-# define ACCESS_USR 0x1
 # define CLIENT_QUIT_NONE 0x0
 # define CLIENT_QUIT_REQUEST 0x1
 # define CLIENT_QUIT_ACCEPT 0x2
@@ -59,6 +56,7 @@ class Client {
 		bool											checkFlag(const std::string &toCheck, AccessType mode) const;
 		std::string										buffer;
 		uint8_t											quitRequest;
+		uint8_t											flagsLogin;
 };
 
 #endif

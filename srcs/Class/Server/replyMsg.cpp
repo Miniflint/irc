@@ -1,642 +1,810 @@
 #include "Server.hpp"
 
-bool Server::handleRplWelcome(Client &c)
+std::string Server::handleRplWelcome(Client &c)
 {
-    (void)c;
+    std::string returnString(":Welcome the IRC Server of 42 (Made by Simon, Tricaducee and Miniflint) - ");
+    const std::string &nickName = c.getNick();
+    const std::string &userName = c.getUserName();
+    const std::string &hostName = c.getHostName();
+    returnString.reserve(returnString.size() + nickName.size() + userName.size() + hostName.size() + 5);
+    return (returnString.append(nickName).append(1, '!').append(userName).append(1, '@').append(hostName).append("\r\n"));
 }
-bool Server::handleRplYourhost(Client &c)
+std::string Server::handleRplYourhost(Client &c)
 {
     (void)c;
+    std::string returnString(":Your host is ");
+    const std::string &hostName = this->getIp();
+    returnString.reserve(returnString.size() + hostName.size() + 2);
+    return (returnString.append(hostName).append("\r\n"));
 }
-bool Server::handleRplCreated(Client &c)
+std::string Server::handleRplCreated(Client &c)
 {
     (void)c;
+    return (":This server was created somewhere in history (We don't keep track of the date because of lazyness)\r\n");
 }
-bool Server::handleRplMyinfo(Client &c)
+std::string Server::handleRplMyinfo(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplBounce(Client &c)
+std::string Server::handleRplBounce(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTracelink(Client &c)
+std::string Server::handleRplTracelink(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTraceconnecting(Client &c)
+std::string Server::handleRplTraceconnecting(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTracehandshake(Client &c)
+std::string Server::handleRplTracehandshake(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTraceunknown(Client &c)
+std::string Server::handleRplTraceunknown(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTraceoperator(Client &c)
+std::string Server::handleRplTraceoperator(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTraceuser(Client &c)
+std::string Server::handleRplTraceuser(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTraceserver(Client &c)
+std::string Server::handleRplTraceserver(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTraceservice(Client &c)
+std::string Server::handleRplTraceservice(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTracenewtype(Client &c)
+std::string Server::handleRplTracenewtype(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTraceclass(Client &c)
+std::string Server::handleRplTraceclass(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTracereconnect(Client &c)
+std::string Server::handleRplTracereconnect(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatslinkinfo(Client &c)
+std::string Server::handleRplStatslinkinfo(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatscommands(Client &c)
+std::string Server::handleRplStatscommands(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatscline(Client &c)
+std::string Server::handleRplStatscline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsnline(Client &c)
+std::string Server::handleRplStatsnline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsiline(Client &c)
+std::string Server::handleRplStatsiline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatskline(Client &c)
+std::string Server::handleRplStatskline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsqline(Client &c)
+std::string Server::handleRplStatsqline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsyline(Client &c)
+std::string Server::handleRplStatsyline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofstats(Client &c)
+std::string Server::handleRplEndofstats(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplUmodeis(Client &c)
+std::string Server::handleRplUmodeis(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplServiceinfo(Client &c)
+std::string Server::handleRplServiceinfo(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofservices(Client &c)
+std::string Server::handleRplEndofservices(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplService(Client &c)
+std::string Server::handleRplService(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplServlist(Client &c)
+std::string Server::handleRplServlist(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplServlistend(Client &c)
+std::string Server::handleRplServlistend(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsvline(Client &c)
+std::string Server::handleRplStatsvline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatslline(Client &c)
+std::string Server::handleRplStatslline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsuptime(Client &c)
+std::string Server::handleRplStatsuptime(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsoline(Client &c)
+std::string Server::handleRplStatsoline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatshline(Client &c)
+std::string Server::handleRplStatshline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsping(Client &c)
+std::string Server::handleRplStatsping(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsbline(Client &c)
+std::string Server::handleRplStatsbline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplStatsdline(Client &c)
+std::string Server::handleRplStatsdline(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplLuserclient(Client &c)
+std::string Server::handleRplLuserclient(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplLuserop(Client &c)
+std::string Server::handleRplLuserop(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplLuserunknown(Client &c)
+std::string Server::handleRplLuserunknown(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplLuserchannels(Client &c)
+std::string Server::handleRplLuserchannels(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplLuserme(Client &c)
+std::string Server::handleRplLuserme(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplAdminme(Client &c)
+std::string Server::handleRplAdminme(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplAdminloc1(Client &c)
+std::string Server::handleRplAdminloc1(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplAdminloc2(Client &c)
+std::string Server::handleRplAdminloc2(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplAdminemail(Client &c)
+std::string Server::handleRplAdminemail(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTracelog(Client &c)
+std::string Server::handleRplTracelog(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTraceend(Client &c)
+std::string Server::handleRplTraceend(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTryagain(Client &c)
+std::string Server::handleRplTryagain(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplNone(Client &c)
+std::string Server::handleRplNone(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplAway(Client &c)
+std::string Server::handleRplAway(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplUserhost(Client &c)
+std::string Server::handleRplUserhost(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplIson(Client &c)
+std::string Server::handleRplIson(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplUnaway(Client &c)
+std::string Server::handleRplUnaway(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplNowaway(Client &c)
+std::string Server::handleRplNowaway(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplWhoisuser(Client &c)
+std::string Server::handleRplWhoisuser(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplWhoisserver(Client &c)
+std::string Server::handleRplWhoisserver(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplWhoisoperator(Client &c)
+std::string Server::handleRplWhoisoperator(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplWhowasuser(Client &c)
+std::string Server::handleRplWhowasuser(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofwho(Client &c)
+std::string Server::handleRplEndofwho(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplWhoischanop(Client &c)
+std::string Server::handleRplWhoischanop(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplWhoisidle(Client &c)
+std::string Server::handleRplWhoisidle(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofwhois(Client &c)
+std::string Server::handleRplEndofwhois(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplWhoischannels(Client &c)
+std::string Server::handleRplWhoischannels(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplListstart(Client &c)
+std::string Server::handleRplListstart(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplList(Client &c)
+std::string Server::handleRplList(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplListend(Client &c)
+std::string Server::handleRplListend(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplChannelmodeis(Client &c)
+std::string Server::handleRplChannelmodeis(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplUniqopis(Client &c)
+std::string Server::handleRplUniqopis(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplNotopic(Client &c)
+std::string Server::handleRplNotopic(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTopic(Client &c)
+std::string Server::handleRplTopic(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplInviting(Client &c)
+std::string Server::handleRplInviting(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplSummoning(Client &c)
+std::string Server::handleRplSummoning(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplInvitelist(Client &c)
+std::string Server::handleRplInvitelist(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofinvitelist(Client &c)
+std::string Server::handleRplEndofinvitelist(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplExceptlist(Client &c)
+std::string Server::handleRplExceptlist(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofexceptlist(Client &c)
+std::string Server::handleRplEndofexceptlist(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplVersion(Client &c)
+std::string Server::handleRplVersion(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplWhoreply(Client &c)
+std::string Server::handleRplWhoreply(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplNamreply(Client &c)
+std::string Server::handleRplNamreply(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplKilldone(Client &c)
+std::string Server::handleRplKilldone(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplClosing(Client &c)
+std::string Server::handleRplClosing(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplCloseend(Client &c)
+std::string Server::handleRplCloseend(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplLinks(Client &c)
+std::string Server::handleRplLinks(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndoflinks(Client &c)
+std::string Server::handleRplEndoflinks(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofnames(Client &c)
+std::string Server::handleRplEndofnames(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplBanlist(Client &c)
+std::string Server::handleRplBanlist(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofbanlist(Client &c)
+std::string Server::handleRplEndofbanlist(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofwhowas(Client &c)
+std::string Server::handleRplEndofwhowas(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplInfo(Client &c)
+std::string Server::handleRplInfo(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplMotd(Client &c)
+std::string Server::handleRplMotd(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplInfostart(Client &c)
+std::string Server::handleRplInfostart(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofinfo(Client &c)
+std::string Server::handleRplEndofinfo(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplMotdstart(Client &c)
+std::string Server::handleRplMotdstart(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofmotd(Client &c)
+std::string Server::handleRplEndofmotd(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplYoureoper(Client &c)
+std::string Server::handleRplYoureoper(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplRehashing(Client &c)
+std::string Server::handleRplRehashing(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplYoureservice(Client &c)
+std::string Server::handleRplYoureservice(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplMyportis(Client &c)
+std::string Server::handleRplMyportis(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplTime(Client &c)
+std::string Server::handleRplTime(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplUsersstart(Client &c)
+std::string Server::handleRplUsersstart(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplUsers(Client &c)
+std::string Server::handleRplUsers(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplEndofusers(Client &c)
+std::string Server::handleRplEndofusers(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleRplNousers(Client &c)
+std::string Server::handleRplNousers(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNosuchnick(Client &c)
+std::string Server::handleErrNosuchnick(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNosuchserver(Client &c)
+std::string Server::handleErrNosuchserver(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNosuchchannel(Client &c)
+std::string Server::handleErrNosuchchannel(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrCannotsendtochan(Client &c)
+std::string Server::handleErrCannotsendtochan(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrToomanychannels(Client &c)
+std::string Server::handleErrToomanychannels(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrWasnosuchnick(Client &c)
+std::string Server::handleErrWasnosuchnick(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrToomanytargets(Client &c)
+std::string Server::handleErrToomanytargets(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNosuchservice(Client &c)
+std::string Server::handleErrNosuchservice(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNoorigin(Client &c)
+std::string Server::handleErrNoorigin(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNorecipient(Client &c)
+std::string Server::handleErrNorecipient(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNotexttosend(Client &c)
+std::string Server::handleErrNotexttosend(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNotoplevel(Client &c)
+std::string Server::handleErrNotoplevel(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrWildtoplevel(Client &c)
+std::string Server::handleErrWildtoplevel(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrBadmask(Client &c)
+std::string Server::handleErrBadmask(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrUnknowncommand(Client &c)
+std::string Server::handleErrUnknowncommand(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNomotd(Client &c)
+std::string Server::handleErrNomotd(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNoadmininfo(Client &c)
+std::string Server::handleErrNoadmininfo(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrFileerror(Client &c)
+std::string Server::handleErrFileerror(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNonicknamegiven(Client &c)
+std::string Server::handleErrNonicknamegiven(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrErroneusnickname(Client &c)
+std::string Server::handleErrErroneusnickname(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNicknameinuse(Client &c)
+std::string Server::handleErrNicknameinuse(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNickcollision(Client &c)
+std::string Server::handleErrNickcollision(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrUnavailresource(Client &c)
+std::string Server::handleErrUnavailresource(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrUsernotinchannel(Client &c)
+std::string Server::handleErrUsernotinchannel(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNotonchannel(Client &c)
+std::string Server::handleErrNotonchannel(Client &c)
 {
     (void)c;
+    // uint32_t t = ERR_NOTONCHANNEL;
+    return (":Channel or Client does not exist\r\n");
 }
-bool Server::handleErrUseronchannel(Client &c)
+std::string Server::handleErrUseronchannel(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNologin(Client &c)
+std::string Server::handleErrNologin(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrSummondisabled(Client &c)
+std::string Server::handleErrSummondisabled(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrUsersdisabled(Client &c)
+std::string Server::handleErrUsersdisabled(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNotregistered(Client &c)
+std::string Server::handleErrNotregistered(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNeedmoreparams(Client &c)
+std::string Server::handleErrNeedmoreparams(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrAlreadyregistered(Client &c)
+std::string Server::handleErrAlreadyregistered(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNopermforhost(Client &c)
+std::string Server::handleErrNopermforhost(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrPasswdmismatch(Client &c)
+std::string Server::handleErrPasswdmismatch(Client &c)
 {
     (void)c;
+    return (":Password does not match the actual password\r\n");
 }
-bool Server::handleErrYourebannedcreep(Client &c)
+std::string Server::handleErrYourebannedcreep(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrYouwillbebanned(Client &c)
+std::string Server::handleErrYouwillbebanned(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrKeyset(Client &c)
+std::string Server::handleErrKeyset(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrChannelisfull(Client &c)
+std::string Server::handleErrChannelisfull(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrUnknownmode(Client &c)
+std::string Server::handleErrUnknownmode(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrInviteonlychan(Client &c)
+std::string Server::handleErrInviteonlychan(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrBannedfromchan(Client &c)
+std::string Server::handleErrBannedfromchan(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrBadchannelkey(Client &c)
+std::string Server::handleErrBadchannelkey(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrBadchanmask(Client &c)
+std::string Server::handleErrBadchanmask(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNochanmodes(Client &c)
+std::string Server::handleErrNochanmodes(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrBanlistfull(Client &c)
+std::string Server::handleErrBanlistfull(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNoprivileges(Client &c)
+std::string Server::handleErrNoprivileges(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrChanoprivsneeded(Client &c)
+std::string Server::handleErrChanoprivsneeded(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrCantkillserver(Client &c)
+std::string Server::handleErrCantkillserver(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrRestricted(Client &c)
+std::string Server::handleErrRestricted(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrUniqoprivsneeded(Client &c)
+std::string Server::handleErrUniqoprivsneeded(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNooperhost(Client &c)
+std::string Server::handleErrNooperhost(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrNoservicehost(Client &c)
+std::string Server::handleErrNoservicehost(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrUmodeunknownflag(Client &c)
+std::string Server::handleErrUmodeunknownflag(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
-bool Server::handleErrUsersdontmatch(Client &c)
+std::string Server::handleErrUsersdontmatch(Client &c)
 {
     (void)c;
+    return ("Not implemented yet");
 }
