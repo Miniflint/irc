@@ -26,9 +26,9 @@ const AccessType CHANNEL_USER_OPERATOR		= 0x40; // o
 
 class Channel {
 	protected:
-		std::string			_nick;
-		std::string			_topic;
-		std::vector<size_t>	_clientsFD;
+		std::string				_nick;
+		std::string				_topic;
+		std::vector<size_t>		_clientsFD;
 		AccessType				_mode;
 	public:
 		Channel();
@@ -39,6 +39,7 @@ class Channel {
 		std::string			getTopic(void) const;
 		void				setTopic(std::string topic);
 		std::vector<size_t>	getClientsFD(void) const;
+		std::vector<size_t>	&getClientsFD(void);
 		void				addClientsFD(size_t fd);
 
 		AccessType			getMode(void) const;

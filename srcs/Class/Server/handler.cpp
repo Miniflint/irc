@@ -23,7 +23,7 @@ static std::string	_formatBaseRelayMessage(Client &c, std::string functionName)
 		.append(1, ' ');
 	return (rtn);
 }
-
+/* 
 static std::string	_formatBaseServerMessage(Server &serv, Client &c, std::string code)
 {
 	std::string rtn;
@@ -34,7 +34,7 @@ static std::string	_formatBaseServerMessage(Server &serv, Client &c, std::string
 		.append(1, ' ').append(c.getNick()).append(1, ' ').append(1, ':');
 	return (rtn);
 }
-
+*/
 bool	Server::handle_admin(Client &c, std::istringstream &iss) 
 {
 	(void)c;
@@ -326,30 +326,32 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 	const size_t	overhead = full.length() + 2;
 	if (MAX_PACKET_SIZE > overhead)
 	{
-		const size_t	diff = MAX_PACKET_SIZE - overhead;
 		full.reserve(MAX_PACKET_SIZE);
-		full.append(message.c_str(), diff).append("\r\n");
+		message.erase(0, 1);
+		full.append(message);
 	}
-	else
+	if (full.length() > MAX_PACKET_SIZE - 2)
 		full.resize(MAX_PACKET_SIZE - 2);
 	full.append("\r\n");
-	std::vector<size_t>::const_iterator end = clients.cend();
-	for (std::vector<size_t>::const_iterator it = clients.cbegin(); it != end; it++) {
+	std::vector<size_t>::const_iterator end = clients.end();
+	for (std::vector<size_t>::const_iterator it = clients.begin(); it != end; it++) {
 		if (c.getFd() == *it)
 			continue ;
 		Client *curr = this->_clients[*it];
 		if (!curr)
 			continue ;
-		curr->addBufferOut(full);
+		this->sendToClient(*curr, full);
 	}
 	return (true);
 }
-bool	Server::handle_quit(Client &c, std::istringstream &iss) 
+bool	Server::handleQuit(Client &c, std::istringstream &iss) 
 {
-	(void)c;
-	std::string token;
-	iss >> token;
-	std::cout << "In " << "quit: " << token << std::endl;
+	(void)iss;
+
+	std::string message(":");
+	message.append(this->_ip).append(" :Thanks for being here for some time !\r\n");
+	this->sendToClient(c, message);
+	this->poolQuit.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_quote(Client &c, std::istringstream &iss) 

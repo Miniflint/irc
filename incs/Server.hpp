@@ -25,8 +25,8 @@ class Server {
 		std::vector<Client *>	_clients;
 		Trie<Channel *>			_channelTrie;
 		std::list<Channel>		_channel;
-		bool					_init();
-		bool					_clientAdd();
+		// bool					_init();
+		// bool					_clientAdd();
 
 		bool					_validateAccess(Client *c, std::string &command);
 		bool    				_validateCommand(cmdFn &func, std::string &command);
@@ -35,16 +35,19 @@ class Server {
 	public:
 		Server(uint16_t port, std::string password);
 		~Server();
-		std::pair<size_t, std::string>	getVals();
+		// std::pair<size_t, std::string>	getVals();
 		int 							newConnection();
+		void							delClient(int fd);
 		bool							run();
 		bool							doCommand(size_t fd);
 		Client							&getClient(size_t fd);
 		// void							setClient(size_t fd);
 		std::string						getIp(void) const;
 		void							setIp(std::string ip);
-		// bool							sendToClient(Client &source);
+		bool							sendToClient(Client &source, std::string message);
+		bool							sendRPLToClient(Client &source, std::string message, uint16_t code);
 		std::queue<int>					poolOut;
+		std::queue<int>					poolQuit;
 		// std::vector<int>				poolInt;
 		// c'est horrible
 		bool handle_admin(Client &c, std::istringstream &rest);
@@ -76,7 +79,7 @@ class Server {
 		bool handle_ping(Client &c, std::istringstream &rest);
 		bool handle_pong(Client &c, std::istringstream &rest);
 		bool handlePrivMsg(Client &c, std::istringstream &rest);
-		bool handle_quit(Client &c, std::istringstream &rest);
+		bool handleQuit(Client &c, std::istringstream &rest);
 		bool handle_quote(Client &c, std::istringstream &rest);
 		bool handle_rehash(Client &c, std::istringstream &rest);
 		bool handle_rules(Client &c, std::istringstream &rest);

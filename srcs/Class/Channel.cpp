@@ -40,6 +40,11 @@ std::vector<size_t>	Channel::getClientsFD(void) const
 	return (this->_clientsFD);
 }
 
+std::vector<size_t>	&Channel::getClientsFD(void)
+{
+	return (this->_clientsFD);
+}
+
 void				Channel::addClientsFD(size_t fd)
 {
 	this->_clientsFD.push_back(fd);

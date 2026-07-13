@@ -1,14 +1,15 @@
 ## TOP PRIORITY
 1. [x] Faire NICK
 1. [x] Faire USER
-1. [ ] Faire boucle event
-   - [ ] recv()
-   - [ ] send()
-1. [ ] Faire Server::sendToClient()
-1. [ ] Faire PRIVMSG
+1. [x] Faire boucle event
+   - [x] recv()
+   - [x] send()
+1. [x] Faire Server::sendToClient()
+1. [x] Faire PRIVMSG
 
 ## PRIORITY
 
+1. [ ] ajouter code erreur
 1. [ ] Faire QUIT
 
 ## Lower Priority

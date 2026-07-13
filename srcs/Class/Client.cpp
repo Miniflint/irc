@@ -2,7 +2,7 @@
 
 Client::Client() {}
 
-Client::Client(int socket, struct sockaddr addr, socklen_t addrLen) : _fd(socket), _nick(""), _userName(""), _hostName(""), _serverName(""), _realName(""), _addr(addr), _addrLen(addrLen), _avertissements(0), buffer("") {}
+Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(""), _serverName(""), _realName(""), _host(host), _port(port), _avertissements(0), buffer("") {}
 
 Client::~Client() {}
 
@@ -76,7 +76,7 @@ void		Client::addBufferOut(std::string bufferOut)
 	this->_bufferOut += bufferOut;
 }
 
-const std::string	&Client::getBufferOut() const
+std::string	&Client::getBufferOut()
 {
 	return (this->_bufferOut);
 }
@@ -106,15 +106,7 @@ bool				Client::checkFlag(const std::string &toCheck, AccessType mode) const
 	return ((this->_channel[toCheck].second & mode) == mode);
 }
 
-Trie<std::pair<Channel *, AccessType> >	Client::getChannel(void) const
+const Trie<std::pair<Channel *, AccessType> >	&Client::getChannel(void) const
 {
 	return (this->_channel);
-}
-
-struct sockaddr							&Client::getAddr() {
-	return (this->_addr);
-}
-
-socklen_t								&Client::getAddrLen() {
-	return (this->_addrLen);
 }

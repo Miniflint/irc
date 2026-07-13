@@ -1,0 +1,24 @@
+./srcs/Class/Server/events.cpp: In member function ‘void Server::delClient(int)’:
+./srcs/Class/Server/events.cpp:39:46: error: no matching function for call to ‘find(std::vector<long unsigned int>::iterator, std::vector<long unsigned int>::iterator, size_t)’
+   39 |                         bool rtn = (std::find(clientFd.begin(), clientFd.end(), c->getFd()) != clientFd.end());
+      |                                     ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  • there is 1 candidate
+In file included from /usr/include/c++/16/bits/locale_facets.h:50,
+                 from /usr/include/c++/16/bits/basic_ios.h:40,
+                 from /usr/include/c++/16/ios:48,
+                 from /usr/include/c++/16/bits/ostream.h:43,
+                 from /usr/include/c++/16/ostream:42,
+                 from /usr/include/c++/16/iostream:43,
+                 from ./incs/main.hpp:5,
+                 from ./incs/Server.hpp:4,
+                 from ./srcs/Class/Server/events.cpp:1:
+    • candidate 1: ‘template<class _CharT2> typename __gnu_cxx::__enable_if<std::__is_char<_CharT>::__value, std::istreambuf_iterator<_CharT> >::__type std::find(istreambuf_iterator<_CharT>, istreambuf_iterator<_CharT>, const _CharT2&)’
+      /usr/include/c++/16/bits/streambuf_iterator.h:437:5:
+        437 |     find(istreambuf_iterator<_CharT> __first,
+            |     ^~~~
+      • template argument deduction/substitution failed:
+        •   ‘__gnu_cxx::__normal_iterator<long unsigned int*, std::vector<long unsigned int> >’ is not derived from ‘std::istreambuf_iterator<_CharT>’
+          ./srcs/Class/Server/events.cpp:39:46:
+             39 |                         bool rtn = (std::find(clientFd.begin(), clientFd.end(), c->getFd()) != clientFd.end());
+                |                                     ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+make: *** [Makefile:43: objs/events.o] Error 1

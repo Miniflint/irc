@@ -4,12 +4,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
+#include <arpa/inet.h>
+#include <algorithm>
+#include <csignal>
 #ifdef __APPLE__
 #elif defined(__linux__)
 # include <sys/epoll.h>
 # define MAX_EVENTS 10
 #endif
-#define BUFFER_SIZE 512
 
 static int	initListenSocket(int port) {
 	int	listenSock = socket(AF_INET, SOCK_STREAM, 0);
@@ -28,26 +30,60 @@ static int	initListenSocket(int port) {
 	return (listenSock);
 }
 
+void Server::delClient(int fd) {
+	close(fd);
+	Client *c = this->_clients[fd];
+	std::string nick = c->getNick();
+	if (!nick.empty()) {
+		std::list<Channel>::iterator end = this->_channel.end();
+		for (std::list<Channel>::iterator it = this->_channel.begin(); it != end; it++) {
+			try {
+				c->getChannel()[it->getNick()];
+				std::vector<size_t> &clientFd = it->getClientsFD();
+				std::vector<size_t>::iterator rtn = std::find(clientFd.begin(), clientFd.end(), c->getFd());
+				if (rtn != clientFd.end())
+					clientFd.erase(rtn);
+			} catch (std::exception &e) {(void)e;}
+		}
+		this->_clientTrie.del(nick);
+	}
+	if (c != NULL) {
+		delete c;
+		this->_clients[fd] = NULL;
+	}
+	std::cout << nick << ": Deconected" << std::endl;
+}
+
 int Server::newConnection()
 {
-	struct sockaddr	addr;
-	socklen_t		addrLen = sizeof(addr);
-	int	clientSock = accept(this->_sockServerFD, &addr, &addrLen);
+	struct sockaddr_in	addr;
+	socklen_t			addrLen = sizeof(addr);
+	int	clientSock = accept(this->_sockServerFD, reinterpret_cast<struct sockaddr *>(&addr), &addrLen);
 	if (clientSock == -1)
 		return (-1);
+	char* host = inet_ntoa(addr.sin_addr);
+	int port = ntohs(addr.sin_port);
 	fcntl(clientSock, F_SETFL, O_NONBLOCK);
 	if (static_cast<size_t>(clientSock) >= this->_clients.size())
 		this->_clients.resize(static_cast<size_t>(clientSock) + 1, NULL);
 	if (!this->_clients[clientSock]) {
-		this->_clients[clientSock] = new Client(clientSock, addr, addrLen);
+		this->_clients[clientSock] = new Client(clientSock, host, port);
 	} else {
 		return (-1);
 	}
+	std::cout << "New Client connected: IP: " << host << " port: " << port << std::endl;
 	return (clientSock);
 }
 
 #ifdef __APPLE__
 #elif defined(__linux__)
+
+void	delEpollClient(Server &serv, int epfd, int fd) {
+	struct epoll_event ev;
+	std::memset(&ev, 0, sizeof(ev)); 
+	epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
+	serv.delClient(fd);
+}
 
 static void	setEpollMode(int epfd, int fd, uint16_t mode, uint32_t flag) {
 	struct epoll_event ev;
@@ -58,6 +94,7 @@ static void	setEpollMode(int epfd, int fd, uint16_t mode, uint32_t flag) {
 }
 
 bool	Server::run() {
+	signal(SIGPIPE, SIG_IGN);
 	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)
 		return (false);
 	int epfd = epoll_create(1);
@@ -77,15 +114,15 @@ bool	Server::run() {
 			if (events[i].data.fd == this->_sockServerFD) {
 				int	newClientFd = this->newConnection();
 				setEpollMode(epfd, newClientFd, EPOLL_CTL_ADD, EPOLLIN);
+			} else if (events[i].events & (EPOLLHUP | EPOLLERR)) {
+				delEpollClient(*this, epfd, events[i].data.fd);
 			} else {
 				if (events[i].events & EPOLLIN) {
-					char	buffer[BUFFER_SIZE + 1];
-					ssize_t	readN = recv(events[i].data.fd, buffer, BUFFER_SIZE, 0);
+					char	buffer[MAX_PACKET_SIZE + 1];
+					ssize_t	readN = recv(events[i].data.fd, buffer, MAX_PACKET_SIZE, 0);
 					if (readN < 1) {
-						close(events[i].data.fd);
-    					delete this->_clients[events[i].data.fd];
-    					this->_clients[events[i].data.fd] = NULL;
-    					continue ;
+						delEpollClient(*this, epfd, events[i].data.fd);
+						continue ;
 					}
 					buffer[readN]= '\0';
 					this->_clients[events[i].data.fd]->buffer += buffer;
@@ -98,14 +135,23 @@ bool	Server::run() {
 				}
 				if (events[i].events & EPOLLOUT) {
 					int	outFd = events[i].data.fd;
-					int	buffSize = this->_clients[outFd]->getBufferOut().size() > BUFFER_SIZE + 1 ? BUFFER_SIZE + 1 : this->_clients[outFd]->getBufferOut().size();
-					ssize_t	writeN = send(outFd, this->_clients[outFd].getBufferOut().c_str(), buffSize, 0);
-					if (writeN != -1)
+					size_t	buffSize = this->_clients[outFd]->getBufferOut().size() < MAX_PACKET_SIZE ? this->_clients[outFd]->getBufferOut().size() : MAX_PACKET_SIZE;
+					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), buffSize, 0);
+					if (writeN != -1) {
 						this->_clients[outFd]->getBufferOut().erase(0, writeN);
+					} else {
+						delEpollClient(*this, epfd, events[i].data.fd);
+						continue;
+					}
 					if (this->_clients[outFd]->getBufferOut().empty())
 						setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN);
 				}
 			}
+		}
+		while (!this->poolQuit.empty()) {
+			int	outFd = this->poolQuit.front();
+			delEpollClient(*this, epfd, outFd);
+			this->poolQuit.pop();
 		}
 	}
 	close(epfd);

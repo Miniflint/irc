@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include <algorithm>
+#include <map>
 
 Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _ip(std::string("0.0.0.0"))
 {
@@ -22,7 +23,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		&Server::handle_list, &Server::handle_lusers, &Server::handle_mode, &Server::handle_motd,
 		&Server::handle_names, &Server::handleNick, &Server::handle_notice, &Server::handle_oper,
 		&Server::handle_part, &Server::handle_pass, &Server::handle_ping, &Server::handle_pong,
-		&Server::handlePrivMsg, &Server::handle_quit, &Server::handle_quote, &Server::handle_rehash,
+		&Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote, &Server::handle_rehash,
 		&Server::handle_rules, &Server::handle_server, &Server::handle_squery, &Server::handle_squit,
 		&Server::handle_setname, &Server::handle_silence, &Server::handle_stats, &Server::handle_summon,
 		&Server::handle_time, &Server::handle_topic, &Server::handle_trace, &Server::handleUser,
@@ -46,7 +47,7 @@ Server::~Server()
 
 bool    Server::_validateAccess(Client *c, std::string &command)
 {
-	if (command == "NICK" || command == "USER")
+	if (command == "NICK" || command == "USER" || command == "QUIT")
 		return (true);
 	try {
 		const std::string	nick = c->getNick();
@@ -75,12 +76,27 @@ bool    Server::_validateCommand(cmdFn &func, std::string &command)
 bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 {
 	Client *c = this->_clients[fd];
-	if (!c || c->buffer.size() < 2 || c->buffer.compare(c->buffer.length() - 2, std::string::npos, "\r\n"))
+	if (!c || c->buffer.size() <= 2)
 		return (false);
-	c->buffer.replace(c->buffer.length() - 1 , 2, "\n");
-	std::istringstream	iss(c->buffer);
+	size_t index = c->buffer.find("\r\n");
+	if (index == std::string::npos && c->buffer.length() < MAX_PACKET_SIZE)
+		return (false);
+	else if (index == std::string::npos && c->buffer.length() >= MAX_PACKET_SIZE) {
+		c->setWarning(c->getWarning() + 1);
+		c->buffer.clear();
+		return (false);
+	} else if (index >= MAX_PACKET_SIZE ) {
+		c->setWarning(c->getWarning() + 1);
+		c->buffer.erase(0, index + 2);
+		return (false);
+	}
+	c->buffer.replace(index, 2, "\n");
+	std::string			sanitizedClientBuffer(c->buffer);
+	c->buffer.erase(0, index);
+	std::istringstream	iss(sanitizedClientBuffer);
 	std::string			cmd;
 	cmdFn				func;
+	std::cout << sanitizedClientBuffer << std::endl;
 	iss >> cmd;
 	if (!this->_validateCommand(func, cmd) || !this->_validateAccess(c, cmd))
 	{
@@ -88,7 +104,7 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 		c->setWarning(warnings);
 		// kick user
 		if (warnings > 2)
-			{}
+			this->poolQuit.push(c->getFd());
 		std::cout << "You get a warning (" << warnings << ")" << std::endl;
 		return (false);
 	}
@@ -100,11 +116,6 @@ Client	&Server::getClient(size_t fd)
 	return (*(this->_clients[fd]));
 }
 
-// void	Server::setClient(size_t fd)
-// {
-// 	this->_clients[fd] = new Client(fd);
-// }
-
 std::string						Server::getIp(void) const
 {
 	return (this->_ip);
@@ -115,3 +126,19 @@ void							Server::setIp(std::string ip)
 	this->_ip = ip;
 }
 
+bool	Server::sendToClient(Client &source, std::string message)
+{
+	source.addBufferOut(message);
+	this->poolOut.push(source.getFd());
+	return (true);
+}
+
+bool	Server::sendRPLToClient(Client &source, std::string message, uint16_t code)
+{
+	std::map<uint16_t, std::string> t;
+	(void)t;
+	(void)code;
+	source.addBufferOut(message);
+	this->poolOut.push(source.getFd());
+	return (true);
+}
