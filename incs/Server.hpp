@@ -21,7 +21,7 @@ class Server {
 		std::string				_password;
 		std::string				_ip;
 		Trie<Server::cmdFn>		_commands;
-		Trie<size_t>			_clientTrie;
+		Trie<int>				_clientTrie;
 		std::vector<Client *>	_clients;
 		Trie<Channel *>			_channelTrie;
 		std::list<Channel>		_channel;
@@ -46,8 +46,9 @@ class Server {
 		void							setIp(std::string ip);
 		bool							sendToClient(Client &source, std::string message);
 		bool							sendRPLToClient(Client &source, std::string message, uint16_t code);
+		void							deconnectClient(int fd, std::string error, std::string message);
 		std::queue<int>					poolOut;
-		std::queue<int>					poolQuit;
+		std::vector<int>				poolQuit;
 		// std::vector<int>				poolInt;
 		// c'est horrible
 		bool handle_admin(Client &c, std::istringstream &rest);

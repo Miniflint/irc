@@ -78,7 +78,7 @@ void	Trie<T>::add_node(Trie<T> *node)
 	this->_nodes[static_cast<unsigned char>(node->get_key()[0])] = node;
 }
 
-static int diff_index(std::string s1, std::string s2)
+static inline int diff_index(std::string s1, std::string s2)
 {
 	int i;
 	for (i = 0; s1[i] && s2[i] && s1[i] == s2[i]; i++);

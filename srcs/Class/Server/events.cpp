@@ -8,10 +8,11 @@
 #include <algorithm>
 #include <csignal>
 #ifdef __APPLE__
+#include <sys/event.h>
 #elif defined(__linux__)
 # include <sys/epoll.h>
-# define MAX_EVENTS 10
 #endif
+# define MAX_EVENTS 10
 
 static int	initListenSocket(int port) {
 	int	listenSock = socket(AF_INET, SOCK_STREAM, 0);
@@ -31,16 +32,28 @@ static int	initListenSocket(int port) {
 }
 
 void Server::delClient(int fd) {
-	close(fd);
 	Client *c = this->_clients[fd];
+	if (!c)
+		return ;
+	close(fd);
 	std::string nick = c->getNick();
 	if (!nick.empty()) {
 		std::list<Channel>::iterator end = this->_channel.end();
 		for (std::list<Channel>::iterator it = this->_channel.begin(); it != end; it++) {
 			try {
 				c->getChannel()[it->getNick()];
-				std::vector<size_t> &clientFd = it->getClientsFD();
-				std::vector<size_t>::iterator rtn = std::find(clientFd.begin(), clientFd.end(), c->getFd());
+				std::vector<int> &clientFd = it->getClientsFD();
+				for (std::vector<int>::iterator itB = clientFd.begin(); itB != clientFd.end();) {
+					Client	&itClient = this->getClient(*itB);
+					if (*itB == fd) {
+						itB = clientFd.erase(itB);
+					} else {
+						if (!c->getBufferQuit().empty() && itClient.quitRequest == CLIENT_QUIT_NONE)
+							this->sendToClient(itClient, c->getBufferQuit());
+						++itB;
+					}
+				}
+				std::vector<int>::iterator rtn = std::find(clientFd.begin(), clientFd.end(), c->getFd());
 				if (rtn != clientFd.end())
 					clientFd.erase(rtn);
 			} catch (std::exception &e) {(void)e;}
@@ -76,6 +89,88 @@ int Server::newConnection()
 }
 
 #ifdef __APPLE__
+static void	setKqueueMode(int evfd, int fd, int16_t flag, uint16_t mode) {
+	struct kevent ev;
+	EV_SET(&ev, fd, flag, mode, 0, 0, NULL);
+	kevent(evfd, &ev, 1, NULL, 0, NULL);
+}
+
+void	delKqueueClient(Server &serv, int evfd, int fd) {
+	setKqueueMode(evfd, fd, EVFILT_WRITE, EV_DELETE);
+	setKqueueMode(evfd, fd, EVFILT_READ, EV_DELETE);
+	serv.delClient(fd);
+}
+
+bool	Server::run() {
+	signal(SIGPIPE, SIG_IGN);
+	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)
+		return (false);
+	int evfd = kqueue();
+	if (evfd == -1) {
+		close(this->_sockServerFD);
+		return (false);
+	}
+	setKqueueMode(evfd, this->_sockServerFD, EVFILT_READ, EV_ADD);
+	struct kevent events[MAX_EVENTS];
+	while (true) {
+		int nEvents = kevent(evfd, NULL, 0, events, MAX_EVENTS, NULL);
+		for (int i = 0; i < nEvents; ++i) {
+			int currFd = events[i].ident;
+			if (events[i].flags & EV_ERROR) {
+				delKqueueClient(*this, evfd, currFd);
+				continue;
+			}
+			if (currFd == this->_sockServerFD) {
+				int	newClientFd = this->newConnection();
+				if (newClientFd != -1)
+					setKqueueMode(evfd, newClientFd, EVFILT_READ, EV_ADD);
+			} else {
+				if (events[i].filter == EVFILT_READ) {
+					char	buffer[MAX_PACKET_SIZE + 1];
+					ssize_t	readN = recv(currFd, buffer, MAX_PACKET_SIZE, 0);
+					if (readN < 1) {
+						delKqueueClient(*this, evfd, currFd);
+						continue ;
+					}
+					buffer[readN]= '\0';
+					this->_clients[currFd]->buffer += buffer;
+					this->doCommand(currFd);
+					while (!this->poolOut.empty()) {
+						int	outFd = this->poolOut.front();
+						setKqueueMode(evfd, outFd, EVFILT_WRITE, EV_ADD);
+						this->poolOut.pop();
+					}
+				}
+				if (events[i].filter == EVFILT_WRITE) {
+					int	outFd = currFd;
+					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), this->_clients[outFd]->getBufferOut().size(), 0);
+					if (writeN != -1) {
+						this->_clients[outFd]->getBufferOut().erase(0, writeN);
+					} else {
+						delKqueueClient(*this, evfd, currFd);
+						continue;
+					}
+					if (this->_clients[outFd]->getBufferOut().empty()) {
+						setKqueueMode(evfd, outFd, EVFILT_WRITE, EV_DELETE);
+						if (this->_clients[outFd]->quitRequest == CLIENT_QUIT_REQUEST)
+							this->_clients[outFd]->quitRequest = CLIENT_QUIT_ACCEPT;
+					}
+				}
+			}
+		}
+		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
+			Client	&c = this->getClient(*it);
+			if (c.quitRequest == CLIENT_QUIT_ACCEPT) {
+				delKqueueClient(*this, evfd, *it);
+				it = this->poolQuit.erase(it);
+			} else
+				++it;
+		}
+	}
+	close(evfd);
+	close(this->_sockServerFD);
+	return (true);
+}
 #elif defined(__linux__)
 
 void	delEpollClient(Server &serv, int epfd, int fd) {
@@ -111,22 +206,24 @@ bool	Server::run() {
 	while (true) {
 		int nEvents = epoll_wait(epfd, events, MAX_EVENTS, -1);
 		for (int i = 0; i < nEvents; ++i) {
-			if (events[i].data.fd == this->_sockServerFD) {
+			int currFd = events[i].data.fd;
+			if (currFd == this->_sockServerFD) {
 				int	newClientFd = this->newConnection();
-				setEpollMode(epfd, newClientFd, EPOLL_CTL_ADD, EPOLLIN);
+				if (newClientFd != -1)
+					setEpollMode(epfd, newClientFd, EPOLL_CTL_ADD, EPOLLIN);
 			} else if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-				delEpollClient(*this, epfd, events[i].data.fd);
+				delEpollClient(*this, epfd, currFd);
 			} else {
 				if (events[i].events & EPOLLIN) {
 					char	buffer[MAX_PACKET_SIZE + 1];
-					ssize_t	readN = recv(events[i].data.fd, buffer, MAX_PACKET_SIZE, 0);
+					ssize_t	readN = recv(currFd, buffer, MAX_PACKET_SIZE, 0);
 					if (readN < 1) {
-						delEpollClient(*this, epfd, events[i].data.fd);
+						delEpollClient(*this, epfd, currFd);
 						continue ;
 					}
 					buffer[readN]= '\0';
-					this->_clients[events[i].data.fd]->buffer += buffer;
-					this->doCommand(events[i].data.fd);
+					this->_clients[currFd]->buffer += buffer;
+					this->doCommand(currFd);
 					while (!this->poolOut.empty()) {
 						int	outFd = this->poolOut.front();
 						setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
@@ -134,24 +231,29 @@ bool	Server::run() {
 					}
 				}
 				if (events[i].events & EPOLLOUT) {
-					int	outFd = events[i].data.fd;
-					size_t	buffSize = this->_clients[outFd]->getBufferOut().size() < MAX_PACKET_SIZE ? this->_clients[outFd]->getBufferOut().size() : MAX_PACKET_SIZE;
-					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), buffSize, 0);
+					int	outFd = currFd;
+					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), this->_clients[outFd]->getBufferOut().size(), 0);
 					if (writeN != -1) {
 						this->_clients[outFd]->getBufferOut().erase(0, writeN);
 					} else {
-						delEpollClient(*this, epfd, events[i].data.fd);
+						delEpollClient(*this, epfd, currFd);
 						continue;
 					}
-					if (this->_clients[outFd]->getBufferOut().empty())
+					if (this->_clients[outFd]->getBufferOut().empty()) {
 						setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN);
+						if (this->_clients[outFd]->quitRequest == CLIENT_QUIT_REQUEST)
+							this->_clients[outFd]->quitRequest = CLIENT_QUIT_ACCEPT;
+					}
 				}
 			}
 		}
-		while (!this->poolQuit.empty()) {
-			int	outFd = this->poolQuit.front();
-			delEpollClient(*this, epfd, outFd);
-			this->poolQuit.pop();
+		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
+			Client	&c = this->getClient(*it);
+			if (c.quitRequest == CLIENT_QUIT_ACCEPT) {
+				delEpollClient(*this, epfd, *it);
+				it = this->poolQuit.erase(it);
+			} else
+				++it;
 		}
 	}
 	close(epfd);

@@ -28,7 +28,7 @@ class Channel {
 	protected:
 		std::string				_nick;
 		std::string				_topic;
-		std::vector<size_t>		_clientsFD;
+		std::vector<int>		_clientsFD;
 		AccessType				_mode;
 	public:
 		Channel();
@@ -38,9 +38,9 @@ class Channel {
 		void				setNick(std::string nick);
 		std::string			getTopic(void) const;
 		void				setTopic(std::string topic);
-		std::vector<size_t>	getClientsFD(void) const;
-		std::vector<size_t>	&getClientsFD(void);
-		void				addClientsFD(size_t fd);
+		std::vector<int>	getClientsFD(void) const;
+		std::vector<int>	&getClientsFD(void);
+		void				addClientsFD(int fd);
 
 		AccessType			getMode(void) const;
 		bool				checkMode(AccessType mode) const;

@@ -9,6 +9,9 @@
 # define ACCESS_ADM 0x4
 # define ACCESS_OPR 0x2
 # define ACCESS_USR 0x1
+# define CLIENT_QUIT_NONE 0x0
+# define CLIENT_QUIT_REQUEST 0x1
+# define CLIENT_QUIT_ACCEPT 0x2
 
 class Channel;
 
@@ -23,6 +26,7 @@ class Client {
 		std::string		_serverName;
 		std::string		_realName;
 		std::string		_bufferOut;
+		std::string		_bufferQuit;
 		std::string		_host;
 		int				_port;
 		int				_avertissements;
@@ -43,6 +47,8 @@ class Client {
 		void											setBufferOut(std::string bufferOut);
 		void											addBufferOut(std::string bufferOut);
 		std::string										&getBufferOut();
+		void											setBufferQuit(std::string bufferQuit);
+		std::string										&getBufferQuit();
 		const Trie<std::pair<Channel *, AccessType> >	&getChannel(void) const;
 		void											setFd(size_t fd);
 		size_t											getFd() const;
@@ -51,7 +57,8 @@ class Client {
 		void											addAccess(const std::string &toCheck, AccessType flag);
 		void											delAccess(const std::string &toCheck, AccessType flag) const;
 		bool											checkFlag(const std::string &toCheck, AccessType mode) const;
-		std::string	buffer;
+		std::string										buffer;
+		uint8_t											quitRequest;
 };
 
 #endif

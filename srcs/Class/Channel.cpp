@@ -35,17 +35,17 @@ void				Channel::setTopic(std::string topic)
 	this->_topic = topic;
 }
 
-std::vector<size_t>	Channel::getClientsFD(void) const
+std::vector<int>	Channel::getClientsFD(void) const
 {
 	return (this->_clientsFD);
 }
 
-std::vector<size_t>	&Channel::getClientsFD(void)
+std::vector<int>	&Channel::getClientsFD(void)
 {
 	return (this->_clientsFD);
 }
 
-void				Channel::addClientsFD(size_t fd)
+void				Channel::addClientsFD(int fd)
 {
 	this->_clientsFD.push_back(fd);
 }

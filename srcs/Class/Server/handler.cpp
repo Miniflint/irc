@@ -350,8 +350,7 @@ bool	Server::handleQuit(Client &c, std::istringstream &iss)
 
 	std::string message(":");
 	message.append(this->_ip).append(" :Thanks for being here for some time !\r\n");
-	this->sendToClient(c, message);
-	this->poolQuit.push(c.getFd());
+	this->deconnectClient(c.getFd(), message, "bye bye la team");
 	return (true);
 }
 bool	Server::handle_quote(Client &c, std::istringstream &iss) 

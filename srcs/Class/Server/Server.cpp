@@ -73,6 +73,21 @@ bool    Server::_validateCommand(cmdFn &func, std::string &command)
 	return (true);
 }
 
+void	Server::deconnectClient(int fd, std::string error, std::string message) {
+	Client	&c = this->getClient(fd);
+	if (!error.empty())
+	{
+		this->sendToClient(c, error);
+		c.quitRequest = CLIENT_QUIT_REQUEST;
+	}
+	if (!c.buffer.empty())
+		c.quitRequest = CLIENT_QUIT_REQUEST;
+	else
+		c.quitRequest = CLIENT_QUIT_ACCEPT;
+	this->poolQuit.push_back(fd);
+	c.setBufferQuit(message);
+}
+
 bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 {
 	Client *c = this->_clients[fd];
@@ -104,7 +119,7 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 		c->setWarning(warnings);
 		// kick user
 		if (warnings > 2)
-			this->poolQuit.push(c->getFd());
+			this->deconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick");
 		std::cout << "You get a warning (" << warnings << ")" << std::endl;
 		return (false);
 	}
