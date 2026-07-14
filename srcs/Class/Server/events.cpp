@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <csignal>
 #ifdef __APPLE__
-#include <sys/event.h>
+# include <sys/event.h>
 #elif defined(__linux__)
 # include <sys/epoll.h>
 #endif

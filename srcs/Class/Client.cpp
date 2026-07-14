@@ -2,7 +2,7 @@
 
 Client::Client() {}
 
-Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(""), _serverName(""), _realName(""), _host(host), _port(port), _avertissements(0), buffer(""), quitRequest(CLIENT_QUIT_NONE) {}
+Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(""), _serverName(""), _realName(""), _host(host), _port(port), _avertissements(0), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
 
 Client::~Client() {}
 
@@ -68,11 +68,25 @@ const std::string	&Client::getRealName() const
 
 void		Client::setBufferOut(std::string bufferOut)
 {
+	const size_t index = bufferOut.find("\r\n");
+	if (index >= MAX_PACKET_SIZE - 2)
+	{
+		bufferOut.resize(MAX_PACKET_SIZE - 2);
+		bufferOut.append("\r\n");
+	}
 	this->_bufferOut = bufferOut;
 }
 
 void		Client::addBufferOut(std::string bufferOut)
 {
+	const size_t index = bufferOut.find("\r\n");
+	if (index == std::string::npos)
+		return ;
+	if (index >= MAX_PACKET_SIZE - 2)
+	{
+		bufferOut.resize(MAX_PACKET_SIZE - 2);
+		bufferOut.append("\r\n");
+	}
 	this->_bufferOut += bufferOut;
 }
 

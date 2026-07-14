@@ -6,12 +6,19 @@
 # include "Channel.hpp"
 # include <sys/socket.h>
 
-# define ACCESS_ADM 0x4
-# define ACCESS_OPR 0x2
-# define ACCESS_USR 0x1
 # define CLIENT_QUIT_NONE 0x0
 # define CLIENT_QUIT_REQUEST 0x1
 # define CLIENT_QUIT_ACCEPT 0x2
+
+# define FLAG_CLIENT_NONE 0x0
+# define FLAG_CLIENT_PASS 0x1
+# define FLAG_CLIENT_NICK 0x2
+# define FLAG_CLIENT_USER 0x4
+# define CHECK_CLIENT_LOG 0x7
+
+# ifndef MAX_PACKET_SIZE
+#  define MAX_PACKET_SIZE 512
+# endif
 
 class Channel;
 
@@ -59,6 +66,7 @@ class Client {
 		bool											checkFlag(const std::string &toCheck, AccessType mode) const;
 		std::string										buffer;
 		uint8_t											quitRequest;
+		uint8_t											flagsLogin;
 };
 
 #endif

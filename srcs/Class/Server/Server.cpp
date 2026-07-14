@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <map>
 
-Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _ip(std::string("0.0.0.0"))
+Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _host(std::string(SERV_HOST_NAME))
 {
 	this->_clients.assign(MAX_SOCKET_FD, NULL);
 	const std::string t[] = {
@@ -21,7 +21,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		&Server::handle_kick, &Server::handle_kill, &Server::handle_knock, &Server::handle_links,
 		&Server::handle_list, &Server::handle_lusers, &Server::handle_mode, &Server::handle_motd,
 		&Server::handle_names, &Server::handleNick, &Server::handle_notice, &Server::handle_oper,
-		&Server::handle_part, &Server::handle_pass, &Server::handle_ping, &Server::handle_pong,
+		&Server::handle_part, &Server::handlePass, &Server::handlePing, &Server::handle_pong,
 		&Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote, &Server::handle_rehash,
 		&Server::handle_rules, &Server::handle_server, &Server::handle_squery, &Server::handle_squit,
 		&Server::handle_setname, &Server::handle_silence, &Server::handle_stats, &Server::handle_summon,
@@ -32,12 +32,11 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	};
 	for (unsigned int i = 0; i <= END; i++)
 		this->_commands.add(t[i], func_list[i]);
-	const std::string replyMsgNumber[] = {"001", "002", "003", "004", "005", "200", "201", "202", "203", "204", "205", "206", "207", "208", "209", "210", "211", "212", "213", "214", "215", "216", "217", "218", "219", "221", "231", "232", "233", "234", "235", "240", "241", "242", "243", "244", "246", "247", "250", "251", "252", "253", "254", "255", "256", "257", "258", "259", "261", "262", "263", "300", "301", "302", "303", "305", "306", "311", "312", "313", "314", "315", "316", "317", "318", "319", "321", "322", "323", "324", "325", "331", "332", "341", "342", "346", "347", "348", "349", "351", "352", "353", "361", "362", "363", "364", "365", "366", "367", "368", "369", "371", "372", "373", "374", "375", "376", "381", "382", "383", "384", "391", "392", "393", "394", "395", "401", "402", "403", "404", "405", "406", "407", "408", "409", "411", "412", "413", "414", "415", "421", "422", "423", "424", "431", "432", "433", "436", "437", "441", "442", "443", "444", "445", "446", "451", "461", "462", "463", "464", "465", "466", "467", "471", "472", "473", "474", "475", "476", "477", "478", "481", "482", "483", "484", "485", "491", "492", "501", "502"};
-	const Server::replyMsg replyMsgFunction[] = {&Server::handleRplWelcome, &Server::handleRplYourhost, &Server::handleRplCreated, &Server::handleRplMyinfo, &Server::handleRplBounce, &Server::handleRplTracelink, &Server::handleRplTraceconnecting, &Server::handleRplTracehandshake, &Server::handleRplTraceunknown, &Server::handleRplTraceoperator, &Server::handleRplTraceuser, &Server::handleRplTraceserver, &Server::handleRplTraceservice, &Server::handleRplTracenewtype, &Server::handleRplTraceclass, &Server::handleRplTracereconnect, &Server::handleRplStatslinkinfo, &Server::handleRplStatscommands, &Server::handleRplStatscline, &Server::handleRplStatsnline, &Server::handleRplStatsiline, &Server::handleRplStatskline, &Server::handleRplStatsqline, &Server::handleRplStatsyline, &Server::handleRplEndofstats, &Server::handleRplUmodeis, &Server::handleRplServiceinfo, &Server::handleRplEndofservices, &Server::handleRplService, &Server::handleRplServlist, &Server::handleRplServlistend, &Server::handleRplStatsvline, &Server::handleRplStatslline, &Server::handleRplStatsuptime, &Server::handleRplStatsoline, &Server::handleRplStatshline, &Server::handleRplStatsping, &Server::handleRplStatsbline, &Server::handleRplStatsdline, &Server::handleRplLuserclient, &Server::handleRplLuserop, &Server::handleRplLuserunknown, &Server::handleRplLuserchannels, &Server::handleRplLuserme, &Server::handleRplAdminme, &Server::handleRplAdminloc1, &Server::handleRplAdminloc2, &Server::handleRplAdminemail, &Server::handleRplTracelog, &Server::handleRplTraceend, &Server::handleRplTryagain, &Server::handleRplNone, &Server::handleRplAway, &Server::handleRplUserhost, &Server::handleRplIson, &Server::handleRplUnaway, &Server::handleRplNowaway, &Server::handleRplWhoisuser, &Server::handleRplWhoisserver, &Server::handleRplWhoisoperator, &Server::handleRplWhowasuser, &Server::handleRplEndofwho, &Server::handleRplWhoischanop, &Server::handleRplWhoisidle, &Server::handleRplEndofwhois, &Server::handleRplWhoischannels, &Server::handleRplListstart, &Server::handleRplList, &Server::handleRplListend, &Server::handleRplChannelmodeis, &Server::handleRplUniqopis, &Server::handleRplNotopic, &Server::handleRplTopic, &Server::handleRplInviting, &Server::handleRplSummoning, &Server::handleRplInvitelist, &Server::handleRplEndofinvitelist, &Server::handleRplExceptlist, &Server::handleRplEndofexceptlist, &Server::handleRplVersion, &Server::handleRplWhoreply, &Server::handleRplNamreply, &Server::handleRplKilldone, &Server::handleRplClosing, &Server::handleRplCloseend, &Server::handleRplLinks, &Server::handleRplEndoflinks, &Server::handleRplEndofnames, &Server::handleRplBanlist, &Server::handleRplEndofbanlist, &Server::handleRplEndofwhowas, &Server::handleRplInfo, &Server::handleRplMotd, &Server::handleRplInfostart, &Server::handleRplEndofinfo, &Server::handleRplMotdstart, &Server::handleRplEndofmotd, &Server::handleRplYoureoper, &Server::handleRplRehashing, &Server::handleRplYoureservice, &Server::handleRplMyportis, &Server::handleRplTime, &Server::handleRplUsersstart, &Server::handleRplUsers, &Server::handleRplEndofusers, &Server::handleRplNousers, &Server::handleErrNosuchnick, &Server::handleErrNosuchserver, &Server::handleErrNosuchchannel, &Server::handleErrCannotsendtochan, &Server::handleErrToomanychannels, &Server::handleErrWasnosuchnick, &Server::handleErrToomanytargets, &Server::handleErrNosuchservice, &Server::handleErrNoorigin, &Server::handleErrNorecipient, &Server::handleErrNotexttosend, &Server::handleErrNotoplevel, &Server::handleErrWildtoplevel, &Server::handleErrBadmask, &Server::handleErrUnknowncommand, &Server::handleErrNomotd, &Server::handleErrNoadmininfo, &Server::handleErrFileerror, &Server::handleErrNonicknamegiven, &Server::handleErrErroneusnickname, &Server::handleErrNicknameinuse, &Server::handleErrNickcollision, &Server::handleErrUnavailresource, &Server::handleErrUsernotinchannel, &Server::handleErrNotonchannel, &Server::handleErrUseronchannel, &Server::handleErrNologin, &Server::handleErrSummondisabled, &Server::handleErrUsersdisabled, &Server::handleErrNotregistered, &Server::handleErrNeedmoreparams, &Server::handleErrAlreadyregistered, &Server::handleErrNopermforhost, &Server::handleErrPasswdmismatch, &Server::handleErrYourebannedcreep, &Server::handleErrYouwillbebanned, &Server::handleErrKeyset, &Server::handleErrChannelisfull, &Server::handleErrUnknownmode, &Server::handleErrInviteonlychan, &Server::handleErrBannedfromchan, &Server::handleErrBadchannelkey, &Server::handleErrBadchanmask, &Server::handleErrNochanmodes, &Server::handleErrBanlistfull, &Server::handleErrNoprivileges, &Server::handleErrChanoprivsneeded, &Server::handleErrCantkillserver, &Server::handleErrRestricted, &Server::handleErrUniqoprivsneeded, &Server::handleErrNooperhost, &Server::handleErrNoservicehost, &Server::handleErrUmodeunknownflag, &Server::handleErrUsersdontmatch};
-	const size_t size = (sizeof(replyMsgNumber) / sizeof(replyMsgNumber[0]));
-	for (unsigned int i = 0; i <= size; i++)
-		this->_replyMsg.add(replyMsgNumber[i], replyMsgFunction[i]);
 	this->_commands.create_graph();
+	this->_channelSpecifiers.channelType = "#";
+	this->_channelSpecifiers.channelLen = 32;
+	this->_channelSpecifiers.channelAuthPrefix = "(ov)@+";
+	this->_channelSpecifiers.channelMode = ",,,ismnt";
 }
 
 Server::~Server()
@@ -48,30 +47,25 @@ Server::~Server()
 	this->_clients.clear();
 }
 
-bool    Server::_validateAccess(Client *c, std::string &command)
+bool    Server::_validateAccess(Client &c, std::string &command)
 {
-	if (command == "NICK" || command == "USER" || command == "QUIT")
+	// if (command != "PASS" && !(c->flagsLogin & FLAG_CLIENT_PASS))
+	// 	return (false);
+	// if (command == "USER" && (c->flagsLogin & FLAG_CLIENT_USER))
+	// 	return (false);
+	if (command == "PASS" || command == "NICK" || command == "USER" || command == "QUIT")
 		return (true);
-	try {
-		const std::string	nick = c->getNick();
-		if (c->getUserName().empty() || nick.empty())
-			throw std::exception();
-		(void)this->_clientTrie[nick];
-	} catch (std::exception &e) {
-		std::cerr << "[ERROR]: User not authorized" << std::endl;
-		c->buffer = "";
-		return (false);
-	}
+	if (c.flagsLogin != CHECK_CLIENT_LOG)
+		return (this->handleErrNotregistered(c), this->poolOut.push(c.getFd()), false);
 	return (true);
 }
 
-bool    Server::_validateCommand(cmdFn &func, std::string &command)
+bool    Server::_validateCommand(Client &c, cmdFn &func, std::string &command)
 {
 	try {
 		func = this->_commands[command];
 	} catch (std::exception &e) {
-		std::cerr << "[ERROR]: " << command << " does not exist" << std::endl;
-		return (false);
+		return (this->handleErrUnknowncommand(c, command), this->poolOut.push(c.getFd()), false);
 	};
 	return (true);
 }
@@ -94,39 +88,43 @@ void	Server::deconnectClient(int fd, std::string error, std::string message) {
 bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 {
 	Client *c = this->_clients[fd];
-	if (!c || c->buffer.size() <= 2)
+	if (!c)
 		return (false);
-	size_t index = c->buffer.find("\r\n");
-	if (index == std::string::npos && c->buffer.length() < MAX_PACKET_SIZE)
-		return (false);
-	else if (index == std::string::npos && c->buffer.length() >= MAX_PACKET_SIZE) {
-		c->setWarning(c->getWarning() + 1);
-		c->buffer.clear();
-		return (false);
-	} else if (index >= MAX_PACKET_SIZE ) {
-		c->setWarning(c->getWarning() + 1);
-		c->buffer.erase(0, index + 2);
-		return (false);
-	}
-	c->buffer.replace(index, 2, "\n");
-	std::string			sanitizedClientBuffer(c->buffer);
-	c->buffer.erase(0, index);
-	std::istringstream	iss(sanitizedClientBuffer);
-	std::string			cmd;
-	cmdFn				func;
-	std::cout << sanitizedClientBuffer << std::endl;
-	iss >> cmd;
-	if (!this->_validateCommand(func, cmd) || !this->_validateAccess(c, cmd))
+	while (true)
 	{
-		const int warnings = c->getWarning() + 1;
-		c->setWarning(warnings);
-		// kick user
-		if (warnings > 2)
-			this->deconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick");
-		std::cout << "You get a warning (" << warnings << ")" << std::endl;
-		return (false);
+		if (c->buffer.size() <= 2)
+			return (false);
+		size_t index = c->buffer.find("\r\n");
+		if (index == std::string::npos && c->buffer.length() < MAX_PACKET_SIZE)
+			return (false);
+		else if (index == std::string::npos && c->buffer.length() >= MAX_PACKET_SIZE) {
+			c->setWarning(c->getWarning() + 1);
+			c->buffer.clear();
+			return (false);
+		} else if (index + 2 >= MAX_PACKET_SIZE ) {
+			c->setWarning(c->getWarning() + 1);
+			c->buffer.erase(0, index + 2);
+			continue;
+		}
+		std::string			sanitizedClientBuffer(c->buffer.begin(), (c->buffer.begin() + index));
+		c->buffer.erase(0, index + 2);
+		std::istringstream	iss(sanitizedClientBuffer);
+		std::string			cmd;
+		cmdFn				func;
+		iss >> cmd;
+		std::cout << sanitizedClientBuffer << std::endl; 
+		if (!this->_validateAccess(*c, cmd) || !this->_validateCommand(*c, func, cmd))
+		{
+			const int warnings = c->getWarning() + 1;
+			c->setWarning(warnings);
+			// kick user
+			if (warnings > 2)
+				this->deconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick");
+			std::cout << "You get a warning (" << warnings << ")" << std::endl;
+			continue ;
+		}
+		(this->*func)(*c, iss);
 	}
-	return ((this->*func)(*c, iss));
 }
 
 Client	&Server::getClient(size_t fd)
@@ -136,12 +134,12 @@ Client	&Server::getClient(size_t fd)
 
 std::string						Server::getIp(void) const
 {
-	return (this->_ip);
+	return (this->_host);
 }
 
 void							Server::setIp(std::string ip)
 {
-	this->_ip = ip;
+	this->_host = ip;
 }
 
 bool	Server::sendToClient(Client &source, std::string message)
@@ -151,12 +149,17 @@ bool	Server::sendToClient(Client &source, std::string message)
 	return (true);
 }
 
-bool	Server::sendRPLToClient(Client &source, std::string message, uint16_t code)
+const std::string		&Server::_getPassword()
 {
-	std::map<uint16_t, std::string> t;
-	(void)t;
-	(void)code;
-	source.addBufferOut(message);
-	this->poolOut.push(source.getFd());
-	return (true);
+	return (this->_password);
+}
+
+void					Server::_sendAllWelcome(Client &c)
+{
+	this->handleRplWelcome(c);
+	this->handleRplYourhost(c);
+	this->handleRplCreated(c);
+	this->handleRplMyinfo(c);
+	this->handleRplISupport(c);
+	this->poolOut.push(c.getFd());
 }
