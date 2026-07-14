@@ -60,6 +60,12 @@ bool	Server::handle_away(Client &c, std::istringstream &iss)
 	std::cout << "In " << "away: " << token << std::endl;
 	return (true);
 }
+bool	Server::handle_cap(Client &c, std::istringstream &iss) 
+{
+	(void)c;
+	(void)iss;
+	return (true);
+}
 bool	Server::handle_cnotice(Client &c, std::istringstream &iss) 
 {
 	(void)c;
@@ -219,10 +225,10 @@ bool	Server::handleNick(Client &c, std::istringstream &iss)
 	std::string token;
 
 	iss >> token >> std::noskipws;
-	if (iss.fail())
+	if (iss.fail() || token.empty())
 		return (this->handleErrNoNicknameGiven(c), this->poolOut.push(c.getFd()), false);
-	if (token.empty() || token.length() > 9)
-		return (this->handleErrNoNicknameGiven(c), this->poolOut.push(c.getFd()), false);
+	if (token.length() > this->_clientSpecifiers.nickLenMax)
+		return (this->handleErrErroneousNickname(c, token), this->poolOut.push(c.getFd()), false);
 	if (token[0] == ':' || this->_channelSpecifiers.channelType.find(token[0]) != std::string::npos)
 		return (this->handleErrNickCollision(c, token), this->poolOut.push(c.getFd()), false);
 	if (!_checkInTrieExist(this->_clientTrie, token))

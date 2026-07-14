@@ -22,6 +22,7 @@ class Channel;
 enum E_commands {
 	ADMIN, // ADMIN [<target>]
 	AWAY, // AWAY [<message>]
+	CAP, // CAP from client. Do nothing
 	CNOTICE, // CNOTICE <nickname> <channel> :<message>
 	CPRIVMSG, // CPRIVMSG <nickname> <channel> :<message>
 	CONNECT, // CONNECT <target server> [<port> [<remote server>]] (RFC 1459)

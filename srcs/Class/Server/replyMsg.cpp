@@ -59,7 +59,13 @@ void    Server::handleRplISupport(Client &c)
     chanMode.append(this->_channelSpecifiers.channelMode);
     std::string chanPrefix(" PREFIX=");
     chanPrefix.append(this->_channelSpecifiers.channelAuthPrefix);
-    rplMessage.append(chanType).append(chanLen).append(chanMode).append(chanPrefix).append("\r\n");
+    std::string nickLen(" NICKLEN=");
+    oss.clear();
+    oss << this->_channelSpecifiers.channelLen;
+    nickLen += oss.str();
+    std::string endComment(" :are supported by this server");
+    rplMessage.append(chanType).append(chanLen).append(chanMode)
+        .append(chanPrefix).append(nickLen).append(endComment).append("\r\n");
     c.addBufferOut(rplMessage);
 }
 void    Server::handleRplTracelink(Client &c)
@@ -499,8 +505,12 @@ void    Server::handleRplInfo(Client &c)
 }
 void    Server::handleRplMotd(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+    std::vector<std::string>::const_iterator end = this->_motd.announcements.end();
+    for (std::vector<std::string>::const_iterator it = this->_motd.announcements.begin(); it != end; it++) {
+        std::string rplMessage(this->_rplPrefix("372", c.getNick()));
+        rplMessage.append(":-").append(*it).append("\r\n");
+        c.addBufferOut(rplMessage);
+    }
 }
 void    Server::handleRplInfostart(Client &c)
 {
@@ -514,12 +524,14 @@ void    Server::handleRplEndofinfo(Client &c)
 }
 void    Server::handleRplMotdstart(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("375", c.getNick()));
+    rplMessage.append(":-").append(this->_motd.motd).append("\r\n");
     c.addBufferOut(rplMessage);
 }
 void    Server::handleRplEndofmotd(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("376", c.getNick()));
+    rplMessage.append(":End of /MOTD\r\n");
     c.addBufferOut(rplMessage);
 }
 void    Server::handleRplYoureoper(Client &c)
@@ -666,15 +678,18 @@ void    Server::handleErrFileerror(Client &c)
 }
 void    Server::handleErrNoNicknameGiven(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("432", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("431", c.getNick()));
     std::string middlePrefix(":No nickname given\r\n");
-    rplMessage.resize(rplMessage.size() + middlePrefix.size());
+    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
     rplMessage.append(middlePrefix);
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrErroneusnickname(Client &c)
+void    Server::handleErrErroneousNickname(Client &c, std::string targetNickName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("432", c.getNick()));
+    std::string middlePrefix(" :Is erroneous\r\n");
+    rplMessage.reserve(rplMessage.size() + targetNickName.size() + middlePrefix.size());
+    rplMessage.append(targetNickName).append(1, ' ').append(middlePrefix);
     c.addBufferOut(rplMessage);
 }
 void    Server::handleErrNicknameInUse(Client &c, std::string targetNickName)
@@ -758,7 +773,7 @@ void    Server::handleErrPasswdMismatch(Client &c)
 {
     std::string rplMessage(this->_rplPrefix("464", c.getNick()));
     std::string middlePrefix(":Password mismatch | This Server require a password\r\n");
-    rplMessage.resize(rplMessage.size() + middlePrefix.size());
+    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
     rplMessage.append(middlePrefix);
     c.addBufferOut(rplMessage);
 }

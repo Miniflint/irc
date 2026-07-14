@@ -6,7 +6,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 {
 	this->_clients.assign(MAX_SOCKET_FD, NULL);
 	const std::string t[] = {
-		"ADMIN", "AWAY", "CNOTICE", "CPRIVMSG", "CONNECT", "DIE", "ERROR",
+		"ADMIN", "AWAY", "CAP", "CNOTICE", "CPRIVMSG", "CONNECT", "DIE", "ERROR",
 		"HELP", "INFO", "INVITE", "ISON", "JOIN", "KICK", "KILL", "KNOCK",
 		"LINKS","LIST","LUSERS","MODE","MOTD","NAMES","NICK","NOTICE","OPER",
 		"PART","PASS","PING","PONG","PRIVMSG","QUIT","QUOTE","REHASH","RULES",
@@ -15,20 +15,20 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		"WALLOPS","WATCH","WHO","WHOIS","WHOWAS", "DCC", ":"
 	};
 	const Server::cmdFn func_list[] = {
-		&Server::handle_admin, &Server::handle_away, &Server::handle_cnotice, &Server::handle_cprivmsg,
-		&Server::handle_connect, &Server::handle_die, &Server::handle_error, &Server::handle_help,
-		&Server::handle_info, &Server::handle_invite, &Server::handle_ison, &Server::handle_join,
-		&Server::handle_kick, &Server::handle_kill, &Server::handle_knock, &Server::handle_links,
-		&Server::handle_list, &Server::handle_lusers, &Server::handle_mode, &Server::handle_motd,
-		&Server::handle_names, &Server::handleNick, &Server::handle_notice, &Server::handle_oper,
-		&Server::handle_part, &Server::handlePass, &Server::handlePing, &Server::handle_pong,
-		&Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote, &Server::handle_rehash,
-		&Server::handle_rules, &Server::handle_server, &Server::handle_squery, &Server::handle_squit,
-		&Server::handle_setname, &Server::handle_silence, &Server::handle_stats, &Server::handle_summon,
-		&Server::handle_time, &Server::handle_topic, &Server::handle_trace, &Server::handleUser,
-		&Server::handle_userhost, &Server::handle_userip, &Server::handle_users, &Server::handle_version,
-		&Server::handle_wallops, &Server::handle_watch, &Server::handle_who, &Server::handle_whois,
-		&Server::handle_whowas, &Server::handleDcc, &Server::handle_message
+		&Server::handle_admin, &Server::handle_away, &Server::handle_cap, &Server::handle_cnotice,
+		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handle_die, &Server::handle_error,
+		&Server::handle_help, &Server::handle_info, &Server::handle_invite, &Server::handle_ison,
+		&Server::handle_join, &Server::handle_kick, &Server::handle_kill, &Server::handle_knock,
+		&Server::handle_links, &Server::handle_list, &Server::handle_lusers, &Server::handle_mode,
+		&Server::handle_motd, &Server::handle_names, &Server::handleNick, &Server::handle_notice,
+		&Server::handle_oper, &Server::handle_part, &Server::handlePass, &Server::handlePing,
+		&Server::handle_pong, &Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote,
+		&Server::handle_rehash, &Server::handle_rules, &Server::handle_server, &Server::handle_squery,
+		&Server::handle_squit, &Server::handle_setname, &Server::handle_silence, &Server::handle_stats,
+		&Server::handle_summon, &Server::handle_time, &Server::handle_topic, &Server::handle_trace,
+		&Server::handleUser, &Server::handle_userhost, &Server::handle_userip, &Server::handle_users,
+		&Server::handle_version, &Server::handle_wallops, &Server::handle_watch, &Server::handle_who,
+		&Server::handle_whois, &Server::handle_whowas, &Server::handleDcc, &Server::handle_message
 	};
 	for (unsigned int i = 0; i <= END; i++)
 		this->_commands.add(t[i], func_list[i]);
@@ -37,6 +37,11 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_channelSpecifiers.channelLen = 32;
 	this->_channelSpecifiers.channelAuthPrefix = "(ov)@+";
 	this->_channelSpecifiers.channelMode = ",,,ismnt";
+	this->_motd.motd = "This is the current message of the day";
+	this->_motd.announcements.push_back("Today is the day we are working on channels");
+	this->_motd.announcements.push_back("And we hope to be able to live long");
+	this->_motd.announcements.push_back("Please Respect the rules !");
+	this->_clientSpecifiers.nickLenMax = 12;
 }
 
 Server::~Server()
@@ -53,7 +58,7 @@ bool    Server::_validateAccess(Client &c, std::string &command)
 	// 	return (false);
 	// if (command == "USER" && (c->flagsLogin & FLAG_CLIENT_USER))
 	// 	return (false);
-	if (command == "PASS" || command == "NICK" || command == "USER" || command == "QUIT")
+	if (command == "PASS" || command == "NICK" || command == "USER" || command == "QUIT" || command=="CAP")
 		return (true);
 	if (c.flagsLogin != CHECK_CLIENT_LOG)
 		return (this->handleErrNotregistered(c), this->poolOut.push(c.getFd()), false);
@@ -161,5 +166,8 @@ void					Server::_sendAllWelcome(Client &c)
 	this->handleRplCreated(c);
 	this->handleRplMyinfo(c);
 	this->handleRplISupport(c);
+	this->handleRplMotdstart(c);
+	this->handleRplMotd(c);
+	this->handleRplEndofmotd(c);
 	this->poolOut.push(c.getFd());
 }

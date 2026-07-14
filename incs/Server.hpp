@@ -21,6 +21,15 @@ typedef struct S_ChannelSpecifiers {
 	std::string	channelAuthPrefix;
 }	t_ChannelSpecifiers;
 
+typedef struct S_ClientSpecifiers {
+	uint16_t	nickLenMax;
+}	t_ClientSpecifiers;
+
+typedef struct S_Motd {
+	std::string					motd;
+	std::vector<std::string>	announcements;
+}	t_Motd;
+
 class Server {
 	typedef bool (Server::*cmdFn)(Client &c, std::istringstream &rest);
 	private:
@@ -34,6 +43,8 @@ class Server {
 		Trie<Channel *>			_channelTrie;
 		std::list<Channel>		_channel;
 		t_ChannelSpecifiers		_channelSpecifiers;
+		t_ClientSpecifiers		_clientSpecifiers;
+		t_Motd					_motd;
 		// bool					_init();
 		// bool					_clientAdd();
 
@@ -64,6 +75,7 @@ class Server {
 		// c'est horrible
 		bool handle_admin(Client &c, std::istringstream &rest);
 		bool handle_away(Client &c, std::istringstream &rest);
+		bool handle_cap(Client &c, std::istringstream &iss);
 		bool handle_cnotice(Client &c, std::istringstream &rest);
 		bool handle_cprivmsg(Client &c, std::istringstream &rest);
 		bool handle_connect(Client &c, std::istringstream &rest);
@@ -242,7 +254,7 @@ class Server {
 		void handleErrNoadmininfo(Client &c);
 		void handleErrFileerror(Client &c);
 		void handleErrNoNicknameGiven(Client &c);
-		void handleErrErroneusnickname(Client &c);
+		void handleErrErroneousNickname(Client &c, std::string targetNickName);
 		void handleErrNicknameInUse(Client &c, std::string targetNickName);
 		void handleErrNickCollision(Client &c, std::string targetNickName);
 		void handleErrUnavailresource(Client &c);
