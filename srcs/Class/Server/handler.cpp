@@ -483,7 +483,7 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 		return (this->handleErrNotregistered(c), this->poolOut.push(c.getFd()), false);
 	if (c.flagsLogin & FLAG_CLIENT_USER)
 		return (this->handleErrAlreadyRegistered(c), this->poolOut.push(c.getFd()), false);
-
+ 
 	std::string userName, hostName, serverName, realName;
 	if (!(iss >> userName >> hostName >> serverName)
 		|| userName.empty() || hostName.empty() || serverName.empty())
@@ -492,7 +492,7 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 	if (realName.empty())
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	size_t indexTrim = realName.find_first_not_of(' ');
-	if (indexTrim == std::string::npos || realName[indexTrim] != ':')
+	if (indexTrim == std::string::npos)
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	realName.erase(0, indexTrim + 1);
 	if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1 || realName.length() < 1)

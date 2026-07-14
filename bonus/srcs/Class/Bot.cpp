@@ -7,6 +7,7 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include <iostream>
+#include <sstream>
 #define	BUFFER_SIZE 512
 
 Bot::Bot(std::string ip, std::string port, std::string password, std::string name) : _ip(ip), _password(password), _name(name), _bufferIn(""), _bufferOut("") {
@@ -61,10 +62,45 @@ bool	Bot::_register(int sockFd) {
 }
 
 void	Bot::doCommand(std::string &cmdLine, int sockFd) {
-	size_t	finded = cmdLine.find("PRIVMSG");
-	if (finded != std::string::npos) {
-		std::cout << "PRIVMSG !!!" << std::endl;
+	std::istringstream	iss(cmdLine);
+	std::string	sendSrc;
+	std::string	privmsg;
+	iss >> sendSrc >> privmsg;
+	if (iss.fail() || iss.eof() || privmsg != "PRIVMSG")
+		return ;
+	std::cout << privmsg << std::endl;
+	std::string	token;
+	iss >> token;
+	if (iss.fail() || iss.eof() || token.empty())
+		return ;
+	std::cout << token << std::endl;
+	if (token != this->_name)
+		privmsg.append(1, ' ').append(token);
+	else
+		privmsg.append(1, ' ').append(sendSrc.begin() + 1, sendSrc.begin() + sendSrc.find('!'));
+	std::cout << privmsg << std::endl;
+	iss >> token;
+	if (iss.fail() || token.empty()) {
+		std::cout << "Pourquoi ?" << std::endl;
+		return ;
 	}
+	if (token[0] == ':')
+		token.erase(0, 1);
+	if (token.empty())
+		return ;
+	std::cout << token << std::endl;
+	if (token == "/ping")
+		privmsg.append(" :Pong !\r\n");
+	else if (token == "/joke")
+		privmsg.append(" :C'est l'histoire d'une put*... [joke canceled]\r\n");
+	else if (token == "/lightspeed")
+		privmsg.append(" :299'792'458 m/s\r\n");
+	else if (token == "/second")
+		privmsg.append(" :9'192'631'770 periodes de radiation, Cesium 133\r\n");
+	else
+		return ;
+	std::cout << privmsg << std::flush;
+	send(sockFd, privmsg.c_str(), privmsg.size(), 0);
 }
 
 bool	Bot::run() {
