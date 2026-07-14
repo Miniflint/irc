@@ -214,31 +214,33 @@ bool	Server::handle_names(Client &c, std::istringstream &iss)
 }
 bool	Server::handleNick(Client &c, std::istringstream &iss) 
 {
+	if (!(c.flagsLogin & FLAG_CLIENT_PASS))
+		return (this->handleErrNotregistered(c), this->poolOut.push(c.getFd()), false);
 	std::string token;
 
 	iss >> token >> std::noskipws;
 	if (iss.fail())
-		return (std::cerr << "[ERROR]: istringstream formatting error" << std::endl, false);
+		return (this->handleErrNoNicknameGiven(c), this->poolOut.push(c.getFd()), false);
 	if (token.empty() || token.length() > 9)
-		return (std::cerr << "[ERROR]: Invalid nickname" << std::endl, false);
+		return (this->handleErrNoNicknameGiven(c), this->poolOut.push(c.getFd()), false);
+	if (token[0] == ':' || this->_channelSpecifiers.channelType.find(token[0]) != std::string::npos)
+		return (this->handleErrNickCollision(c, token), this->poolOut.push(c.getFd()), false);
 	if (!_checkInTrieExist(this->_clientTrie, token))
-		return (std::cerr << "[ERROR]: User Already exist" << std::endl, false);
-	std::string oldUserName(c.getNick());
-	if (!_checkInTrieExist(this->_clientTrie, oldUserName))
+		return (this->handleErrNicknameInUse(c, token), this->poolOut.push(c.getFd()), false);
+	std::string oldUserName = c.getNick();
+	if (c.flagsLogin == CHECK_CLIENT_LOG)
 	{
-		std::cout << "[SUCCESS]: Deleting into trie (nickName) - " << oldUserName << std::endl;
 		this->_clientTrie.del(oldUserName);
+		// faire message pour changement de nom
 	}
 	c.setNick(token);
-	if (!c.getUserName().empty())
+	if (c.flagsLogin & FLAG_CLIENT_USER)
 	{
-		std::cout << "[SUCCESS]: Adding to trie (nickName) - " << token << std::endl;
 		this->_clientTrie.add(token, c.getFd());
-		this->addRPLToClient(c, RPL_WELCOME);
-		this->addRPLToClient(c, RPL_YOURHOST);
-		this->sendRPLToClient(c, RPL_CREATED);
+		if (!(c.flagsLogin & FLAG_CLIENT_NICK))
+			this->_sendAllWelcome(c);
 	}
-	std::cout << "[SUCCESS]: Changing nickname - " << token << std::endl;
+	c.flagsLogin |= FLAG_CLIENT_NICK;
 	return (true);
 }
 bool	Server::handle_notice(Client &c, std::istringstream &iss) 
@@ -265,23 +267,28 @@ bool	Server::handle_part(Client &c, std::istringstream &iss)
 	std::cout << "In " << "part: " << token << std::endl;
 	return (true);
 }
-bool	Server::handle_pass(Client &c, std::istringstream &iss) 
+bool	Server::handlePass(Client &c, std::istringstream &iss) 
 {
-	(void)c;
+	if (c.flagsLogin & FLAG_CLIENT_PASS)
+		return (this->handleErrAlreadyRegistered(c) ,this->poolOut.push(c.getFd()), false);
 	std::string token;
 	iss >> token;
 	if (iss.fail() || token.empty())
-		return (std::cerr << "Failed to parse token" << std::endl, false);
+		return (this->handleErrNeedMoreParams(c, "PASS") ,this->poolOut.push(c.getFd()), false);
 	if (this->_password.size() != token.size() || !_constantTimeCheck(this->_password, token))
-		return (this->sendRPLToClient(c, ERR_PASSWDMISMATCH), false);
+		return (this->handleErrPasswdMismatch(c) ,this->poolOut.push(c.getFd()), false);
+	c.flagsLogin |= FLAG_CLIENT_PASS;
 	return (true);
 }
-bool	Server::handle_ping(Client &c, std::istringstream &iss) 
+bool	Server::handlePing(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "ping: " << token << std::endl;
+	if (iss.fail() || token.empty())
+		return (this->handleErrNeedMoreParams(c, "PING"), this->poolOut.push(c.getFd()), false);
+	std::string	pongRet = ":";
+	pongRet.append(this->_host).append(" PONG ").append(this->_host).append(" ").append(token).append("\r\n");
+	this->sendToClient(c, pongRet);
 	return (true);
 }
 bool	Server::handle_pong(Client &c, std::istringstream &iss) 
@@ -297,13 +304,13 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 	std::string target, message;
 	iss >> target;
 	if (iss.fail() || target.empty())
-		return (std::cerr << "[ERROR]: Could not parse the target" << std::endl, false);
+		return (this->handleErrNoRecipient(c, "PRIVMSG"), this->poolOut.push(c.getFd()), false);
 	std::getline(iss, message);
 	if (message.empty())
-		return (std::cerr << "[ERROR]: Could not parse the message" << std::endl, false);
+		return (this->handleErrNotexttosend(c), this->poolOut.push(c.getFd()), false);
 	size_t index = message.find_first_not_of(' ');
 	if (index == std::string::npos || message[index] != ':')
-		return (std::cerr << "[ERROR]: Message is in wrong format" << std::endl, false);
+		return (this->handleErrNotexttosend(c), this->poolOut.push(c.getFd()), false);
 
 	std::vector<size_t>	clients;
 	std::string realTarget(target);
@@ -317,14 +324,14 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 			try {
 				targetChannel = this->_channelTrie[target];
 			} catch (std::exception &e) {
-				return (std::cerr << "[ERROR]: Channel does not exist" << std::endl, false);
+				return (this->handleErrNosuchchannel(c, target), this->poolOut.push(c.getFd()), false);
 			}
 			if (!targetChannel->checkMode(CHANNEL_NOT_EXTERNAL))
-				return (std::cerr << "[ERROR]: User no write access" << std::endl, false);
+				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
 		if (targetChannel->checkMode(CHANNEL_MODERATED) && 
 			!((c.checkFlag(target, CHANNEL_USER_OPERATOR) || c.checkFlag(target, CHANNEL_USER_VOICE))))
-				return (std::cerr << "[ERROR]: User no write access" << std::endl, false);
+				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
 	}
 	else
@@ -333,25 +340,16 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		try {
 			targetClient = this->_clientTrie[target];
 		} catch (std::exception &e) {
-			return (this->sendRPLToClient(c, ERR_USERNOTINCHANNEL), false);
+			return (this->handleErrNoSuchNick(c, target), this->poolOut.push(c.getFd()), false);
 		}
 		clients.push_back(targetClient);
+		clients.push_back(c.getFd());
 	}
 	std::string		full(_formatBaseRelayMessage(c, "PRIVMSG"));
-	const size_t	overhead = full.length() + 2;
-	if (MAX_PACKET_SIZE > overhead)
-	{
-		full.reserve(MAX_PACKET_SIZE);
-		message.erase(0, 1);
-		full.append(message);
-	}
-	if (full.length() > MAX_PACKET_SIZE - 2)
-		full.resize(MAX_PACKET_SIZE - 2);
-	full.append("\r\n");
+	message.erase(0, 1);
+	full.append(target).append(1, ' ').append(message).append("\r\n");
 	std::vector<size_t>::const_iterator end = clients.end();
 	for (std::vector<size_t>::const_iterator it = clients.begin(); it != end; it++) {
-		if (c.getFd() == *it)
-			continue ;
 		Client *curr = this->_clients[*it];
 		if (!curr)
 			continue ;
@@ -361,11 +359,17 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 }
 bool	Server::handleQuit(Client &c, std::istringstream &iss) 
 {
-	(void)iss;
+	std::string token;
 
+	std::getline(iss, token);
 	std::string message(":");
-	message.append(this->_ip).append(" :Thanks for being here for some time !\r\n");
-	this->deconnectClient(c.getFd(), message, "bye bye la team");
+	message.append(c.getNick()).append(1, '!').append(c.getUserName()).append(1, '@').append(c.getHostName()).append(" QUIT :");
+	if (token.empty())
+		token += "Left without a message";
+	if (token[0] == ':')
+		token.erase(0, 1);
+	token.append("\r\n");
+	this->deconnectClient(c.getFd(), message + "Thanks for being with us\r\n", message + token);
 	return (true);
 }
 bool	Server::handle_quote(Client &c, std::istringstream &iss) 
@@ -474,36 +478,35 @@ bool	Server::handle_trace(Client &c, std::istringstream &iss)
 }
 bool	Server::handleUser(Client &c, std::istringstream &iss) 
 {
-	if (!c.getUserName().empty() || !c.getHostName().empty() ||
-		!c.getServerName().empty() || !c.getRealName().empty())
-		return (std::cerr << "[ERROR]: already has USER" << std::endl, false);
+
+	if (!(c.flagsLogin & FLAG_CLIENT_PASS))
+		return (this->handleErrNotregistered(c), this->poolOut.push(c.getFd()), false);
+	if (c.flagsLogin & FLAG_CLIENT_USER)
+		return (this->handleErrAlreadyRegistered(c), this->poolOut.push(c.getFd()), false);
 
 	std::string userName, hostName, serverName, realName;
-	if (!(iss >> userName >> hostName >> serverName) || iss.fail())
-		return (std::cerr << "[ERROR]: istringstream parsing failed" << std::endl, false);
+	if (!(iss >> userName >> hostName >> serverName)
+		|| userName.empty() || hostName.empty() || serverName.empty())
+		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	std::getline(iss, realName);
 	if (realName.empty())
-		return (std::cerr << "[ERROR]: empty nickname" << std::endl, false);
+		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	size_t indexTrim = realName.find_first_not_of(' ');
 	if (indexTrim == std::string::npos || realName[indexTrim] != ':')
-		return (std::cerr << "[ERROR]: problem parsing realName" << std::endl, false);
+		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	realName.erase(0, indexTrim + 1);
-	if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1)
-		return (std::cerr << "[ERROR]: problem parsing" << std::endl, false);
+	if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1 || realName.length() < 1)
+		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	c.setUserName(userName);
 	c.setHostName(hostName);
 	c.setServerName(serverName);
 	c.setRealName(realName);
-	const std::string &nickName(c.getNick());
-	if (!nickName.empty() && _checkInTrieExist(this->_clientTrie, nickName))
+	if (c.flagsLogin & FLAG_CLIENT_NICK)
 	{
-		std::cout << "[SUCCESS]: Adding to trie (nickName) - " << nickName << std::endl;
-		this->_clientTrie.add(nickName, c.getFd());
+		this->_clientTrie.add(c.getNick(), c.getFd());
+		this->_sendAllWelcome(c);
 	}
-	std::cout << "[SUCCESS]: Setting userName - " << userName << std::endl;
-	std::cout << "[SUCCESS]: Setting hostName - " << hostName << std::endl;
-	std::cout << "[SUCCESS]: Setting serverName - " << serverName << std::endl;
-	std::cout << "[SUCCESS]: Setting realName - " << realName << std::endl;
+	c.flagsLogin |= FLAG_CLIENT_USER;
 	return (true);
 }
 bool	Server::handle_userhost(Client &c, std::istringstream &iss) 

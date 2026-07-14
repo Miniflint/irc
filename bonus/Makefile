@@ -1,29 +1,23 @@
-INC_DIR	:= ./incs
-SRC_DIR	:= ./srcs
-INI_DIR	:= $(SRC_DIR)/Class
-SRV_DIR	:= $(INI_DIR)/Server
-OBJ_DIR	:= ./objs
-BON_DIR := ./bonus
-BON_EX	:= $(BON_DIR)/ircbot
+INC_DIR		:= ./incs
+SRC_DIR		:= ./srcs
+CLASS_DIR	:= $(SRC_DIR)/Class
+OBJ_DIR		:= ./objs
 
-VPATH	:= $(SRC_DIR):$(INI_DIR):$(SRV_DIR)
+VPATH	:= $(SRC_DIR):$(CLASS_DIR)
 
 SRCS	:= main.cpp
-INITS	:= Channel.cpp Client.cpp
-SRVS	:= Server.cpp handler.cpp events.cpp replyMsg.cpp
+CLASS	:= Bot.cpp
 
 SRC_FILES := $(addprefix $(SRC_DIR)/, $(SRCS))
-INI_FILES := $(addprefix $(INI_DIR)/, $(INITS))
-SRV_FILES := $(addprefix $(SRV_DIR)/, $(SRVS))
+INI_FILES := $(addprefix $(CLASS_DIR)/, $(CLASS))
 
 OBJS	:=	$(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:%.cpp=%.o))) \
-			$(addprefix $(OBJ_DIR)/, $(notdir $(INITS:%.cpp=%.o))) \
-			$(addprefix $(OBJ_DIR)/, $(notdir $(SRVS:%.cpp=%.o)))
+			$(addprefix $(OBJ_DIR)/, $(notdir $(CLASS:%.cpp=%.o)))
 
 FLAGS	:= -Wall -Wextra -Werror -std=c++98 -I$(INC_DIR)
 CC		:= /usr/bin/g++
 
-TARGET	:= ircserv
+TARGET	:= ircbot
 
 ifeq ($(OPTI),yes)
 	FLAGS += -O3
@@ -34,9 +28,6 @@ ifeq ($(HARD),yes)
 endif
 
 all: $(TARGET)
-
-bonus: $(TARGET)
-	make -C $(BON_DIR)
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
@@ -52,9 +43,6 @@ clean:
 
 fclean: clean
 	rm -f $(TARGET)
-	@if [ -f "$(BON_EX)" ]; then \
-		$(MAKE) -C $(BON_DIR) fclean; \
-	fi
 
 re: fclean all
 

@@ -1,810 +1,864 @@
 #include "Server.hpp"
 
-std::string Server::handleRplWelcome(Client &c)
+std::string Server::_rplPrefix(std::string code, std::string nickName) const
 {
-    std::string returnString(":Welcome the IRC Server of 42 (Made by Simon, Tricaducee and Miniflint) - ");
+    if (nickName.empty())
+        nickName = "*";
+    std::string rplMessage(":");
+    rplMessage.reserve(this->_host.size() + 5 + nickName.size() + 2);
+    rplMessage.append(this->_host).append(1, ' ').append(code).append(1, ' ').append(nickName).append(1, ' ');
+    return (rplMessage);
+}
+
+void    Server::handleRplWelcome(Client &c)
+{
+    std::string rplMessage(_rplPrefix("001", c.getNick()));
+    std::string middlePrefix(":Welcome the IRC Server of 42 (Made by Simon, Tricaducee and Miniflint) - ");
     const std::string &nickName = c.getNick();
     const std::string &userName = c.getUserName();
     const std::string &hostName = c.getHostName();
-    returnString.reserve(returnString.size() + nickName.size() + userName.size() + hostName.size() + 5);
-    return (returnString.append(nickName).append(1, '!').append(userName).append(1, '@').append(hostName).append("\r\n"));
+    rplMessage.reserve(rplMessage.size() + middlePrefix.size() + nickName.size() + userName.size() + hostName.size() + 5);
+    rplMessage.append(middlePrefix).append(nickName).append(1, '!').append(userName).append(1, '@').append(hostName).append("\r\n");
+	c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplYourhost(Client &c)
+void    Server::handleRplYourhost(Client &c)
 {
-    (void)c;
-    std::string returnString(":Your host is ");
+    std::string rplMessage(this->_rplPrefix("002", c.getNick()));
+    std::string middlePrefix(":Your host is ");
     const std::string &hostName = this->getIp();
-    returnString.reserve(returnString.size() + hostName.size() + 2);
-    return (returnString.append(hostName).append("\r\n"));
+    rplMessage.reserve(rplMessage.size() + middlePrefix.size() + hostName.size() + 2);
+    rplMessage.append(middlePrefix).append(hostName).append("\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplCreated(Client &c)
+void    Server::handleRplCreated(Client &c)
 {
-    (void)c;
-    return (":This server was created somewhere in history (We don't keep track of the date because of lazyness)\r\n");
+    std::string rplMessage(this->_rplPrefix("003", c.getNick()));
+    std::string middlePrefix(":The server was created at this date: [2026-06-13 14:16 GMT+2]\r\n");
+    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
+    rplMessage.append(middlePrefix);
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplMyinfo(Client &c)
+void    Server::handleRplMyinfo(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("004", c.getNick()));
+    std::string middlePrefix(":Bla bla\r\n");
+    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
+    rplMessage.append(middlePrefix);
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplBounce(Client &c)
+void    Server::handleRplISupport(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::ostringstream oss;
+    std::string rplMessage(this->_rplPrefix("005", c.getNick()));
+    std::string chanType("CHANTYPES=");
+    chanType.append(this->_channelSpecifiers.channelType);
+    std::string chanLen(" CHANNELLEN=");
+    oss << this->_channelSpecifiers.channelLen;
+    chanLen += oss.str();
+    std::string chanMode(" CHAN=");
+    chanMode.append(this->_channelSpecifiers.channelMode);
+    std::string chanPrefix(" PREFIX=");
+    chanPrefix.append(this->_channelSpecifiers.channelAuthPrefix);
+    rplMessage.append(chanType).append(chanLen).append(chanMode).append(chanPrefix).append("\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTracelink(Client &c)
+void    Server::handleRplTracelink(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTraceconnecting(Client &c)
+void    Server::handleRplTraceconnecting(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTracehandshake(Client &c)
+void    Server::handleRplTracehandshake(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTraceunknown(Client &c)
+void    Server::handleRplTraceunknown(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTraceoperator(Client &c)
+void    Server::handleRplTraceoperator(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTraceuser(Client &c)
+void    Server::handleRplTraceuser(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTraceserver(Client &c)
+void    Server::handleRplTraceserver(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTraceservice(Client &c)
+void    Server::handleRplTraceservice(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTracenewtype(Client &c)
+void    Server::handleRplTracenewtype(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTraceclass(Client &c)
+void    Server::handleRplTraceclass(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTracereconnect(Client &c)
+void    Server::handleRplTracereconnect(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatslinkinfo(Client &c)
+void    Server::handleRplStatslinkinfo(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatscommands(Client &c)
+void    Server::handleRplStatscommands(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatscline(Client &c)
+void    Server::handleRplStatscline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsnline(Client &c)
+void    Server::handleRplStatsnline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsiline(Client &c)
+void    Server::handleRplStatsiline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatskline(Client &c)
+void    Server::handleRplStatskline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsqline(Client &c)
+void    Server::handleRplStatsqline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsyline(Client &c)
+void    Server::handleRplStatsyline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofstats(Client &c)
+void    Server::handleRplEndofstats(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplUmodeis(Client &c)
+void    Server::handleRplUmodeis(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplServiceinfo(Client &c)
+void    Server::handleRplServiceinfo(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofservices(Client &c)
+void    Server::handleRplEndofservices(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplService(Client &c)
+void    Server::handleRplService(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplServlist(Client &c)
+void    Server::handleRplServlist(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplServlistend(Client &c)
+void    Server::handleRplServlistend(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsvline(Client &c)
+void    Server::handleRplStatsvline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatslline(Client &c)
+void    Server::handleRplStatslline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsuptime(Client &c)
+void    Server::handleRplStatsuptime(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsoline(Client &c)
+void    Server::handleRplStatsoline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatshline(Client &c)
+void    Server::handleRplStatshline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsping(Client &c)
+void    Server::handleRplStatsping(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsbline(Client &c)
+void    Server::handleRplStatsbline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplStatsdline(Client &c)
+void    Server::handleRplStatsdline(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplLuserclient(Client &c)
+void    Server::handleRplLuserclient(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplLuserop(Client &c)
+void    Server::handleRplLuserop(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplLuserunknown(Client &c)
+void    Server::handleRplLuserunknown(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplLuserchannels(Client &c)
+void    Server::handleRplLuserchannels(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplLuserme(Client &c)
+void    Server::handleRplLuserme(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplAdminme(Client &c)
+void    Server::handleRplAdminme(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplAdminloc1(Client &c)
+void    Server::handleRplAdminloc1(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplAdminloc2(Client &c)
+void    Server::handleRplAdminloc2(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplAdminemail(Client &c)
+void    Server::handleRplAdminemail(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTracelog(Client &c)
+void    Server::handleRplTracelog(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTraceend(Client &c)
+void    Server::handleRplTraceend(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTryagain(Client &c)
+void    Server::handleRplTryagain(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplNone(Client &c)
+void    Server::handleRplNone(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplAway(Client &c)
+void    Server::handleRplAway(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplUserhost(Client &c)
+void    Server::handleRplUserhost(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplIson(Client &c)
+void    Server::handleRplIson(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplUnaway(Client &c)
+void    Server::handleRplUnaway(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplNowaway(Client &c)
+void    Server::handleRplNowaway(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplWhoisuser(Client &c)
+void    Server::handleRplWhoisuser(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplWhoisserver(Client &c)
+void    Server::handleRplWhoisserver(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplWhoisoperator(Client &c)
+void    Server::handleRplWhoisoperator(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplWhowasuser(Client &c)
+void    Server::handleRplWhowasuser(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofwho(Client &c)
+void    Server::handleRplEndofwho(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplWhoischanop(Client &c)
+void    Server::handleRplWhoischanop(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplWhoisidle(Client &c)
+void    Server::handleRplWhoisidle(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofwhois(Client &c)
+void    Server::handleRplEndofwhois(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplWhoischannels(Client &c)
+void    Server::handleRplWhoischannels(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplListstart(Client &c)
+void    Server::handleRplListstart(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplList(Client &c)
+void    Server::handleRplList(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplListend(Client &c)
+void    Server::handleRplListend(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplChannelmodeis(Client &c)
+void    Server::handleRplChannelmodeis(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplUniqopis(Client &c)
+void    Server::handleRplUniqopis(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplNotopic(Client &c)
+void    Server::handleRplNotopic(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTopic(Client &c)
+void    Server::handleRplTopic(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplInviting(Client &c)
+void    Server::handleRplInviting(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplSummoning(Client &c)
+void    Server::handleRplSummoning(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplInvitelist(Client &c)
+void    Server::handleRplInvitelist(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofinvitelist(Client &c)
+void    Server::handleRplEndofinvitelist(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplExceptlist(Client &c)
+void    Server::handleRplExceptlist(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofexceptlist(Client &c)
+void    Server::handleRplEndofexceptlist(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplVersion(Client &c)
+void    Server::handleRplVersion(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplWhoreply(Client &c)
+void    Server::handleRplWhoreply(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplNamreply(Client &c)
+void    Server::handleRplNamreply(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplKilldone(Client &c)
+void    Server::handleRplKilldone(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplClosing(Client &c)
+void    Server::handleRplClosing(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplCloseend(Client &c)
+void    Server::handleRplCloseend(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplLinks(Client &c)
+void    Server::handleRplLinks(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndoflinks(Client &c)
+void    Server::handleRplEndoflinks(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofnames(Client &c)
+void    Server::handleRplEndofnames(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplBanlist(Client &c)
+void    Server::handleRplBanlist(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofbanlist(Client &c)
+void    Server::handleRplEndofbanlist(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofwhowas(Client &c)
+void    Server::handleRplEndofwhowas(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplInfo(Client &c)
+void    Server::handleRplInfo(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplMotd(Client &c)
+void    Server::handleRplMotd(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplInfostart(Client &c)
+void    Server::handleRplInfostart(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofinfo(Client &c)
+void    Server::handleRplEndofinfo(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplMotdstart(Client &c)
+void    Server::handleRplMotdstart(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofmotd(Client &c)
+void    Server::handleRplEndofmotd(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplYoureoper(Client &c)
+void    Server::handleRplYoureoper(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplRehashing(Client &c)
+void    Server::handleRplRehashing(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplYoureservice(Client &c)
+void    Server::handleRplYoureservice(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplMyportis(Client &c)
+void    Server::handleRplMyportis(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplTime(Client &c)
+void    Server::handleRplTime(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplUsersstart(Client &c)
+void    Server::handleRplUsersstart(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplUsers(Client &c)
+void    Server::handleRplUsers(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplEndofusers(Client &c)
+void    Server::handleRplEndofusers(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleRplNousers(Client &c)
+void    Server::handleRplNousers(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNosuchnick(Client &c)
+void    Server::handleErrNoSuchNick(Client &c, std::string clientName)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("401", c.getNick()));
+    rplMessage.append(clientName).append(" :No such nickname\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNosuchserver(Client &c)
+void    Server::handleErrNosuchserver(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNosuchchannel(Client &c)
+void    Server::handleErrNosuchchannel(Client &c, std::string channelName)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("403", c.getNick()));
+    rplMessage.append(channelName).append(" :No such channel\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrCannotsendtochan(Client &c)
+void    Server::handleErrCannotSendToChan(Client &c, std::string channelName)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("404", c.getNick()));
+    rplMessage.append(channelName).append(" :Cannot send to Channel/User\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrToomanychannels(Client &c)
+void    Server::handleErrToomanychannels(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrWasnosuchnick(Client &c)
+void    Server::handleErrWasnosuchnick(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrToomanytargets(Client &c)
+void    Server::handleErrToomanytargets(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNosuchservice(Client &c)
+void    Server::handleErrNosuchservice(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNoorigin(Client &c)
+void    Server::handleErrNoorigin(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNorecipient(Client &c)
+void    Server::handleErrNoRecipient(Client &c, std::string cmd)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("411", c.getNick()));
+    std::string middlePrefix("No Recipient Given (");
+    rplMessage.append(middlePrefix).append(cmd).append(")\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNotexttosend(Client &c)
+void    Server::handleErrNotexttosend(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("412", c.getNick()));
+    rplMessage.append(":No text to send or Message in wrong format\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNotoplevel(Client &c)
+void    Server::handleErrNotoplevel(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrWildtoplevel(Client &c)
+void    Server::handleErrWildtoplevel(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrBadmask(Client &c)
+void    Server::handleErrBadmask(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrUnknowncommand(Client &c)
+void    Server::handleErrUnknowncommand(Client &c, std::string &cmd)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("421", c.getNick()));
+    rplMessage.append(cmd).append(":Unknown command\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNomotd(Client &c)
+void    Server::handleErrNomotd(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNoadmininfo(Client &c)
+void    Server::handleErrNoadmininfo(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrFileerror(Client &c)
+void    Server::handleErrFileerror(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNonicknamegiven(Client &c)
+void    Server::handleErrNoNicknameGiven(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("432", c.getNick()));
+    std::string middlePrefix(":No nickname given\r\n");
+    rplMessage.resize(rplMessage.size() + middlePrefix.size());
+    rplMessage.append(middlePrefix);
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrErroneusnickname(Client &c)
+void    Server::handleErrErroneusnickname(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNicknameinuse(Client &c)
+void    Server::handleErrNicknameInUse(Client &c, std::string targetNickName)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("433", c.getNick()));
+    std::string middlePrefix(":Nickname already in use\r\n");
+    rplMessage.reserve(rplMessage.size() + targetNickName.size() + middlePrefix.size());
+    rplMessage.append(targetNickName).append(1, ' ').append(middlePrefix);
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNickcollision(Client &c)
+void    Server::handleErrNickCollision(Client &c, std::string targetNickName)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("436", c.getNick()));
+    std::string middlePrefix(" :Nickname collision. Cannot proceed further");
+    rplMessage.reserve(rplMessage.size() + (targetNickName.size() * 2) + middlePrefix.size() + 7);
+    rplMessage.append(targetNickName).append(middlePrefix).append(" [").append(targetNickName).append("]\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrUnavailresource(Client &c)
+void    Server::handleErrUnavailresource(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrUsernotinchannel(Client &c)
+void    Server::handleErrUsernotinchannel(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNotonchannel(Client &c)
+void    Server::handleErrNotonchannel(Client &c)
 {
-    (void)c;
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
     // uint32_t t = ERR_NOTONCHANNEL;
-    return (":Channel or Client does not exist\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrUseronchannel(Client &c)
+void    Server::handleErrUseronchannel(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNologin(Client &c)
+void    Server::handleErrNologin(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrSummondisabled(Client &c)
+void    Server::handleErrSummondisabled(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrUsersdisabled(Client &c)
+void    Server::handleErrUsersdisabled(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNotregistered(Client &c)
+void    Server::handleErrNotregistered(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("451", c.getNick()));
+    rplMessage.append(":You have not registered\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNeedmoreparams(Client &c)
+void    Server::handleErrNeedMoreParams(Client &c, std::string cmd)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("461", c.getNick()));
+    rplMessage.append(cmd).append(" :Not enough parameters\r\n");
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrAlreadyregistered(Client &c)
+void    Server::handleErrAlreadyRegistered(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("462", c.getNick()));
+    std::string middlePrefix(":You may not reregister\r\n");
+    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
+    rplMessage.append(middlePrefix);
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNopermforhost(Client &c)
+void    Server::handleErrNopermforhost(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrPasswdmismatch(Client &c)
+void    Server::handleErrPasswdMismatch(Client &c)
 {
-    (void)c;
-    return (":Password does not match the actual password\r\n");
+    std::string rplMessage(this->_rplPrefix("464", c.getNick()));
+    std::string middlePrefix(":Password mismatch | This Server require a password\r\n");
+    rplMessage.resize(rplMessage.size() + middlePrefix.size());
+    rplMessage.append(middlePrefix);
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrYourebannedcreep(Client &c)
+void    Server::handleErrYourebannedcreep(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrYouwillbebanned(Client &c)
+void    Server::handleErrYouwillbebanned(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrKeyset(Client &c)
+void    Server::handleErrKeyset(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrChannelisfull(Client &c)
+void    Server::handleErrChannelisfull(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrUnknownmode(Client &c)
+void    Server::handleErrUnknownmode(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrInviteonlychan(Client &c)
+void    Server::handleErrInviteonlychan(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrBannedfromchan(Client &c)
+void    Server::handleErrBannedfromchan(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrBadchannelkey(Client &c)
+void    Server::handleErrBadchannelkey(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrBadchanmask(Client &c)
+void    Server::handleErrBadchanmask(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNochanmodes(Client &c)
+void    Server::handleErrNochanmodes(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrBanlistfull(Client &c)
+void    Server::handleErrBanlistfull(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNoprivileges(Client &c)
+void    Server::handleErrNoprivileges(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrChanoprivsneeded(Client &c)
+void    Server::handleErrChanoprivsneeded(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrCantkillserver(Client &c)
+void    Server::handleErrCantkillserver(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrRestricted(Client &c)
+void    Server::handleErrRestricted(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrUniqoprivsneeded(Client &c)
+void    Server::handleErrUniqoprivsneeded(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNooperhost(Client &c)
+void    Server::handleErrNooperhost(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrNoservicehost(Client &c)
+void    Server::handleErrNoservicehost(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrUmodeunknownflag(Client &c)
+void    Server::handleErrUmodeunknownflag(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }
-std::string Server::handleErrUsersdontmatch(Client &c)
+void    Server::handleErrUsersdontmatch(Client &c)
 {
-    (void)c;
-    return ("Not implemented yet");
+    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    c.addBufferOut(rplMessage);
 }

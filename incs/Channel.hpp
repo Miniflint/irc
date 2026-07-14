@@ -6,23 +6,28 @@
 
 # include <stdint.h>
 
+// ajouter l et k
+// k
 /* MODE 
  * +i (Invite-only): Users must be invited to join.
  * +s (Secret): The room stays hidden from /LIST commands and user profiles.
  * +m (Moderated): Only users with voice (+v) or operator status (+o) can talk.
  * +n (No external): People outside the channel cannot send messages into it.
  * +t (Topic protection): Only channel operators can change the topic.
+ * +k (Key): Set or remove a channel password
  */
 
 typedef uint16_t AccessType;
 
-const AccessType CHANNEL_INVITE 			= 0x1;	// i
-const AccessType CHANNEL_SECRET 			= 0x2;	// s
-const AccessType CHANNEL_MODERATED 			= 0x4;	// m
-const AccessType CHANNEL_NOT_EXTERNAL		= 0x8;	// n
-const AccessType CHANNEL_TOPIC_PROTECTION	= 0x10;	// t
-const AccessType CHANNEL_USER_VOICE			= 0x20; // v
-const AccessType CHANNEL_USER_OPERATOR		= 0x40; // o
+const AccessType CHANNEL_INVITE_ONLY		= 0x1;	 // i
+const AccessType CHANNEL_SECRET 			= 0x2;	 // s
+const AccessType CHANNEL_MODERATED 			= 0x4;	 // m
+const AccessType CHANNEL_NOT_EXTERNAL		= 0x8;	 // n
+const AccessType CHANNEL_TOPIC_PROTECTION	= 0x10;	 // t
+const AccessType CHANNEL_KEY				= 0x20;  // k
+const AccessType CHANNEL_LIMIT_USER			= 0x40;  // l
+const AccessType CHANNEL_USER_VOICE			= 0x80;  // v
+const AccessType CHANNEL_USER_OPERATOR		= 0x100; // o
 
 class Channel {
 	protected:
