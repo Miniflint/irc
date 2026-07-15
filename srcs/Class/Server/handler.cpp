@@ -20,7 +20,7 @@ static bool _constantTimeCheck(const std::string &pass, const std::string &toChe
 	return (diff == 0);
 }
 
-static std::string	_formatBaseRelayMessage(Client &c, std::string functionName)
+std::string	Server::_formatBaseRelayMessage(Client &c, std::string functionName)
 {
 	std::string rtn;
 	const size_t totalSize = rtn.size() + 5 + c.getNick().size() +
@@ -46,18 +46,18 @@ static std::string	_formatBaseServerMessage(Server &serv, Client &c, std::string
 */
 bool	Server::handle_admin(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "admin: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "ADMIN");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_away(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "away: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "AWAY");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_cap(Client &c, std::istringstream &iss) 
@@ -68,74 +68,74 @@ bool	Server::handle_cap(Client &c, std::istringstream &iss)
 }
 bool	Server::handle_cnotice(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "cnotice: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "CNOTICE");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_cprivmsg(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "cprivmsg: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "CPRIVMSG");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_connect(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "connect: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "CONNECT");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_die(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "die: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "DIE");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_error(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "error: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "ERROR");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_help(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "help: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "HELP");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_info(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "info: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "INFO");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_invite(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "invite: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "INVITE");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_ison(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "ison: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "ISON");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handleJoin(Client &c, std::istringstream &iss) 
@@ -174,34 +174,34 @@ bool	Server::handleJoin(Client &c, std::istringstream &iss)
 }
 bool	Server::handle_kick(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "kick: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "KICK");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_kill(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "kill: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "KILL");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_knock(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "knock: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "KNOCK");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_links(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "links: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "LINKS");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handleList(Client &c, std::istringstream &iss) 
@@ -221,34 +221,34 @@ bool	Server::handleList(Client &c, std::istringstream &iss)
 }
 bool	Server::handle_lusers(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "lusers: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "LUSERS");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_mode(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "mode: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "MODE");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_motd(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "motd: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "MOTD");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_names(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "names: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "NAMES");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handleNick(Client &c, std::istringstream &iss) 
@@ -284,26 +284,26 @@ bool	Server::handleNick(Client &c, std::istringstream &iss)
 }
 bool	Server::handle_notice(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "notice: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "NOTICE");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_oper(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "oper: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "OPER");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_part(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "part: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "PART");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handlePass(Client &c, std::istringstream &iss) 
@@ -332,10 +332,10 @@ bool	Server::handlePing(Client &c, std::istringstream &iss)
 }
 bool	Server::handle_pong(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "pong: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "PONG");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handlePrivMsg(Client &c, std::istringstream &iss) 
@@ -344,12 +344,17 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 	iss >> target;
 	if (iss.fail() || target.empty())
 		return (this->handleErrNoRecipient(c, "PRIVMSG"), this->poolOut.push(c.getFd()), false);
-	std::getline(iss, message);
-	if (message.empty())
+	iss >> message;
+	if (message.empty() || (message.size() == 1 && message[0] == ':'))
 		return (this->handleErrNoTextToSend(c), this->poolOut.push(c.getFd()), false);
-	size_t index = message.find_first_not_of(' ');
-	if (index == std::string::npos || message[index] != ':')
-		return (this->handleErrNoTextToSend(c), this->poolOut.push(c.getFd()), false);
+	if (message[0] == ':') {
+		std::string buff;
+		std::getline(iss, buff);
+		message += buff;
+	}
+	// size_t index = message.find_first_not_of(' ');
+	// if (index == std::string::npos || message[index] != ':')
+	// 	return (this->handleErrNoTextToSend(c), this->poolOut.push(c.getFd()), false);
 
 	std::vector<size_t>	clients;
 	std::string realTarget(target);
@@ -384,7 +389,7 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		clients.push_back(c.getFd());
 	}
 	std::string		full(_formatBaseRelayMessage(c, "PRIVMSG"));
-	message.erase(0, 1);
+	// message.erase(0, 1);
 	full.append(target).append(1, ' ').append(message).append("\r\n");
 	std::vector<size_t>::const_iterator end = clients.end();
 	for (std::vector<size_t>::const_iterator it = clients.begin(); it != end; it++) {
@@ -412,106 +417,106 @@ bool	Server::handleQuit(Client &c, std::istringstream &iss)
 }
 bool	Server::handle_quote(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "quote: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "QUOTE");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_rehash(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "rehash: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "REHASH");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_rules(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "rules: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "RULES");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_server(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "server: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "SERVER");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_squery(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "squery: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "SQUERY");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_squit(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "squit: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "SQUIT");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_setname(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "setname: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "SETNAME");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_silence(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "silence: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "SILENCE");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_stats(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "stats: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "STATS");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_summon(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "summon: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "SUMMON");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_time(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "time: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "TIME");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_topic(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "topic: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "TOPIC");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_trace(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "trace: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "TRACE");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handleUser(Client &c, std::istringstream &iss) 
@@ -536,7 +541,7 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 	if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1 || realName.length() < 1)
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	c.setUserName(userName);
-	c.setHostName(hostName);
+	// c.setHostName(hostName);
 	c.setServerName(serverName);
 	c.setRealName(realName);
 	if (c.flagsLogin & FLAG_CLIENT_NICK)
@@ -549,89 +554,89 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 }
 bool	Server::handle_userhost(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "userhost: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "USERHOST");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_userip(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "userip: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "USERIP");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_users(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "users: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "USERS");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_version(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "version: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "VERSION");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_wallops(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "wallops: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "WALLOPS");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_watch(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "watch: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "WATCH");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_who(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "who: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "WHO");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_whois(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "whois: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "WHOIS");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_whowas(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "whowas: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "WHOWAS");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handleDcc(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "dcc: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "DCC");
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handle_message(Client &c, std::istringstream &iss) 
 {
-	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "message: " << token << std::endl;
+	this->handleErrUnknowncommand(c, "MESSAGE");
+	this->poolOut.push(c.getFd());
 	return (true);
 }

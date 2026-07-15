@@ -87,13 +87,13 @@ void	Bot::doCommand(std::string &cmdLine, int sockFd) {
 	if (token.empty())
 		return ;
 	std::cout << token << std::endl;
-	if (token == "/ping")
+	if (token == "#ping")
 		privmsg.append(" :Pong !\r\n");
-	else if (token == "/joke")
+	else if (token == "#joke")
 		privmsg.append(" :C'est l'histoire d'une put*... [joke canceled]\r\n");
-	else if (token == "/lightspeed")
-		privmsg.append(" :299'792'458 m/s\r\n");
-	else if (token == "/second")
+	else if (token == "#lightspeed")
+		privmsg.append(" :299'792'458 ms\r\n");
+	else if (token == "#second")
 		privmsg.append(" :9'192'631'770 periodes de radiation, Cesium 133\r\n");
 	else
 		return ;

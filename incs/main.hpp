@@ -243,4 +243,8 @@ enum E_codes {
 	CODES_END
 };
 
+void	serverReceivesLog(std::string msg);
+void	serverReceivesLogError(std::string msg, std::string error);
+void	serverSendsLog(std::string msg);
+
 #endif

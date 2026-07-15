@@ -1,8 +1,9 @@
 #include "Client.hpp"
+#include "main.hpp"
 
 Client::Client() {}
 
-Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(""), _serverName(""), _realName(""), _host(host), _port(port), _avertissements(0), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
+Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
 
 Client::~Client() {}
 
@@ -87,6 +88,7 @@ void		Client::addBufferOut(std::string bufferOut)
 		bufferOut.resize(MAX_PACKET_SIZE - 2);
 		bufferOut.append("\r\n");
 	}
+	serverSendsLog(bufferOut);
 	this->_bufferOut += bufferOut;
 }
 

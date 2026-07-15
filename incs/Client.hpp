@@ -11,7 +11,7 @@
 # define CLIENT_QUIT_ACCEPT 0x2
 
 # ifndef MAX_PACKET_SIZE
-#  define MAX_PACKET_SIZE 512
+#  define MAX_PACKET_SIZE 512U
 # endif
 
 const uint8_t FLAG_CLIENT_NONE = 0x0;
@@ -34,7 +34,6 @@ class Client {
 		std::string		_realName;
 		std::string		_bufferOut;
 		std::string		_bufferQuit;
-		std::string		_host;
 		int				_port;
 		int				_avertissements;
 		uint8_t			_flagsUser; // if away

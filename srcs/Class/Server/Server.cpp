@@ -104,10 +104,12 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 			return (false);
 		else if (index == std::string::npos && c->buffer.length() >= MAX_PACKET_SIZE) {
 			c->setWarning(c->getWarning() + 1);
+			serverReceivesLogError(c->buffer, "too long and unfinished");
 			c->buffer.clear();
 			return (false);
 		} else if (index + 2 >= MAX_PACKET_SIZE ) {
 			c->setWarning(c->getWarning() + 1);
+			serverReceivesLogError(c->buffer.substr(0, index), "too long");
 			c->buffer.erase(0, index + 2);
 			continue;
 		}
@@ -117,17 +119,19 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 		std::string			cmd;
 		cmdFn				func;
 		iss >> cmd;
-		std::cout << sanitizedClientBuffer << std::endl; 
+		// std::cout << sanitizedClientBuffer << std::endl; 
 		if (!this->_validateAccess(*c, cmd) || !this->_validateCommand(*c, func, cmd))
 		{
+			serverReceivesLogError(c->buffer.substr(0, index), "not valid");
 			const int warnings = c->getWarning() + 1;
 			c->setWarning(warnings);
 			// kick user
 			if (warnings > 2)
-				this->deconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick");
+				this->deconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick\r\n");
 			std::cout << "You get a warning (" << warnings << ")" << std::endl;
 			continue ;
 		}
+		serverReceivesLog(sanitizedClientBuffer);
 		(this->*func)(*c, iss);
 	}
 }
@@ -146,6 +150,11 @@ void							Server::setIp(std::string ip)
 {
 	this->_host = ip;
 }
+
+// std::string		Server::_makeHostMask(Client &c) {
+// 	std::string	hostMask(":");
+// 	return (hostMask.append(c.getNick()).append(1, '!').append(c.getUserName()).append(1, '@').append(c.getHostName()));
+// }
 
 bool	Server::sendToClient(Client &source, std::string message)
 {

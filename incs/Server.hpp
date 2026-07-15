@@ -53,6 +53,9 @@ class Server {
 		const std::string		&_getPassword();
 		std::string 			_rplPrefix(std::string code, std::string nick) const;
 		void					_sendAllWelcome(Client &c);
+		std::string				_formatBaseRelayMessage(Client &c, std::string functionName);
+		// std::string				_makeHostMask(Client &c);
+		Channel					*_joinChannelSendMsg(Client &c, Channel *chan, std::string &channelName);
 		Server() {};
 		Server(const Server &src) {(void)src;};
 	public:
@@ -254,7 +257,7 @@ class Server {
 		void handleErrNotoplevel(Client &c);
 		void handleErrWildtoplevel(Client &c);
 		void handleErrBadmask(Client &c);
-		void handleErrUnknowncommand(Client &c, std::string &cmd);
+		void handleErrUnknowncommand(Client &c, std::string cmd);
 		void handleErrNomotd(Client &c);
 		void handleErrNoadmininfo(Client &c);
 		void handleErrFileerror(Client &c);

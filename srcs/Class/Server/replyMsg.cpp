@@ -377,7 +377,7 @@ void    Server::handleRplListStart(Client &c)
 {
     std::string rplMessage(this->_rplPrefix("321", c.getNick()));
     rplMessage.append("\r\n");
-    std::cout << rplMessage << std::endl;
+    // std::cout << rplMessage << std::endl;
     c.addBufferOut(rplMessage);
 }
 void    Server::handleRplList(Client &c)
@@ -392,7 +392,7 @@ void    Server::handleRplList(Client &c)
         std::string channelTopic = currentChannel.getTopic().size() > 2 ? currentChannel.getTopic() : "No topic";
         rplMessage.append(currentChannel.getNick()).append(1, ' ')
             .append(amountUserStr.str()).append(" :").append(channelTopic).append("\r\n");
-        std::cout << rplMessage << std::endl;
+        // std::cout << rplMessage << std::endl;
         c.addBufferOut(rplMessage);
         amountUserStr.clear();
     }
@@ -401,7 +401,7 @@ void    Server::handleRplListEnd(Client &c)
 {
     std::string rplMessage(this->_rplPrefix("323", c.getNick()));
     rplMessage.append(":End of LIST\r\n");
-    std::cout << rplMessage << std::endl;
+    // std::cout << rplMessage << std::endl;
     c.addBufferOut(rplMessage);
 }
 void    Server::handleRplChannelmodeis(Client &c)
@@ -678,7 +678,7 @@ void    Server::handleErrBadmask(Client &c)
     std::string rplMessage(this->_rplPrefix("000", c.getNick()));
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrUnknowncommand(Client &c, std::string &cmd)
+void    Server::handleErrUnknowncommand(Client &c, std::string cmd)
 {
     std::string rplMessage(this->_rplPrefix("421", c.getNick()));
     rplMessage.append(cmd).append(":Unknown command\r\n");

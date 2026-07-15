@@ -74,7 +74,7 @@ int Server::newConnection()
 	int	clientSock = accept(this->_sockServerFD, reinterpret_cast<struct sockaddr *>(&addr), &addrLen);
 	if (clientSock == -1)
 		return (-1);
-	char* host = inet_ntoa(addr.sin_addr);
+	std::string host = inet_ntoa(addr.sin_addr);
 	int port = ntohs(addr.sin_port);
 	fcntl(clientSock, F_SETFL, O_NONBLOCK);
 	if (static_cast<size_t>(clientSock) >= this->_clients.size())
@@ -84,7 +84,7 @@ int Server::newConnection()
 	} else {
 		return (-1);
 	}
-	std::cout << "New Client connected: IP: " << host << " port: " << port << std::endl;
+	std::cout << "New Client connected: IP: " << this->_clients[clientSock]->getHostName() << " IP: " << host << " port: " << port << std::endl;
 	return (clientSock);
 }
 

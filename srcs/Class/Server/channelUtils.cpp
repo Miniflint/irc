@@ -15,6 +15,15 @@ static inline Channel	*sendRet(Client &c, Server &serv, Channel *chan) {
 	return (chan);
 }
 
+Channel	*Server::_joinChannelSendMsg(Client &c, Channel *chan, std::string &channelName) {
+	std::string	joinMsg(this->_formatBaseRelayMessage(c, "JOIN"));
+	joinMsg.append(channelName).append("\r\n");
+	for (std::vector<int>::iterator it = chan->getClientsFD().begin(); it != chan->getClientsFD().end(); ++it)
+		this->sendToClient(this->getClient(*it), joinMsg);
+	this->handleRplTopic(c, channelName, chan->getTopic());
+	return (chan);
+}
+
 Channel	*Server::createNewChannel(std::string name, std::string pass) {
 	Channel	chan(name, pass);
 	if (!pass.empty())
@@ -47,9 +56,9 @@ Channel	*Server::addClientToChannel(Client &client, std::string channelName, std
 				return (this->handleErrInviteOnlyChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //pas invité
 			if (chan->getMode() & CHANNEL_LIMIT_USER && chan->getClientsFD().size() >= static_cast<size_t>(chan->getMaxUsers()))
 				return (this->handleErrChannelisfull(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //plus de place sur le channel
-			client.getChannel().add(channelName, std::pair<Channel *, AccessType>(chan, USER_OPERATOR));
+			client.getChannel().add(channelName, std::pair<Channel *, AccessType>(chan, NO_ACCESS));
 			chan->addClientsFD(client.getFd());
-			return (this->handleRplTopic(client, channelName, chan->getTopic()), sendRet(client, *this, chan));
+			return (this->_joinChannelSendMsg(client, chan, channelName));
 		}
 	} catch (std::exception &e) {
 		if (this->_channelSpecifiers.channelType.find(channelName[0]) == std::string::npos)
@@ -57,7 +66,7 @@ Channel	*Server::addClientToChannel(Client &client, std::string channelName, std
 		chan = this->createNewChannel(channelName, channelPass);
 		client.getChannel().add(channelName, std::pair<Channel *, AccessType>(chan, USER_OPERATOR | USER_FOUNDER));
 		chan->addClientsFD(client.getFd());
-		return (this->handleRplTopic(client, channelName, chan->getTopic()), sendRet(client, *this, chan));
+		return (this->_joinChannelSendMsg(client, chan, channelName));
 	}
 	return (NULL);
 }
