@@ -511,13 +511,13 @@ void	Server::handleRplNameReply(Client &c, std::string channelName, Channel &cha
 			user.append(1, '+');
 		user.append(itClient.getNick());
 		if (user.size() + actualReply.size() > MAX_PACKET_SIZE - 2) {
-			actualReply.pop_back();
+			actualReply.resize(actualReply.size() - 1);
 			c.addBufferOut(actualReply.append("\r\n"));
 			actualReply = rplMessage;
 		}
 		actualReply.append(user).append(1, ' ');
 	}
-	actualReply.pop_back();
+	actualReply.resize(actualReply.size() - 1);
 	c.addBufferOut(actualReply.append("\r\n"));
 }
 void	Server::handleRplKilldone(Client &c)
