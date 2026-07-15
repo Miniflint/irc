@@ -61,7 +61,7 @@ void    Server::handleRplISupport(Client &c)
     chanPrefix.append(this->_channelSpecifiers.channelAuthPrefix);
     std::string nickLen(" NICKLEN=");
     oss.clear();
-    oss << this->_channelSpecifiers.channelLen;
+    oss << this->_clientSpecifiers.nickLenMax;
     nickLen += oss.str();
     std::string endComment(" :are supported by this server");
     rplMessage.append(chanType).append(chanLen).append(chanMode)
@@ -375,17 +375,34 @@ void    Server::handleRplWhoischannels(Client &c)
 }
 void    Server::handleRplListstart(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("321", c.getNick()));
+    std::cout << rplMessage << std::endl;
     c.addBufferOut(rplMessage);
 }
 void    Server::handleRplList(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+    std::list<Channel>::const_iterator end = this->_channel.end();
+    std::ostringstream amountUserStr;
+    for (std::list<Channel>::const_iterator it = this->_channel.begin(); it != end; it++)
+    {
+        std::cerr << (*it).getNick() << std::endl;
+        std::string rplMessage(this->_rplPrefix("322", c.getNick()));
+        const Channel currentChannel = *it;
+        amountUserStr << currentChannel.getClientsFD().size();
+        if (amountUserStr.fail())
+            std::cout << ":(" << std::endl;
+        std::string channelTopic = currentChannel.getTopic().size() > 2 ? currentChannel.getTopic() : "No topic";
+        rplMessage.append(currentChannel.getNick()).append(1, ' ')
+            .append(amountUserStr.str()).append(" :").append(channelTopic);
+        std::cout << rplMessage << std::endl;
+        c.addBufferOut(rplMessage);
+    }
 }
 void    Server::handleRplListend(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("323", c.getNick()));
+    rplMessage.append(":End of LIST");
+    std::cout << rplMessage << std::endl;
     c.addBufferOut(rplMessage);
 }
 void    Server::handleRplChannelmodeis(Client &c)
@@ -403,9 +420,16 @@ void    Server::handleRplNotopic(Client &c)
     std::string rplMessage(this->_rplPrefix("000", c.getNick()));
     c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTopic(Client &c)
+//WILL BE USED
+void    Server::handleRplTopic(Client &c, std::string channelName, std::string topic)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("332", c.getNick()));
+    rplMessage.append(channelName).append(" :");
+    if (topic.empty())
+        rplMessage.append("no topic");
+    else
+        rplMessage.append(topic);
+    rplMessage.append("\r\n");
     c.addBufferOut(rplMessage);
 }
 void    Server::handleRplInviting(Client &c)
@@ -590,7 +614,7 @@ void    Server::handleErrNosuchserver(Client &c)
     std::string rplMessage(this->_rplPrefix("000", c.getNick()));
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNosuchchannel(Client &c, std::string channelName)
+void    Server::handleErrNoSuchChannel(Client &c, std::string channelName)
 {
     std::string rplMessage(this->_rplPrefix("403", c.getNick()));
     rplMessage.append(channelName).append(" :No such channel\r\n");
@@ -634,7 +658,7 @@ void    Server::handleErrNoRecipient(Client &c, std::string cmd)
     rplMessage.append(middlePrefix).append(cmd).append(")\r\n");
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNotexttosend(Client &c)
+void    Server::handleErrNoTextToSend(Client &c)
 {
     std::string rplMessage(this->_rplPrefix("412", c.getNick()));
     rplMessage.append(":No text to send or Message in wrong format\r\n");
@@ -792,9 +816,10 @@ void    Server::handleErrKeyset(Client &c)
     std::string rplMessage(this->_rplPrefix("000", c.getNick()));
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrChannelisfull(Client &c)
+void    Server::handleErrChannelisfull(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("471", c.getNick()));
+    rplMessage.append(channelName).append(" :Cannot join channel (+l)\r\n");
     c.addBufferOut(rplMessage);
 }
 void    Server::handleErrUnknownmode(Client &c)
@@ -802,28 +827,35 @@ void    Server::handleErrUnknownmode(Client &c)
     std::string rplMessage(this->_rplPrefix("000", c.getNick()));
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrInviteonlychan(Client &c)
+void    Server::handleErrInviteOnlyChan(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("473", c.getNick()));
+    rplMessage.append(channelName).append(" :Cannot join channel (+i)\r\n");
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrBannedfromchan(Client &c)
+void    Server::handleErrBannedFromChan(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    // "<client> <channel> :Cannot join channel (+b)"
+    std::string rplMessage(this->_rplPrefix("474", c.getNick()));
+    rplMessage.append(channelName).append(" :Cannot join channel (+b)\r\n");
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrBadchannelkey(Client &c)
+void    Server::handleErrBadChannelKey(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("475", c.getNick()));
+    rplMessage.append(channelName).append(" :Cannot join channel (+k)\r\n");
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrBadchanmask(Client &c)
+void    Server::handleErrBadChanMask(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+    std::string rplMessage(this->_rplPrefix("476", c.getNick()));
+    std::string middlePrefix(" :Bad Channel Mask\r\n");
+    rplMessage.append(channelName).append(middlePrefix);
     c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNochanmodes(Client &c)
+void    Server::handleErrNochanmodes(Client &c, std::string channelName)
 {
+    (void)channelName;
     std::string rplMessage(this->_rplPrefix("000", c.getNick()));
     c.addBufferOut(rplMessage);
 }

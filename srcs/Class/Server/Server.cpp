@@ -18,8 +18,8 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		&Server::handle_admin, &Server::handle_away, &Server::handle_cap, &Server::handle_cnotice,
 		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handle_die, &Server::handle_error,
 		&Server::handle_help, &Server::handle_info, &Server::handle_invite, &Server::handle_ison,
-		&Server::handle_join, &Server::handle_kick, &Server::handle_kill, &Server::handle_knock,
-		&Server::handle_links, &Server::handle_list, &Server::handle_lusers, &Server::handle_mode,
+		&Server::handleJoin, &Server::handle_kick, &Server::handle_kill, &Server::handle_knock,
+		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handle_mode,
 		&Server::handle_motd, &Server::handle_names, &Server::handleNick, &Server::handle_notice,
 		&Server::handle_oper, &Server::handle_part, &Server::handlePass, &Server::handlePing,
 		&Server::handle_pong, &Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote,
@@ -33,10 +33,10 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	for (unsigned int i = 0; i <= END; i++)
 		this->_commands.add(t[i], func_list[i]);
 	this->_commands.create_graph();
-	this->_channelSpecifiers.channelType = "#";
+	this->_channelSpecifiers.channelType = "&#";
 	this->_channelSpecifiers.channelLen = 32;
-	this->_channelSpecifiers.channelAuthPrefix = "(ov)@+";
-	this->_channelSpecifiers.channelMode = ",,,ismnt";
+	this->_channelSpecifiers.channelAuthPrefix = "(qaohv)~&@%+";
+	this->_channelSpecifiers.channelMode = ",,,ismntklb";
 	this->_motd.motd = "This is the current message of the day";
 	this->_motd.announcements.push_back("Today is the day we are working on channels");
 	this->_motd.announcements.push_back("And we hope to be able to live long");
@@ -169,5 +169,6 @@ void					Server::_sendAllWelcome(Client &c)
 	this->handleRplMotdstart(c);
 	this->handleRplMotd(c);
 	this->handleRplEndofmotd(c);
+	this->addClientToChannel(c, "&general");
 	this->poolOut.push(c.getFd());
 }

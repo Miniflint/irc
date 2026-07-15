@@ -10,15 +10,15 @@
 # define CLIENT_QUIT_REQUEST 0x1
 # define CLIENT_QUIT_ACCEPT 0x2
 
-# define FLAG_CLIENT_NONE 0x0
-# define FLAG_CLIENT_PASS 0x1
-# define FLAG_CLIENT_NICK 0x2
-# define FLAG_CLIENT_USER 0x4
-# define CHECK_CLIENT_LOG 0x7
-
 # ifndef MAX_PACKET_SIZE
 #  define MAX_PACKET_SIZE 512
 # endif
+
+const uint8_t FLAG_CLIENT_NONE = 0x0;
+const uint8_t FLAG_CLIENT_PASS = 0x1;
+const uint8_t FLAG_CLIENT_NICK = 0x2;
+const uint8_t FLAG_CLIENT_USER = 0x4;
+const uint8_t CHECK_CLIENT_LOG = 0x7;
 
 class Channel;
 
@@ -37,6 +37,7 @@ class Client {
 		std::string		_host;
 		int				_port;
 		int				_avertissements;
+		uint8_t			_flagsUser; // if away
 		Trie<std::pair<Channel *, AccessType> >	_channel;
 	public:
 		Client(int socket, std::string host, int port);
@@ -56,7 +57,7 @@ class Client {
 		std::string										&getBufferOut();
 		void											setBufferQuit(std::string bufferQuit);
 		std::string										&getBufferQuit();
-		const Trie<std::pair<Channel *, AccessType> >	&getChannel(void) const;
+		Trie<std::pair<Channel *, AccessType> >			&getChannel(void);
 		void											setFd(size_t fd);
 		size_t											getFd() const;
 		void											setWarning(int warn_lvl);

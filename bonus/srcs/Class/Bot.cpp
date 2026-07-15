@@ -80,10 +80,8 @@ void	Bot::doCommand(std::string &cmdLine, int sockFd) {
 		privmsg.append(1, ' ').append(sendSrc.begin() + 1, sendSrc.begin() + sendSrc.find('!'));
 	std::cout << privmsg << std::endl;
 	iss >> token;
-	if (iss.fail() || token.empty()) {
-		std::cout << "Pourquoi ?" << std::endl;
+	if (iss.fail() || token.empty())
 		return ;
-	}
 	if (token[0] == ':')
 		token.erase(0, 1);
 	if (token.empty())

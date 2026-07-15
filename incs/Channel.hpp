@@ -5,6 +5,7 @@
 # include <list>
 
 # include <stdint.h>
+# include <map>
 
 // ajouter l et k
 // k
@@ -19,6 +20,16 @@
 
 typedef uint16_t AccessType;
 
+const AccessType NO_ACCESS					= 0x0;
+
+/* differents access possible de user sur un channel */
+const AccessType USER_FOUNDER				= 0x1;	// (~)q
+const AccessType USER_PROTECTED				= 0x2;	// (&)a
+const AccessType USER_OPERATOR				= 0x4;	// (@)o
+const AccessType USER_HALFOP				= 0x8;	// (%)h
+const AccessType USER_VOICE					= 0x10;	// (+)v
+
+/* different mode de channel possible */
 const AccessType CHANNEL_INVITE_ONLY		= 0x1;	 // i
 const AccessType CHANNEL_SECRET 			= 0x2;	 // s
 const AccessType CHANNEL_MODERATED 			= 0x4;	 // m
@@ -26,26 +37,41 @@ const AccessType CHANNEL_NOT_EXTERNAL		= 0x8;	 // n
 const AccessType CHANNEL_TOPIC_PROTECTION	= 0x10;	 // t
 const AccessType CHANNEL_KEY				= 0x20;  // k
 const AccessType CHANNEL_LIMIT_USER			= 0x40;  // l
-const AccessType CHANNEL_USER_VOICE			= 0x80;  // v
-const AccessType CHANNEL_USER_OPERATOR		= 0x100; // o
+const AccessType CHANNEL_BAN				= 0x80;  // b
+
+/* Liste d'exception sur les channels | qui est invité / qui est ban */
+const AccessType EXCEPTION_INVITED			= 0x1;
+const AccessType EXCEPTION_BANNED			= 0x2;
 
 class Channel {
 	protected:
-		std::string				_nick;
-		std::string				_topic;
-		std::vector<int>		_clientsFD;
-		AccessType				_mode;
+		std::string						_nick;
+		std::string						_topic;
+		std::string						_password;
+		int								_maxUsers;
+		std::vector<int>				_clientsFD;
+		std::map<int, AccessType>		_exceptionList;
+		AccessType						_mode;
 	public:
 		Channel();
 		Channel(std::string nick, std::string topic);
+		Channel(const Channel &src);
 		~Channel();
+		Channel	&operator=(const Channel &src);
 		std::string			getNick(void) const;
 		void				setNick(std::string nick);
 		std::string			getTopic(void) const;
 		void				setTopic(std::string topic);
+		std::string			getPass(void) const;
+		void				setPass(std::string pass);
+		int					getMaxUsers(void) const;
+		void				setMaxUsers(int limit);
 		std::vector<int>	getClientsFD(void) const;
 		std::vector<int>	&getClientsFD(void);
 		void				addClientsFD(int fd);
+		AccessType			getAccessClient(int fd);
+		void				addClientException(int fd, AccessType flag);
+		void				delClientException(int fd, AccessType flag);
 
 		AccessType			getMode(void) const;
 		bool				checkMode(AccessType mode) const;

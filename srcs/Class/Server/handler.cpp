@@ -138,12 +138,43 @@ bool	Server::handle_ison(Client &c, std::istringstream &iss)
 	std::cout << "In " << "ison: " << token << std::endl;
 	return (true);
 }
-bool	Server::handle_join(Client &c, std::istringstream &iss) 
+bool	Server::handleJoin(Client &c, std::istringstream &iss) 
 {
-	(void)c;
-	std::string token;
-	iss >> token;
-	std::cout << "In " << "join: " << token << std::endl;
+	std::string channel, key;
+	iss >> channel >> key;
+	if (channel.empty())
+		return (this->handleErrNeedMoreParams(c, "JOIN"), this->poolOut.push(c.getFd()), false);
+	std::istringstream			channelParse(channel), keyParse(key);
+	std::vector<std::string>	channelList, keyList;
+	for (std::string tmp; std::getline(keyParse, tmp, ',');)
+		keyList.push_back(tmp);
+	for (std::string tmp; std::getline(channelParse, tmp, ',');)
+		channelList.push_back(tmp);
+	std::vector<std::string>::iterator end = channelList.end();
+	unsigned int i = 0;
+	for (std::vector<std::string>::iterator it = channelList.begin(); it != end; it++) {
+		std::string channelName = *it;
+		if (i < keyList.size()) {
+			if (this->addClientToChannel(c, channelName, keyList[i]) == NULL)
+				this->poolOut.push(c.getFd());
+			++i;
+		} else {
+			if (this->addClientToChannel(c, channelName, "") == NULL)
+				this->poolOut.push(c.getFd());
+		}
+		// if (!keyList.empty())
+		// {
+		// 	size_t index = i > keyList.size() - 1 ? keyList.size() - 1 : i;
+		// 	if (this->addClientToChannel(c, channelName, keyList[index]) == NULL)
+		// 		this->poolOut.push(c.getFd());
+		// } else {
+		// 	if (this->addClientToChannel(c, channelName, "") == NULL)
+		// 		this->poolOut.push(c.getFd());
+		// }
+		// i++;
+	}
+	//if (this->_channelSpecifiers.channelType.find(channel[0]) == std::string::npos)
+	//	return (this->handleErrNoSuchChannel(c, target), this->poolOut.push(c.getFd()), false);
 	return (true);
 }
 bool	Server::handle_kick(Client &c, std::istringstream &iss) 
@@ -178,12 +209,18 @@ bool	Server::handle_links(Client &c, std::istringstream &iss)
 	std::cout << "In " << "links: " << token << std::endl;
 	return (true);
 }
-bool	Server::handle_list(Client &c, std::istringstream &iss) 
+bool	Server::handleList(Client &c, std::istringstream &iss) 
 {
 	(void)c;
 	std::string token;
 	iss >> token;
-	std::cout << "In " << "list: " << token << std::endl;
+	if (token.empty())
+	{
+		this->handleRplListstart(c);
+		this->handleRplList(c);
+		this->handleRplListend(c);
+		return (this->poolOut.push(c.getFd()), true);
+	}
 	return (true);
 }
 bool	Server::handle_lusers(Client &c, std::istringstream &iss) 
@@ -313,16 +350,15 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		return (this->handleErrNoRecipient(c, "PRIVMSG"), this->poolOut.push(c.getFd()), false);
 	std::getline(iss, message);
 	if (message.empty())
-		return (this->handleErrNotexttosend(c), this->poolOut.push(c.getFd()), false);
+		return (this->handleErrNoTextToSend(c), this->poolOut.push(c.getFd()), false);
 	size_t index = message.find_first_not_of(' ');
 	if (index == std::string::npos || message[index] != ':')
-		return (this->handleErrNotexttosend(c), this->poolOut.push(c.getFd()), false);
+		return (this->handleErrNoTextToSend(c), this->poolOut.push(c.getFd()), false);
 
 	std::vector<size_t>	clients;
 	std::string realTarget(target);
-	if (target[0] == '#')
+	if (this->_channelSpecifiers.channelType.find(target[0]) != std::string::npos)
 	{
-		target.erase(0, 1);
 		Channel	*targetChannel = NULL;
 		try {
 			targetChannel = c.getChannel()[target].first;
@@ -330,13 +366,13 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 			try {
 				targetChannel = this->_channelTrie[target];
 			} catch (std::exception &e) {
-				return (this->handleErrNosuchchannel(c, target), this->poolOut.push(c.getFd()), false);
+				return (this->handleErrNoSuchChannel(c, target), this->poolOut.push(c.getFd()), false);
 			}
 			if (!targetChannel->checkMode(CHANNEL_NOT_EXTERNAL))
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
 		if (targetChannel->checkMode(CHANNEL_MODERATED) && 
-			!((c.checkFlag(target, CHANNEL_USER_OPERATOR) || c.checkFlag(target, CHANNEL_USER_VOICE))))
+			!((c.checkFlag(target, USER_OPERATOR) || c.checkFlag(target, USER_VOICE))))
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
 	}

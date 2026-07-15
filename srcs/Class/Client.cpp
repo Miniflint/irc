@@ -130,7 +130,7 @@ bool				Client::checkFlag(const std::string &toCheck, AccessType mode) const
 	return ((this->_channel[toCheck].second & mode) == mode);
 }
 
-const Trie<std::pair<Channel *, AccessType> >	&Client::getChannel(void) const
+Trie<std::pair<Channel *, AccessType> >	&Client::getChannel(void)
 {
 	return (this->_channel);
 }
