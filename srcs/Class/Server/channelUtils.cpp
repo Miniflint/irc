@@ -21,6 +21,8 @@ Channel	*Server::_joinChannelSendMsg(Client &c, Channel *chan, std::string &chan
 	for (std::vector<int>::iterator it = chan->getClientsFD().begin(); it != chan->getClientsFD().end(); ++it)
 		this->sendToClient(this->getClient(*it), joinMsg);
 	this->handleRplTopic(c, channelName, chan->getTopic());
+	this->handleRplNameReply(c, channelName, *chan);
+	this->handleRplEndofnames(c, channelName);
 	return (chan);
 }
 

@@ -27,7 +27,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		&Server::handle_squit, &Server::handle_setname, &Server::handle_silence, &Server::handle_stats,
 		&Server::handle_summon, &Server::handle_time, &Server::handle_topic, &Server::handle_trace,
 		&Server::handleUser, &Server::handle_userhost, &Server::handle_userip, &Server::handle_users,
-		&Server::handle_version, &Server::handle_wallops, &Server::handle_watch, &Server::handle_who,
+		&Server::handle_version, &Server::handle_wallops, &Server::handle_watch, &Server::handleWho,
 		&Server::handle_whois, &Server::handle_whowas, &Server::handleDcc, &Server::handle_message
 	};
 	for (unsigned int i = 0; i <= END; i++)

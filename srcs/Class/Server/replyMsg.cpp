@@ -2,909 +2,953 @@
 
 std::string Server::_rplPrefix(std::string code, std::string nickName) const
 {
-    if (nickName.empty())
-        nickName = "*";
-    std::string rplMessage(":");
-    rplMessage.reserve(this->_host.size() + 5 + nickName.size() + 2);
-    rplMessage.append(this->_host).append(1, ' ').append(code).append(1, ' ').append(nickName).append(1, ' ');
-    return (rplMessage);
+	if (nickName.empty())
+		nickName = "*";
+	std::string rplMessage(":");
+	rplMessage.reserve(this->_host.size() + 5 + nickName.size() + 2);
+	rplMessage.append(this->_host).append(1, ' ').append(code).append(1, ' ').append(nickName).append(1, ' ');
+	return (rplMessage);
 }
 
-void    Server::handleRplWelcome(Client &c)
+void	Server::handleRplWelcome(Client &c)
 {
-    std::string rplMessage(_rplPrefix("001", c.getNick()));
-    std::string middlePrefix(":Welcome the IRC Server of 42 (Made by Simon, Tricaducee and Miniflint) - ");
-    const std::string &nickName = c.getNick();
-    const std::string &userName = c.getUserName();
-    const std::string &hostName = c.getHostName();
-    rplMessage.reserve(rplMessage.size() + middlePrefix.size() + nickName.size() + userName.size() + hostName.size() + 5);
-    rplMessage.append(middlePrefix).append(nickName).append(1, '!').append(userName).append(1, '@').append(hostName).append("\r\n");
+	std::string rplMessage(_rplPrefix("001", c.getNick()));
+	std::string middlePrefix(":Welcome the IRC Server of 42 (Made by Simon, Tricaducee and Miniflint) - ");
+	const std::string &nickName = c.getNick();
+	const std::string &userName = c.getUserName();
+	const std::string &hostName = c.getHostName();
+	rplMessage.reserve(rplMessage.size() + middlePrefix.size() + nickName.size() + userName.size() + hostName.size() + 5);
+	rplMessage.append(middlePrefix).append(nickName).append(1, '!').append(userName).append(1, '@').append(hostName).append("\r\n");
 	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplYourhost(Client &c)
+void	Server::handleRplYourhost(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("002", c.getNick()));
-    std::string middlePrefix(":Your host is ");
-    const std::string &hostName = this->getIp();
-    rplMessage.reserve(rplMessage.size() + middlePrefix.size() + hostName.size() + 2);
-    rplMessage.append(middlePrefix).append(hostName).append("\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("002", c.getNick()));
+	std::string middlePrefix(":Your host is ");
+	const std::string &hostName = this->getIp();
+	rplMessage.reserve(rplMessage.size() + middlePrefix.size() + hostName.size() + 2);
+	rplMessage.append(middlePrefix).append(hostName).append("\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplCreated(Client &c)
+void	Server::handleRplCreated(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("003", c.getNick()));
-    std::string middlePrefix(":The server was created at this date: [2026-06-13 14:16 GMT+2]\r\n");
-    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
-    rplMessage.append(middlePrefix);
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("003", c.getNick()));
+	std::string middlePrefix(":The server was created at this date: [2026-06-13 14:16 GMT+2]\r\n");
+	rplMessage.reserve(rplMessage.size() + middlePrefix.size());
+	rplMessage.append(middlePrefix);
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplMyinfo(Client &c)
+void	Server::handleRplMyinfo(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("004", c.getNick()));
-    std::string middlePrefix(":Bla bla\r\n");
-    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
-    rplMessage.append(middlePrefix);
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("004", c.getNick()));
+	std::string middlePrefix(":Bla bla\r\n");
+	rplMessage.reserve(rplMessage.size() + middlePrefix.size());
+	rplMessage.append(middlePrefix);
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplISupport(Client &c)
+void	Server::handleRplISupport(Client &c)
 {
-    std::ostringstream oss;
-    std::string rplMessage(this->_rplPrefix("005", c.getNick()));
-    std::string chanType("CHANTYPES=");
-    chanType.append(this->_channelSpecifiers.channelType);
-    std::string chanLen(" CHANNELLEN=");
-    oss << this->_channelSpecifiers.channelLen;
-    chanLen += oss.str();
-    std::string chanMode(" CHAN=");
-    chanMode.append(this->_channelSpecifiers.channelMode);
-    std::string chanPrefix(" PREFIX=");
-    chanPrefix.append(this->_channelSpecifiers.channelAuthPrefix);
-    std::string nickLen(" NICKLEN=");
-    oss.clear();
-    oss << this->_clientSpecifiers.nickLenMax;
-    nickLen += oss.str();
-    std::string endComment(" :are supported by this server");
-    rplMessage.append(chanType).append(chanLen).append(chanMode)
-        .append(chanPrefix).append(nickLen).append(endComment).append("\r\n");
-    c.addBufferOut(rplMessage);
+	std::ostringstream oss;
+	std::string rplMessage(this->_rplPrefix("005", c.getNick()));
+	std::string chanType("CHANTYPES=");
+	chanType.append(this->_channelSpecifiers.channelType);
+	std::string chanLen(" CHANNELLEN=");
+	oss << this->_channelSpecifiers.channelLen;
+	chanLen += oss.str();
+	std::string chanMode(" CHAN=");
+	chanMode.append(this->_channelSpecifiers.channelMode);
+	std::string chanPrefix(" PREFIX=");
+	chanPrefix.append(this->_channelSpecifiers.channelAuthPrefix);
+	std::string nickLen(" NICKLEN=");
+	oss.clear();
+	oss << this->_clientSpecifiers.nickLenMax;
+	nickLen += oss.str();
+	std::string endComment(" :are supported by this server");
+	rplMessage.append(chanType).append(chanLen).append(chanMode)
+		.append(chanPrefix).append(nickLen).append(endComment).append("\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTracelink(Client &c)
+void	Server::handleRplTracelink(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTraceconnecting(Client &c)
+void	Server::handleRplTraceconnecting(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTracehandshake(Client &c)
+void	Server::handleRplTracehandshake(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTraceunknown(Client &c)
+void	Server::handleRplTraceunknown(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTraceoperator(Client &c)
+void	Server::handleRplTraceoperator(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTraceuser(Client &c)
+void	Server::handleRplTraceuser(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTraceserver(Client &c)
+void	Server::handleRplTraceserver(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTraceservice(Client &c)
+void	Server::handleRplTraceservice(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTracenewtype(Client &c)
+void	Server::handleRplTracenewtype(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTraceclass(Client &c)
+void	Server::handleRplTraceclass(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTracereconnect(Client &c)
+void	Server::handleRplTracereconnect(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatslinkinfo(Client &c)
+void	Server::handleRplStatslinkinfo(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatscommands(Client &c)
+void	Server::handleRplStatscommands(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatscline(Client &c)
+void	Server::handleRplStatscline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsnline(Client &c)
+void	Server::handleRplStatsnline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsiline(Client &c)
+void	Server::handleRplStatsiline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatskline(Client &c)
+void	Server::handleRplStatskline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsqline(Client &c)
+void	Server::handleRplStatsqline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsyline(Client &c)
+void	Server::handleRplStatsyline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofstats(Client &c)
+void	Server::handleRplEndofstats(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplUmodeis(Client &c)
+void	Server::handleRplUmodeis(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplServiceinfo(Client &c)
+void	Server::handleRplServiceinfo(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofservices(Client &c)
+void	Server::handleRplEndofservices(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplService(Client &c)
+void	Server::handleRplService(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplServlist(Client &c)
+void	Server::handleRplServlist(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplServlistend(Client &c)
+void	Server::handleRplServlistend(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsvline(Client &c)
+void	Server::handleRplStatsvline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatslline(Client &c)
+void	Server::handleRplStatslline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsuptime(Client &c)
+void	Server::handleRplStatsuptime(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsoline(Client &c)
+void	Server::handleRplStatsoline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatshline(Client &c)
+void	Server::handleRplStatshline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsping(Client &c)
+void	Server::handleRplStatsping(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsbline(Client &c)
+void	Server::handleRplStatsbline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplStatsdline(Client &c)
+void	Server::handleRplStatsdline(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplLuserclient(Client &c)
+void	Server::handleRplLuserclient(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplLuserop(Client &c)
+void	Server::handleRplLuserop(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplLuserunknown(Client &c)
+void	Server::handleRplLuserunknown(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplLuserchannels(Client &c)
+void	Server::handleRplLuserchannels(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplLuserme(Client &c)
+void	Server::handleRplLuserme(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplAdminme(Client &c)
+void	Server::handleRplAdminme(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplAdminloc1(Client &c)
+void	Server::handleRplAdminloc1(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplAdminloc2(Client &c)
+void	Server::handleRplAdminloc2(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplAdminemail(Client &c)
+void	Server::handleRplAdminemail(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTracelog(Client &c)
+void	Server::handleRplTracelog(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTraceend(Client &c)
+void	Server::handleRplTraceend(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTryagain(Client &c)
+void	Server::handleRplTryagain(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplNone(Client &c)
+void	Server::handleRplNone(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplAway(Client &c)
+void	Server::handleRplAway(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplUserhost(Client &c)
+void	Server::handleRplUserhost(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplIson(Client &c)
+void	Server::handleRplIson(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplUnaway(Client &c)
+void	Server::handleRplUnaway(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplNowaway(Client &c)
+void	Server::handleRplNowaway(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplWhoisuser(Client &c)
+void	Server::handleRplWhoisuser(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplWhoisserver(Client &c)
+void	Server::handleRplWhoisserver(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplWhoisoperator(Client &c)
+void	Server::handleRplWhoisoperator(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplWhowasuser(Client &c)
+void	Server::handleRplWhowasuser(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofwho(Client &c)
+void	Server::handleRplEndOfWho(Client &c, std::string target)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("315", c.getNick()));
+	c.addBufferOut(rplMessage.append(target).append(" :End of WHO list\r\n"));
 }
-void    Server::handleRplWhoischanop(Client &c)
+void	Server::handleRplWhoischanop(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplWhoisidle(Client &c)
+void	Server::handleRplWhoisidle(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofwhois(Client &c)
+void	Server::handleRplEndofwhois(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplWhoischannels(Client &c)
+void	Server::handleRplWhoischannels(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplListStart(Client &c)
+void	Server::handleRplListStart(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("321", c.getNick()));
-    rplMessage.append("\r\n");
-    // std::cout << rplMessage << std::endl;
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("321", c.getNick()));
+	rplMessage.append("\r\n");
+	// std::cout << rplMessage << std::endl;
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplList(Client &c)
+void	Server::handleRplList(Client &c)
 {
-    std::list<Channel>::const_iterator end = this->_channel.end();
-    std::ostringstream amountUserStr;
-    for (std::list<Channel>::const_iterator it = this->_channel.begin(); it != end; it++)
-    {
-        std::string rplMessage(this->_rplPrefix("322", c.getNick()));
-        const Channel currentChannel = *it;
-        amountUserStr << currentChannel.getClientsFD().size();
-        std::string channelTopic = currentChannel.getTopic().size() > 2 ? currentChannel.getTopic() : "No topic";
-        rplMessage.append(currentChannel.getNick()).append(1, ' ')
-            .append(amountUserStr.str()).append(" :").append(channelTopic).append("\r\n");
-        // std::cout << rplMessage << std::endl;
-        c.addBufferOut(rplMessage);
-        amountUserStr.clear();
-    }
+	std::list<Channel>::const_iterator end = this->_channel.end();
+	std::ostringstream amountUserStr;
+	for (std::list<Channel>::const_iterator it = this->_channel.begin(); it != end; it++)
+	{
+		std::string rplMessage(this->_rplPrefix("322", c.getNick()));
+		const Channel currentChannel = *it;
+		amountUserStr << currentChannel.getClientsFD().size();
+		std::string channelTopic = currentChannel.getTopic().size() > 2 ? currentChannel.getTopic() : "No topic";
+		rplMessage.append(currentChannel.getNick()).append(1, ' ')
+			.append(amountUserStr.str()).append(" :").append(channelTopic).append("\r\n");
+		// std::cout << rplMessage << std::endl;
+		c.addBufferOut(rplMessage);
+		amountUserStr.clear();
+	}
 }
-void    Server::handleRplListEnd(Client &c)
+void	Server::handleRplListEnd(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("323", c.getNick()));
-    rplMessage.append(":End of LIST\r\n");
-    // std::cout << rplMessage << std::endl;
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("323", c.getNick()));
+	rplMessage.append(":End of LIST\r\n");
+	// std::cout << rplMessage << std::endl;
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplChannelmodeis(Client &c)
+void	Server::handleRplChannelmodeis(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplUniqopis(Client &c)
+void	Server::handleRplUniqopis(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplNotopic(Client &c)
+void	Server::handleRplNotopic(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
 //WILL BE USED
-void    Server::handleRplTopic(Client &c, std::string channelName, std::string topic)
+void	Server::handleRplTopic(Client &c, std::string channelName, std::string topic)
+{
+	std::string rplMessage(this->_rplPrefix("332", c.getNick()));
+	rplMessage.append(channelName).append(" :");
+	if (topic.empty())
+		rplMessage.append("No topic");
+	else
+		rplMessage.append(topic);
+	rplMessage.append("\r\n");
+	c.addBufferOut(rplMessage);
+}
+void	Server::handleRplInviting(Client &c)
+{
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
+}
+void	Server::handleRplSummoning(Client &c)
+{
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
+}
+void	Server::handleRplInvitelist(Client &c)
+{
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
+}
+void	Server::handleRplEndofinvitelist(Client &c)
+{
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
+}
+void	Server::handleRplExceptlist(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("332", c.getNick()));
-    rplMessage.append(channelName).append(" :");
-    if (topic.empty())
-        rplMessage.append("no topic");
-    else
-        rplMessage.append(topic);
-    rplMessage.append("\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplInviting(Client &c)
+void	Server::handleRplEndofexceptlist(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplSummoning(Client &c)
+
+void	Server::handleRplVersion(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplInvitelist(Client &c)
+
+void	Server::handleRplWhoReply(Client &c, Client &cWho, Channel &chan)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("352", c.getNick()));
+	std::string	status;
+	uint8_t	usrStatus = cWho.getStatus();
+	if (usrStatus & USR_STATUS_AWAY)
+		status = " G";
+	else
+		status = " H";
+	if (usrStatus & USR_STATUS_OPER)
+		status.append(1, '*');
+	AccessType	access = cWho.getChannelAccess(chan.getNick());
+	if (access & USER_FOUNDER)
+		status.append(1, '~');
+	else if (access & USER_OPERATOR)
+		status.append(1, '@');
+	else if (access & USER_VOICE)
+		status.append(1, '+');
+	c.addBufferOut(rplMessage.append(chan.getNick()).append(1, ' ').append(cWho.getUserName()).append(1, ' ').append(cWho.getHostName()).append(1, ' ').append(SERV_HOST_NAME).append(1, ' ').append(cWho.getNick()).append(status).append(" :0 ").append(cWho.getRealName()).append("\r\n"));
 }
-void    Server::handleRplEndofinvitelist(Client &c)
+
+void	Server::handleRplNameReply(Client &c, std::string channelName, Channel &chan)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("353", c.getNick()));
+	if (chan.getMode() & CHANNEL_SECRET)
+		rplMessage.append("@ ");
+	else
+		rplMessage.append("= ");
+	rplMessage.append(channelName);
+	rplMessage.append(" :");
+	std::string	actualReply(rplMessage);
+	for (std::vector<int>::iterator it = chan.getClientsFD().begin(); it != chan.getClientsFD().end(); ++it) {
+		Client  &itClient = this->getClient(*it);
+		AccessType  access = itClient.getChannelAccess(channelName);
+		std::string	user;
+		if (access & USER_FOUNDER)
+			user.append(1, '~');
+		else if (access & USER_OPERATOR)
+			user.append(1, '@');
+		else if (access & USER_VOICE)
+			user.append(1, '+');
+		user.append(itClient.getNick());
+		if (user.size() + actualReply.size() > MAX_PACKET_SIZE - 2) {
+			actualReply.pop_back();
+			c.addBufferOut(actualReply.append("\r\n"));
+			actualReply = rplMessage;
+		}
+		actualReply.append(user).append(1, ' ');
+	}
+	actualReply.pop_back();
+	c.addBufferOut(actualReply.append("\r\n"));
 }
-void    Server::handleRplExceptlist(Client &c)
+void	Server::handleRplKilldone(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofexceptlist(Client &c)
+void	Server::handleRplClosing(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplVersion(Client &c)
+void	Server::handleRplCloseend(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplWhoreply(Client &c)
+void	Server::handleRplLinks(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplNamreply(Client &c)
+void	Server::handleRplEndoflinks(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplKilldone(Client &c)
+void	Server::handleRplEndofnames(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("366", c.getNick()));
+	c.addBufferOut(rplMessage.append(channelName).append(" :End of /NAMES list\r\n"));
 }
-void    Server::handleRplClosing(Client &c)
+void	Server::handleRplBanlist(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplCloseend(Client &c)
+void	Server::handleRplEndofbanlist(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplLinks(Client &c)
+void	Server::handleRplEndofwhowas(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndoflinks(Client &c)
+void	Server::handleRplInfo(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofnames(Client &c)
+void	Server::handleRplMotd(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::vector<std::string>::const_iterator end = this->_motd.announcements.end();
+	for (std::vector<std::string>::const_iterator it = this->_motd.announcements.begin(); it != end; it++) {
+		std::string rplMessage(this->_rplPrefix("372", c.getNick()));
+		rplMessage.append(":-").append(*it).append("\r\n");
+		c.addBufferOut(rplMessage);
+	}
 }
-void    Server::handleRplBanlist(Client &c)
+void	Server::handleRplInfostart(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofbanlist(Client &c)
+void	Server::handleRplEndofinfo(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofwhowas(Client &c)
+void	Server::handleRplMotdstart(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("375", c.getNick()));
+	rplMessage.append(":-").append(this->_motd.motd).append("\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplInfo(Client &c)
+void	Server::handleRplEndofmotd(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("376", c.getNick()));
+	rplMessage.append(":End of /MOTD\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplMotd(Client &c)
+void	Server::handleRplYoureoper(Client &c)
 {
-    std::vector<std::string>::const_iterator end = this->_motd.announcements.end();
-    for (std::vector<std::string>::const_iterator it = this->_motd.announcements.begin(); it != end; it++) {
-        std::string rplMessage(this->_rplPrefix("372", c.getNick()));
-        rplMessage.append(":-").append(*it).append("\r\n");
-        c.addBufferOut(rplMessage);
-    }
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplInfostart(Client &c)
+void	Server::handleRplRehashing(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofinfo(Client &c)
+void	Server::handleRplYoureservice(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplMotdstart(Client &c)
+void	Server::handleRplMyportis(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("375", c.getNick()));
-    rplMessage.append(":-").append(this->_motd.motd).append("\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofmotd(Client &c)
+void	Server::handleRplTime(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("376", c.getNick()));
-    rplMessage.append(":End of /MOTD\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplYoureoper(Client &c)
+void	Server::handleRplUsersstart(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplRehashing(Client &c)
+void	Server::handleRplUsers(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplYoureservice(Client &c)
+void	Server::handleRplEndofusers(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplMyportis(Client &c)
+void	Server::handleRplNousers(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplTime(Client &c)
+void	Server::handleErrNoSuchNick(Client &c, std::string clientName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("401", c.getNick()));
+	rplMessage.append(clientName).append(" :No such nickname\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplUsersstart(Client &c)
+void	Server::handleErrNosuchserver(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplUsers(Client &c)
+void	Server::handleErrNoSuchChannel(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("403", c.getNick()));
+	rplMessage.append(channelName).append(" :No such channel\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplEndofusers(Client &c)
+void	Server::handleErrCannotSendToChan(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("404", c.getNick()));
+	rplMessage.append(channelName).append(" :Cannot send to Channel/User\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleRplNousers(Client &c)
+void	Server::handleErrToomanychannels(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNoSuchNick(Client &c, std::string clientName)
+void	Server::handleErrWasnosuchnick(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("401", c.getNick()));
-    rplMessage.append(clientName).append(" :No such nickname\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNosuchserver(Client &c)
+void	Server::handleErrToomanytargets(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNoSuchChannel(Client &c, std::string channelName)
+void	Server::handleErrNosuchservice(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("403", c.getNick()));
-    rplMessage.append(channelName).append(" :No such channel\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrCannotSendToChan(Client &c, std::string channelName)
+void	Server::handleErrNoorigin(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("404", c.getNick()));
-    rplMessage.append(channelName).append(" :Cannot send to Channel/User\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrToomanychannels(Client &c)
+void	Server::handleErrNoRecipient(Client &c, std::string cmd)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("411", c.getNick()));
+	std::string middlePrefix("No Recipient Given (");
+	rplMessage.append(middlePrefix).append(cmd).append(")\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrWasnosuchnick(Client &c)
+void	Server::handleErrNoTextToSend(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("412", c.getNick()));
+	rplMessage.append(":No text to send or Message in wrong format\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrToomanytargets(Client &c)
+void	Server::handleErrNotoplevel(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNosuchservice(Client &c)
+void	Server::handleErrWildtoplevel(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNoorigin(Client &c)
+void	Server::handleErrBadmask(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNoRecipient(Client &c, std::string cmd)
+void	Server::handleErrUnknowncommand(Client &c, std::string cmd)
 {
-    std::string rplMessage(this->_rplPrefix("411", c.getNick()));
-    std::string middlePrefix("No Recipient Given (");
-    rplMessage.append(middlePrefix).append(cmd).append(")\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("421", c.getNick()));
+	rplMessage.append(cmd).append(" :Unknown command\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNoTextToSend(Client &c)
+void	Server::handleErrNomotd(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("412", c.getNick()));
-    rplMessage.append(":No text to send or Message in wrong format\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNotoplevel(Client &c)
+void	Server::handleErrNoadmininfo(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrWildtoplevel(Client &c)
+void	Server::handleErrFileerror(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrBadmask(Client &c)
+void	Server::handleErrNoNicknameGiven(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("431", c.getNick()));
+	std::string middlePrefix(":No nickname given\r\n");
+	rplMessage.reserve(rplMessage.size() + middlePrefix.size());
+	rplMessage.append(middlePrefix);
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrUnknowncommand(Client &c, std::string cmd)
+void	Server::handleErrErroneousNickname(Client &c, std::string targetNickName)
 {
-    std::string rplMessage(this->_rplPrefix("421", c.getNick()));
-    rplMessage.append(cmd).append(":Unknown command\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("432", c.getNick()));
+	std::string middlePrefix(" :Is erroneous\r\n");
+	rplMessage.reserve(rplMessage.size() + targetNickName.size() + middlePrefix.size());
+	rplMessage.append(targetNickName).append(1, ' ').append(middlePrefix);
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNomotd(Client &c)
+void	Server::handleErrNicknameInUse(Client &c, std::string targetNickName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("433", c.getNick()));
+	std::string middlePrefix(":Nickname already in use\r\n");
+	rplMessage.reserve(rplMessage.size() + targetNickName.size() + middlePrefix.size());
+	rplMessage.append(targetNickName).append(1, ' ').append(middlePrefix);
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNoadmininfo(Client &c)
+void	Server::handleErrNickCollision(Client &c, std::string targetNickName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("436", c.getNick()));
+	std::string middlePrefix(" :Nickname collision. Cannot proceed further");
+	rplMessage.reserve(rplMessage.size() + (targetNickName.size() * 2) + middlePrefix.size() + 7);
+	rplMessage.append(targetNickName).append(middlePrefix).append(" [").append(targetNickName).append("]\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrFileerror(Client &c)
+void	Server::handleErrUnavailresource(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNoNicknameGiven(Client &c)
+void	Server::handleErrUsernotinchannel(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("431", c.getNick()));
-    std::string middlePrefix(":No nickname given\r\n");
-    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
-    rplMessage.append(middlePrefix);
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrErroneousNickname(Client &c, std::string targetNickName)
+void	Server::handleErrNotonchannel(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("432", c.getNick()));
-    std::string middlePrefix(" :Is erroneous\r\n");
-    rplMessage.reserve(rplMessage.size() + targetNickName.size() + middlePrefix.size());
-    rplMessage.append(targetNickName).append(1, ' ').append(middlePrefix);
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	// uint32_t t = ERR_NOTONCHANNEL;
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNicknameInUse(Client &c, std::string targetNickName)
+void	Server::handleErrUseronchannel(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("433", c.getNick()));
-    std::string middlePrefix(":Nickname already in use\r\n");
-    rplMessage.reserve(rplMessage.size() + targetNickName.size() + middlePrefix.size());
-    rplMessage.append(targetNickName).append(1, ' ').append(middlePrefix);
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNickCollision(Client &c, std::string targetNickName)
+void	Server::handleErrNologin(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("436", c.getNick()));
-    std::string middlePrefix(" :Nickname collision. Cannot proceed further");
-    rplMessage.reserve(rplMessage.size() + (targetNickName.size() * 2) + middlePrefix.size() + 7);
-    rplMessage.append(targetNickName).append(middlePrefix).append(" [").append(targetNickName).append("]\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrUnavailresource(Client &c)
+void	Server::handleErrSummondisabled(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrUsernotinchannel(Client &c)
+void	Server::handleErrUsersdisabled(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNotonchannel(Client &c)
+void	Server::handleErrNotregistered(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    // uint32_t t = ERR_NOTONCHANNEL;
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("451", c.getNick()));
+	rplMessage.append(":You have not registered\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrUseronchannel(Client &c)
+void	Server::handleErrNeedMoreParams(Client &c, std::string cmd)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("461", c.getNick()));
+	rplMessage.append(cmd).append(" :Not enough parameters\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNologin(Client &c)
+void	Server::handleErrAlreadyRegistered(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("462", c.getNick()));
+	std::string middlePrefix(":You may not reregister\r\n");
+	rplMessage.reserve(rplMessage.size() + middlePrefix.size());
+	rplMessage.append(middlePrefix);
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrSummondisabled(Client &c)
+void	Server::handleErrNopermforhost(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrUsersdisabled(Client &c)
+void	Server::handleErrPasswdMismatch(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("464", c.getNick()));
+	std::string middlePrefix(":Password mismatch | This Server require a password\r\n");
+	rplMessage.reserve(rplMessage.size() + middlePrefix.size());
+	rplMessage.append(middlePrefix);
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNotregistered(Client &c)
+void	Server::handleErrYourebannedcreep(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("451", c.getNick()));
-    rplMessage.append(":You have not registered\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNeedMoreParams(Client &c, std::string cmd)
+void	Server::handleErrYouwillbebanned(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("461", c.getNick()));
-    rplMessage.append(cmd).append(" :Not enough parameters\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrAlreadyRegistered(Client &c)
+void	Server::handleErrKeyset(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("462", c.getNick()));
-    std::string middlePrefix(":You may not reregister\r\n");
-    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
-    rplMessage.append(middlePrefix);
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNopermforhost(Client &c)
+void	Server::handleErrChannelisfull(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("471", c.getNick()));
+	rplMessage.append(channelName).append(" :Cannot join channel (+l)\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrPasswdMismatch(Client &c)
+void	Server::handleErrUnknownmode(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("464", c.getNick()));
-    std::string middlePrefix(":Password mismatch | This Server require a password\r\n");
-    rplMessage.reserve(rplMessage.size() + middlePrefix.size());
-    rplMessage.append(middlePrefix);
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrYourebannedcreep(Client &c)
+void	Server::handleErrInviteOnlyChan(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("473", c.getNick()));
+	rplMessage.append(channelName).append(" :Cannot join channel (+i)\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrYouwillbebanned(Client &c)
+void	Server::handleErrBannedFromChan(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	// "<client> <channel> :Cannot join channel (+b)"
+	std::string rplMessage(this->_rplPrefix("474", c.getNick()));
+	rplMessage.append(channelName).append(" :Cannot join channel (+b)\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrKeyset(Client &c)
+void	Server::handleErrBadChannelKey(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("475", c.getNick()));
+	rplMessage.append(channelName).append(" :Cannot join channel (+k)\r\n");
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrChannelisfull(Client &c, std::string channelName)
+void	Server::handleErrBadChanMask(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("471", c.getNick()));
-    rplMessage.append(channelName).append(" :Cannot join channel (+l)\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("476", c.getNick()));
+	std::string middlePrefix(" :Bad Channel Mask\r\n");
+	rplMessage.append(channelName).append(middlePrefix);
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrUnknownmode(Client &c)
+void	Server::handleErrNochanmodes(Client &c, std::string channelName)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	(void)channelName;
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrInviteOnlyChan(Client &c, std::string channelName)
+void	Server::handleErrBanlistfull(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("473", c.getNick()));
-    rplMessage.append(channelName).append(" :Cannot join channel (+i)\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrBannedFromChan(Client &c, std::string channelName)
+void	Server::handleErrNoprivileges(Client &c)
 {
-    // "<client> <channel> :Cannot join channel (+b)"
-    std::string rplMessage(this->_rplPrefix("474", c.getNick()));
-    rplMessage.append(channelName).append(" :Cannot join channel (+b)\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrBadChannelKey(Client &c, std::string channelName)
+void	Server::handleErrChanoprivsneeded(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("475", c.getNick()));
-    rplMessage.append(channelName).append(" :Cannot join channel (+k)\r\n");
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrBadChanMask(Client &c, std::string channelName)
+void	Server::handleErrCantkillserver(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("476", c.getNick()));
-    std::string middlePrefix(" :Bad Channel Mask\r\n");
-    rplMessage.append(channelName).append(middlePrefix);
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNochanmodes(Client &c, std::string channelName)
+void	Server::handleErrRestricted(Client &c)
 {
-    (void)channelName;
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrBanlistfull(Client &c)
+void	Server::handleErrUniqoprivsneeded(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrNoprivileges(Client &c)
+void	Server::handleErrNooperhost(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrChanoprivsneeded(Client &c)
+void	Server::handleErrNoservicehost(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrCantkillserver(Client &c)
+void	Server::handleErrUmodeunknownflag(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }
-void    Server::handleErrRestricted(Client &c)
+void	Server::handleErrUsersdontmatch(Client &c)
 {
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
-}
-void    Server::handleErrUniqoprivsneeded(Client &c)
-{
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
-}
-void    Server::handleErrNooperhost(Client &c)
-{
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
-}
-void    Server::handleErrNoservicehost(Client &c)
-{
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
-}
-void    Server::handleErrUmodeunknownflag(Client &c)
-{
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
-}
-void    Server::handleErrUsersdontmatch(Client &c)
-{
-    std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-    c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	c.addBufferOut(rplMessage);
 }

@@ -3,7 +3,7 @@
 
 Client::Client() {}
 
-Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
+Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), _userStatus(USR_STATUS_NONE), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
 
 Client::~Client() {}
 
@@ -117,19 +117,54 @@ size_t	Client::getFd() const
 	return (this->_fd);
 }
 
-void	Client::addAccess(const std::string &toCheck, AccessType flag)
+void	Client::addChannelAccess(const std::string &toCheck, AccessType flag)
 {
-	this->_channel[toCheck].second |= flag;
+	try {
+		this->_channel[toCheck].second |= flag;
+	} catch (std::exception &e) { (void)e; }
 }
 
-void	Client::delAccess(const std::string &toCheck, AccessType flag) const
+void	Client::delChannelAccess(const std::string &toCheck, AccessType flag) const
 {
-	this->_channel[toCheck].second &= ~flag;
+	try {
+		this->_channel[toCheck].second &= ~flag;
+	} catch (std::exception &e) { (void)e; }
 }
 
-bool				Client::checkFlag(const std::string &toCheck, AccessType mode) const
+bool	Client::checkChannelAccess(const std::string &toCheck, AccessType mode) const
 {
-	return ((this->_channel[toCheck].second & mode) == mode);
+	try {
+		return ((this->_channel[toCheck].second & mode) == mode);
+	} catch (std::exception &e) { (void)e; }
+	return (false);
+}
+
+AccessType	Client::getChannelAccess(const std::string &toCheck) const
+{
+	try {
+		return (this->_channel[toCheck].second);
+	} catch (std::exception &e) { (void)e; }
+	return (NO_ACCESS);
+}
+
+void	Client::addStatus(uint8_t status)
+{
+	this->_userStatus |= status;
+}
+
+void	Client::delStatus(uint8_t status)
+{
+	this->_userStatus &= ~status;
+}
+
+bool	Client::checkStatus(uint8_t status) const
+{
+	return ((this->_userStatus & status) == status);
+}
+
+uint8_t	Client::getStatus() const
+{
+	return (this->_userStatus);
 }
 
 Trie<std::pair<Channel *, AccessType> >	&Client::getChannel(void)

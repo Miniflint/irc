@@ -373,7 +373,7 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
 		if (targetChannel->checkMode(CHANNEL_MODERATED) && 
-			!((c.checkFlag(target, USER_OPERATOR) || c.checkFlag(target, USER_VOICE))))
+			!((c.checkChannelAccess(target, USER_OPERATOR) || c.checkChannelAccess(target, USER_VOICE))))
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
 	}
@@ -600,11 +600,18 @@ bool	Server::handle_watch(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_who(Client &c, std::istringstream &iss) 
+bool	Server::handleWho(Client &c, std::istringstream &iss) 
 {
 	std::string token;
 	iss >> token;
-	this->handleErrUnknowncommand(c, "WHO");
+	if (token.empty())
+		return (false);
+	try {
+		Channel	*chan = c.getChannel()[token].first;
+		for (std::vector<int>::iterator it = chan->getClientsFD().begin(); it != chan->getClientsFD().end(); ++it)
+			this->handleRplWhoReply(c, this->getClient(*it), *chan);
+	} catch (std::exception &e) { (void)e; }
+	this->handleRplEndOfWho(c, token);
 	this->poolOut.push(c.getFd());
 	return (true);
 }
