@@ -12,6 +12,19 @@
 # include <iostream>
 # include <string>
 
+void	tag() {
+std::cout << "--------------------------------------------------------------------------" << std::endl;
+std::cout << "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc   |" << std::endl;
+std::cout << "| | $$  | $$ /$$__  $$|_  $$_/| $$__  $$ /$$__  $$ | Whith love by:      |" << std::endl;
+std::cout << "| | $$  | $$|__/  \\ $$  | $$  | $$  \\ $$| $$  \\__/ | - Miniflint         |" << std::endl;
+std::cout << "| | $$$$$$$$  /$$$$$$/  | $$  | $$$$$$$/| $$       | - Simon             |" << std::endl;
+std::cout << "| |_____  $$ /$$____/   | $$  | $$__  $$| $$       | - and Tricaducee    |" << std::endl;
+std::cout << "|       | $$| $$        | $$  | $$  \\ $$| $$    $$ | Tested whith:       |" << std::endl;
+std::cout << "|       | $$| $$$$$$$$ /$$$$$$| $$  | $$|  $$$$$$/ | Halloy irc client   |" << std::endl;
+std::cout << "|       |__/|________/|______/|__/  |__/ \\______/  | https://halloy.chat |" << std::endl;
+std::cout << "--------------------------------------------------------------------------" << std::endl;                                         
+}
+
 void	display_help(char *filename)
 {
 	std::cout << filename << " <port> <password>" << std::endl;
@@ -44,6 +57,7 @@ int	main(int ac, char **argv)
 	if (i >= 1)
 		return (i - 1);
 	Server	serv(atoi(argv[1]), argv[2]);
+	tag();
 	serv.run();
 	//serv.setClient(0);
 	//createUserAndRegister(serv, 5, "NICK Xavier", "USER Xav * * :Dup");
