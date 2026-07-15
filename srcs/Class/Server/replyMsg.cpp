@@ -394,6 +394,7 @@ void    Server::handleRplList(Client &c)
             .append(amountUserStr.str()).append(" :").append(channelTopic).append("\r\n");
         std::cout << rplMessage << std::endl;
         c.addBufferOut(rplMessage);
+        amountUserStr.clear();
     }
 }
 void    Server::handleRplListEnd(Client &c)

@@ -1,0 +1,9 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/miniflint/Documents/cursus/irc",
+            "binaryPath": "/home/miniflint/Documents/cursus/irc/ircserv",
+            "binaryArgs": []
+        }
+    ]
+}
