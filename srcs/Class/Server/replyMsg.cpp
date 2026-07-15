@@ -373,9 +373,10 @@ void    Server::handleRplWhoischannels(Client &c)
     std::string rplMessage(this->_rplPrefix("000", c.getNick()));
     c.addBufferOut(rplMessage);
 }
-void    Server::handleRplListstart(Client &c)
+void    Server::handleRplListStart(Client &c)
 {
     std::string rplMessage(this->_rplPrefix("321", c.getNick()));
+    rplMessage.append("\r\n");
     std::cout << rplMessage << std::endl;
     c.addBufferOut(rplMessage);
 }
@@ -385,23 +386,20 @@ void    Server::handleRplList(Client &c)
     std::ostringstream amountUserStr;
     for (std::list<Channel>::const_iterator it = this->_channel.begin(); it != end; it++)
     {
-        std::cerr << (*it).getNick() << std::endl;
         std::string rplMessage(this->_rplPrefix("322", c.getNick()));
         const Channel currentChannel = *it;
         amountUserStr << currentChannel.getClientsFD().size();
-        if (amountUserStr.fail())
-            std::cout << ":(" << std::endl;
         std::string channelTopic = currentChannel.getTopic().size() > 2 ? currentChannel.getTopic() : "No topic";
         rplMessage.append(currentChannel.getNick()).append(1, ' ')
-            .append(amountUserStr.str()).append(" :").append(channelTopic);
+            .append(amountUserStr.str()).append(" :").append(channelTopic).append("\r\n");
         std::cout << rplMessage << std::endl;
         c.addBufferOut(rplMessage);
     }
 }
-void    Server::handleRplListend(Client &c)
+void    Server::handleRplListEnd(Client &c)
 {
     std::string rplMessage(this->_rplPrefix("323", c.getNick()));
-    rplMessage.append(":End of LIST");
+    rplMessage.append(":End of LIST\r\n");
     std::cout << rplMessage << std::endl;
     c.addBufferOut(rplMessage);
 }

@@ -155,13 +155,10 @@ bool	Server::handleJoin(Client &c, std::istringstream &iss)
 	for (std::vector<std::string>::iterator it = channelList.begin(); it != end; it++) {
 		std::string channelName = *it;
 		if (i < keyList.size()) {
-			if (this->addClientToChannel(c, channelName, keyList[i]) == NULL)
-				this->poolOut.push(c.getFd());
+			this->addClientToChannel(c, channelName, keyList[i]);
 			++i;
-		} else {
-			if (this->addClientToChannel(c, channelName, "") == NULL)
-				this->poolOut.push(c.getFd());
-		}
+		} else
+			this->addClientToChannel(c, channelName, "");
 		// if (!keyList.empty())
 		// {
 		// 	size_t index = i > keyList.size() - 1 ? keyList.size() - 1 : i;
@@ -173,8 +170,6 @@ bool	Server::handleJoin(Client &c, std::istringstream &iss)
 		// }
 		// i++;
 	}
-	//if (this->_channelSpecifiers.channelType.find(channel[0]) == std::string::npos)
-	//	return (this->handleErrNoSuchChannel(c, target), this->poolOut.push(c.getFd()), false);
 	return (true);
 }
 bool	Server::handle_kick(Client &c, std::istringstream &iss) 
@@ -216,10 +211,11 @@ bool	Server::handleList(Client &c, std::istringstream &iss)
 	iss >> token;
 	if (token.empty())
 	{
-		this->handleRplListstart(c);
+		this->handleRplListStart(c);
 		this->handleRplList(c);
-		this->handleRplListend(c);
-		return (this->poolOut.push(c.getFd()), true);
+		this->handleRplListEnd(c);
+		this->poolOut.push(c.getFd());
+		return (true);
 	}
 	return (true);
 }

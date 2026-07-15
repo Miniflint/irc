@@ -200,9 +200,9 @@ class Server {
 		void handleRplWhoisidle(Client &c);
 		void handleRplEndofwhois(Client &c);
 		void handleRplWhoischannels(Client &c);
-		void handleRplListstart(Client &c);
+		void handleRplListStart(Client &c);
 		void handleRplList(Client &c);
-		void handleRplListend(Client &c);
+		void handleRplListEnd(Client &c);
 		void handleRplChannelmodeis(Client &c);
 		void handleRplUniqopis(Client &c);
 		void handleRplNotopic(Client &c);

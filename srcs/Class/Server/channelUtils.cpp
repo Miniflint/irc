@@ -40,20 +40,20 @@ Channel	*Server::addClientToChannel(Client &client, std::string channelName, std
 		} catch (std::exception &e) {
 			AccessType clientAccess = chan->getAccessClient(client.getFd());
 			if (chan->getMode() & CHANNEL_KEY && chan->getPass() != channelPass)
-				return (this->handleErrBadChannelKey(client, channelName), sendRet(client, *this, (Channel *)NULL)); //mauvais mot de passes
+				return (this->handleErrBadChannelKey(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //mauvais mot de passes
 			if (chan->getMode() & CHANNEL_BAN && clientAccess & EXCEPTION_BANNED)
-				return (this->handleErrBannedFromChan(client, channelName), sendRet(client, *this, (Channel *)NULL)); //client bannis
+				return (this->handleErrBannedFromChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //client bannis
 			if (chan->getMode() & CHANNEL_INVITE_ONLY && !(clientAccess & EXCEPTION_INVITED))
-				return (this->handleErrInviteOnlyChan(client, channelName), sendRet(client, *this, (Channel *)NULL)); //pas invité
+				return (this->handleErrInviteOnlyChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //pas invité
 			if (chan->getMode() & CHANNEL_LIMIT_USER && chan->getClientsFD().size() >= static_cast<size_t>(chan->getMaxUsers()))
-				return (this->handleErrChannelisfull(client, channelName), sendRet(client, *this, (Channel *)NULL)); //plus de place sur le channel
+				return (this->handleErrChannelisfull(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //plus de place sur le channel
 			client.getChannel().add(channelName, std::pair<Channel *, AccessType>(chan, USER_OPERATOR));
 			chan->addClientsFD(client.getFd());
 			return (this->handleRplTopic(client, channelName, chan->getTopic()), sendRet(client, *this, chan));
 		}
 	} catch (std::exception &e) {
 		if (this->_channelSpecifiers.channelType.find(channelName[0]) == std::string::npos)
-			return (this->handleErrBadChanMask(client, channelName), sendRet(client, *this, (Channel *)NULL)); //nom de channel invalid
+			return (this->handleErrBadChanMask(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //nom de channel invalid
 		chan = this->createNewChannel(channelName, channelPass);
 		client.getChannel().add(channelName, std::pair<Channel *, AccessType>(chan, USER_OPERATOR | USER_FOUNDER));
 		chan->addClientsFD(client.getFd());
