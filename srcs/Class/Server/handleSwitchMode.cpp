@@ -14,7 +14,9 @@ bool					Server::_lCasePlus(Client &c, Channel &channel, std::istringstream &iss
 	channel.setMaxUsers(r);
 	channel.addMode(CHANNEL_LIMIT_USER);
 	std::string		full(_makeHostMask(c, "MODE"));
-	full.append(targetName).append(" +l ").append(std::ostringstream(r).str()).append("\r\n");
+	std::ostringstream convertToString;
+	convertToString << r;
+	full.append(targetName).append(" +l ").append(convertToString.str()).append("\r\n");
 	this->sendToChannel(channel, full);
     return (true);
 }
