@@ -15,16 +15,18 @@ class Trie {
 		~Trie();
 		bool		add(std::string key, T element);
 		bool		del(std::string key);
-		void    	add_node(Trie<T> *node);
+		void    	addNode(Trie<T> *node);
 		T			&operator[](std::string key) const;
-		void		create_graph(void);
-		void		create_graph(const char *filename);
-		std::string	get_key(void) const;
-		void		set_key(std::string key);
-		T			&get_elem(void);
-		void		set_elem(T element);
-		bool		get_leaf(void) const;
-		void		set_leaf(bool leaf);
+		void		createGraph(void);
+		void		createGraph(const char *filename);
+		std::string	getKey(void) const;
+		void		setKey(std::string key);
+		T			&getElem(void);
+		void		setElem(T element);
+		bool		getLeaf(void) const;
+		void		setLeaf(bool leaf);
+		bool		isIn(std::string key);
+		Trie<T>		*find(std::string key);
 		Trie<T>		*_nodes[256];
 	private:
 		std::string	_key;

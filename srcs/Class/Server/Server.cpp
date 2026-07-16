@@ -32,7 +32,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	};
 	for (unsigned int i = 0; i <= END; i++)
 		this->_commands.add(t[i], func_list[i]);
-	this->_commands.create_graph();
+	this->_commands.createGraph();
 	this->_channelSpecifiers.channelType = "&#";
 	this->_channelSpecifiers.channelLen = 32;
 	this->_channelSpecifiers.channelAuthPrefix = "(qaohv)~&@%+";

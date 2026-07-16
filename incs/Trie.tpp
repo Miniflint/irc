@@ -39,43 +39,43 @@ Trie<T>::~Trie() {
 }
 
 template <typename T>
-std::string	Trie<T>::get_key(void) const
+std::string	Trie<T>::getKey(void) const
 {
     return (this->_key);
 }
 
 template <typename T>
-void	Trie<T>::set_key(std::string key) {
+void	Trie<T>::setKey(std::string key) {
     this->_key = key;
 }
 
 template <typename T>
-T	&Trie<T>::get_elem(void)
+T	&Trie<T>::getElem(void)
 {
     return (this->_element);
 }
 
 template <typename T>
-void	Trie<T>::set_elem(T elem) {
+void	Trie<T>::setElem(T elem) {
     this->_element = elem;
 }
 
 template <typename T>
-bool	Trie<T>::get_leaf(void) const
+bool	Trie<T>::getLeaf(void) const
 {
     return (this->_leaf);
 }
 
 template <typename T>
-void	Trie<T>::set_leaf(bool leaf)
+void	Trie<T>::setLeaf(bool leaf)
 {
 	this->_leaf = leaf;
 }
 
 template <typename T>
-void	Trie<T>::add_node(Trie<T> *node)
+void	Trie<T>::addNode(Trie<T> *node)
 {
-	this->_nodes[static_cast<unsigned char>(node->get_key()[0])] = node;
+	this->_nodes[static_cast<unsigned char>(node->getKey()[0])] = node;
 }
 
 static inline int diff_index(std::string s1, std::string s2)
@@ -88,28 +88,28 @@ static inline int diff_index(std::string s1, std::string s2)
 template <typename T>
 bool    Trie<T>::add(std::string new_key, T element)
 {
-    Trie<T>    *next_node = this->_nodes[static_cast<unsigned char>(new_key[0])];
-	if (!next_node) {
+    Trie<T>    *nextNode = this->_nodes[static_cast<unsigned char>(new_key[0])];
+	if (!nextNode) {
 		this->_nodes[static_cast<unsigned char>(new_key[0])] = new Trie<T>(new_key, element, true);
 		return (true);
 	}
-	std::string key = next_node->get_key();
+	std::string key = nextNode->getKey();
 	const int diff_i = diff_index(key, new_key);
 	key.erase(0, diff_i);
 	new_key.erase(0, diff_i);
 	Trie<T>	*new_node;
 	if (key.empty())
-		new_node = next_node;
+		new_node = nextNode;
 	else {
-		std::string	com_key = next_node->get_key().substr(0, diff_i);
+		std::string	com_key = nextNode->getKey().substr(0, diff_i);
 		new_node = new Trie<T>(com_key);
-		next_node->set_key(key);
-		new_node->add_node(next_node);
+		nextNode->setKey(key);
+		new_node->addNode(nextNode);
 		this->_nodes[static_cast<unsigned char>(com_key[0])] = new_node;
 	}
 	if (new_key.empty()) {
-		new_node->set_elem(element);
-		new_node->set_leaf(true);
+		new_node->setElem(element);
+		new_node->setLeaf(true);
 		return (true);
 	}
 	return (new_node->add(new_key, element));
@@ -129,9 +129,9 @@ bool	Trie<T>::del(std::string key) {
 	if (i_diff < this->_key.length())
 		return (false);
 	key.erase(0, i_diff);
-	Trie<T>		*next_node = this->_nodes[static_cast<unsigned char>(key[0])];
-	if (next_node) {
-		if (next_node->del(key))
+	Trie<T>		*nextNode = this->_nodes[static_cast<unsigned char>(key[0])];
+	if (nextNode) {
+		if (nextNode->del(key))
 		{
 			delete this->_nodes[static_cast<unsigned char>(key[0])];
 			this->_nodes[static_cast<unsigned char>(key[0])] = NULL;
@@ -151,27 +151,50 @@ bool	Trie<T>::del(std::string key) {
 template <typename T>
 T 			&Trie<T>::operator[](std::string key) const
 {
-	Trie<T>	*next_node = this->_nodes[static_cast<unsigned char>(key[0])];
-	if (!next_node)
+	Trie<T>	*nextNode = this->_nodes[static_cast<unsigned char>(key[0])];
+	if (!nextNode)
 		throw std::exception();
-	std::string	next_key = next_node->get_key();
+	std::string	next_key = nextNode->getKey();
 	if (next_key.length() > key.length())
 		throw std::exception();
 	if (next_key == key)
 	{
-		if (next_node->get_leaf())
-			return (next_node->get_elem());
+		if (nextNode->getLeaf())
+			return (nextNode->getElem());
 		throw std::exception();
 	}
 	int	i_diff = diff_index(next_key, key);
-	return ((*next_node)[std::string(key.c_str() + i_diff)]);
+	return ((*nextNode)[std::string(key.c_str() + i_diff)]);
+}
+
+template <typename T>
+Trie<T>		*Trie<T>::find(std::string key) {
+	Trie<T>	*nextNode = this->_nodes[static_cast<unsigned char>(key[0])];
+	if (!nextNode)
+		return (NULL);
+	std::string	next_key = nextNode->getKey();
+	if (next_key.length() > key.length())
+		return (NULL);
+	if (next_key == key)
+	{
+		if (nextNode->getLeaf())
+			return (nextNode);
+		return (NULL);
+	}
+	int	i_diff = diff_index(next_key, key);
+	return (nextNode->find(std::string(key.c_str() + i_diff)));
+}
+
+template <typename T>
+bool		Trie<T>::isIn(std::string key) {
+	return (this->find(key) != NULL);
 }
 
 template <typename T>
 void	create_graph_root(Trie<T> *root, std::ofstream &f)
 {
 	int i = 0;
-	f << "\t\"" << root << "\" [label=\"" << root->get_key() << "\n" << root->get_leaf() << "\"]" << std::endl;
+	f << "\t\"" << root << "\" [label=\"" << root->getKey() << "\n" << root->getLeaf() << "\"]" << std::endl;
 	while (i < 256)
 	{
 		if (root->_nodes[i] != NULL)
@@ -184,7 +207,7 @@ void	create_graph_root(Trie<T> *root, std::ofstream &f)
 }
 
 template <typename T>
-void	Trie<T>::create_graph(void)
+void	Trie<T>::createGraph(void)
 {
 	std::ofstream f("t.dot");
 
@@ -195,7 +218,7 @@ void	Trie<T>::create_graph(void)
 }
 
 template <typename T>
-void	Trie<T>::create_graph(const char *filename)
+void	Trie<T>::createGraph(const char *filename)
 {
 	std::ofstream f(filename);
 
