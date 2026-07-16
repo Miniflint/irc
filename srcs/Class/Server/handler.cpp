@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include <cstring>
+#include <algorithm>
 
 std::string	Server::_makeHostMask(Client &c, std::string functionName)
 {
