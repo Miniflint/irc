@@ -6,8 +6,8 @@
    - [x] send()
 1. [x] Faire Server::sendToClient()
 1. [x] Faire PRIVMSG
-1. [ ] Faire channels
-1. [ ] Faire JOIN
+1. [x] Faire channels
+1. [X] Faire JOIN
 1. [ ] faire KICK
 1. [ ] faire TOPIC
 1. [ ] faire MODE
@@ -16,16 +16,20 @@
 ## PRIORITY
 
 1. [X] ajouter code erreur
-1. [X] Faire QUIT
+1. [ ] Faire QUIT
 1. [ ] Faire KILL
+1. [ ] Faire INVITE
+1. [ ] Faire PART
 
 ## Lower Priority
 
-
+1. [ ] Terminer WHO
+1. [ ] Faire AWAY
 
 ## OTHERS
 
-1. [ ] Faire un bot
+1. [x] Faire un bot
    - [x] comprends un message particulier
-   - [ ] répond au message
+   - [x] répond au message
    - [ ] peut faire des commandes dynamiquement
+1. [ ] Faire DCC

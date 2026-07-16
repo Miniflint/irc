@@ -13,16 +13,16 @@
 # include <string>
 
 void	tag() {
-std::cout << "--------------------------------------------------------------------------" << std::endl;
-std::cout << "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc   |" << std::endl;
-std::cout << "| | $$  | $$ /$$__  $$|_  $$_/| $$__  $$ /$$__  $$ | Whith love by:      |" << std::endl;
-std::cout << "| | $$  | $$|__/  \\ $$  | $$  | $$  \\ $$| $$  \\__/ | - Miniflint         |" << std::endl;
-std::cout << "| | $$$$$$$$  /$$$$$$/  | $$  | $$$$$$$/| $$       | - Simon             |" << std::endl;
-std::cout << "| |_____  $$ /$$____/   | $$  | $$__  $$| $$       | - and Tricaducee    |" << std::endl;
-std::cout << "|       | $$| $$        | $$  | $$  \\ $$| $$    $$ | Tested whith:       |" << std::endl;
-std::cout << "|       | $$| $$$$$$$$ /$$$$$$| $$  | $$|  $$$$$$/ | Halloy irc client   |" << std::endl;
-std::cout << "|       |__/|________/|______/|__/  |__/ \\______/  | https://halloy.chat |" << std::endl;
-std::cout << "--------------------------------------------------------------------------" << std::endl;                                         
+	std::cout << "--------------------------------------------------------------------------" << std::endl;
+	std::cout << "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc   |" << std::endl;
+	std::cout << "| | $$  | $$ /$$__  $$|_  $$_/| $$__  $$ /$$__  $$ | With love by:       |" << std::endl;
+	std::cout << "| | $$  | $$|__/  \\ $$  | $$  | $$  \\ $$| $$  \\__/ | - Miniflint         |" << std::endl;
+	std::cout << "| | $$$$$$$$  /$$$$$$/  | $$  | $$$$$$$/| $$       | - Simon             |" << std::endl;
+	std::cout << "| |_____  $$ /$$____/   | $$  | $$__  $$| $$       | - and Tricaducee    |" << std::endl;
+	std::cout << "|       | $$| $$        | $$  | $$  \\ $$| $$    $$ | Tested with:        |" << std::endl;
+	std::cout << "|       | $$| $$$$$$$$ /$$$$$$| $$  | $$|  $$$$$$/ | Halloy irc client   |" << std::endl;
+	std::cout << "|       |__/|________/|______/|__/  |__/ \\______/  | https://halloy.chat |" << std::endl;
+	std::cout << "--------------------------------------------------------------------------" << std::endl;                                         
 }
 
 void	display_help(char *filename)

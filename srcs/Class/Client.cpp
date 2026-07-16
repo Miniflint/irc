@@ -3,7 +3,7 @@
 
 Client::Client() {}
 
-Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), _userStatus(USR_STATUS_NONE), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
+Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), _userStatus(USR_STATUS_NONE), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE), serverAccess(CLIENT_ACCESS_NONE) {}
 
 Client::~Client() {}
 
@@ -107,12 +107,12 @@ std::string	&Client::getBufferQuit()
 	return (this->_bufferQuit);
 }
 
-void	Client::setFd(size_t fd)
+void	Client::setFd(int fd)
 {
 	this->_fd = fd;
 }
 
-size_t	Client::getFd() const
+int	Client::getFd() const
 {
 	return (this->_fd);
 }
