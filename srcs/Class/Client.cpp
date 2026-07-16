@@ -3,7 +3,7 @@
 
 Client::Client() {}
 
-Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), _userStatus(USR_STATUS_NONE), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE), serverAccess(CLIENT_ACCESS_NONE) {}
+Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), _userStatus(CLIENT_ACCESS_NONE), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
 
 Client::~Client() {}
 
@@ -147,22 +147,22 @@ AccessType	Client::getChannelAccess(const std::string &toCheck) const
 	return (NO_ACCESS);
 }
 
-void	Client::addStatus(uint8_t status)
+void	Client::addStatus(AccessType status)
 {
 	this->_userStatus |= status;
 }
 
-void	Client::delStatus(uint8_t status)
+void	Client::delStatus(AccessType status)
 {
 	this->_userStatus &= ~status;
 }
 
-bool	Client::checkStatus(uint8_t status) const
+bool	Client::checkStatus(AccessType status) const
 {
 	return ((this->_userStatus & status) == status);
 }
 
-uint8_t	Client::getStatus() const
+AccessType	Client::getStatus() const
 {
 	return (this->_userStatus);
 }

@@ -11,8 +11,24 @@
 # include <queue>
 # define SOCK_DOMAIN AF_LOCAL
 # define SERV_HOST_NAME "ft_irc.42.com"
+# define MAX_SOCKET_FD 2048U
+# define ADMIN_ID "2Tri"
+# define ADMIN_PASS "2TriIsBetterThanOne"
+# define OPERATOR_ID "2x3"
+# define OPERATOR_PASS "0p3r4t0r"
 
-# define  MAX_SOCKET_FD 2048U
+# define INFO_MSG_TAG0 "--------------------------------------------------------------------------\r\n"
+# define INFO_MSG_TAG1 "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc   |\r\n"
+# define INFO_MSG_TAG2 "| | $$  | $$ /$$__  $$|_  $$_/| $$__  $$ /$$__  $$ | With love by:       |\r\n"
+# define INFO_MSG_TAG3 "| | $$  | $$|__/  \\ $$  | $$  | $$  \\ $$| $$  \\__/ | - Miniflint         |\r\n"
+# define INFO_MSG_TAG4 "| | $$$$$$$$  /$$$$$$/  | $$  | $$$$$$$/| $$       | - Simon             |\r\n"
+# define INFO_MSG_TAG5 "| |_____  $$ /$$____/   | $$  | $$__  $$| $$       | - and Tricaducee    |\r\n"
+# define INFO_MSG_TAG6 "|       | $$| $$        | $$  | $$  \\ $$| $$    $$ | Tested with:        |\r\n"
+# define INFO_MSG_TAG7 "|       | $$| $$$$$$$$ /$$$$$$| $$  | $$|  $$$$$$/ | Halloy irc client   |\r\n"
+# define INFO_MSG_TAG8 "|       |__/|________/|______/|__/  |__/ \\______/  | https://halloy.chat |\r\n"
+# define INFO_MSG_TAG9 "--------------------------------------------------------------------------\r\n"
+# define INFO_MSG_DATE "The server repository was created at this date: [2026-06-13 14:16 GMT+2]\r\n"
+# define INFO_MSG_VERSION "Actual version 0.7.1 date: [2026-07-17 01:41 GMT+2]\r\n"
 
 typedef struct S_ChannelSpecifiers {
 	std::string	channelType;
@@ -30,6 +46,8 @@ typedef struct S_Motd {
 	std::vector<std::string>	announcements;
 }	t_Motd;
 
+bool	_constantTimeCheck(const std::string &pass, const std::string &toCheck);
+
 class Server {
 	typedef bool (Server::*cmdFn)(Client &c, std::istringstream &rest);
 	private:
@@ -45,6 +63,10 @@ class Server {
 		t_ChannelSpecifiers		_channelSpecifiers;
 		t_ClientSpecifiers		_clientSpecifiers;
 		t_Motd					_motd;
+		std::string				_adminPass;
+		std::string				_operatorPass;
+		std::string				_adminName;
+		std::string				_operatorName;
 		// bool					_init();
 		// bool					_clientAdd();
 
@@ -55,6 +77,13 @@ class Server {
 		void					_sendAllWelcome(Client &c);
 		std::string				_makeHostMask(Client &c, std::string functionName);
 		Channel					*_joinChannelSendMsg(Client &c, Channel *chan, std::string &channelName);
+		int						_handleCasePlus(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
+		int						_handleCaseMinus(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
+
+		bool					_kCasePlus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_kCaseMinus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_lCasePlus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_lCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel);
 		Server() {};
 		Server(const Server &src) {(void)src;};
 	public:
@@ -70,12 +99,14 @@ class Server {
 		std::string						getIp(void) const;
 		void							setIp(std::string ip);
 		bool							sendToClient(Client &source, std::string message);
+		bool							sendToChannel(Channel &source, std::string message);
 		void							deconnectClient(int fd, std::string error, std::string message);
 		Channel							*createNewChannel(std::string name, std::string pass);
 		Channel							*addClientToChannel(int fd, std::string channelName, std::string channelPass);
 		Channel							*addClientToChannel(Client &client, std::string channelName, std::string channelPass);
 		Channel							*addClientToChannel(int fd, std::string channelName);
 		Channel							*addClientToChannel(Client &client, std::string channelName);
+		bool							handleModeUser(Client &c, std::string targetName, std::string modeType);
 		std::queue<int>					poolOut;
 		std::vector<int>				poolQuit;
 		// std::vector<int>				poolInt;
@@ -89,7 +120,7 @@ class Server {
 		bool	handle_die(Client &c, std::istringstream &rest);
 		bool	handle_error(Client &c, std::istringstream &rest);
 		bool	handle_help(Client &c, std::istringstream &rest);
-		bool	handle_info(Client &c, std::istringstream &rest);
+		bool	handleInfo(Client &c, std::istringstream &rest);
 		bool	handle_invite(Client &c, std::istringstream &rest);
 		bool	handle_ison(Client &c, std::istringstream &rest);
 		bool	handleJoin(Client &c, std::istringstream &rest);
@@ -104,7 +135,7 @@ class Server {
 		bool	handle_names(Client &c, std::istringstream &rest);
 		bool	handleNick(Client &c, std::istringstream &rest);
 		bool	handle_notice(Client &c, std::istringstream &rest);
-		bool	handle_oper(Client &c, std::istringstream &rest);
+		bool	handleOper(Client &c, std::istringstream &rest);
 		bool	handlePart(Client &c, std::istringstream &rest);
 		bool	handlePass(Client &c, std::istringstream &rest);
 		bool	handlePing(Client &c, std::istringstream &rest);
@@ -227,13 +258,13 @@ class Server {
 		void	handleRplBanList(Client &c, std::string channelName);
 		void	handleRplEndofbanlist(Client &c, std::string channelName);
 		void	handleRplEndofwhowas(Client &c);
-		void	handleRplInfo(Client &c);
+		void	handleRplInfo(Client &c, std::string message);
 		void	handleRplMotd(Client &c);
 		void	handleRplInfostart(Client &c);
 		void	handleRplEndofinfo(Client &c);
 		void	handleRplMotdstart(Client &c);
 		void	handleRplEndofmotd(Client &c);
-		void	handleRplYoureoper(Client &c);
+		void	handleRplYoureOper(Client &c, std::string message);
 		void	handleRplRehashing(Client &c);
 		void	handleRplYoureservice(Client &c);
 		void	handleRplMyportis(Client &c);

@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <map>
 
-Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _host(std::string(SERV_HOST_NAME))
+Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _host(std::string(SERV_HOST_NAME)), _adminPass(ADMIN_PASS), _operatorPass(OPERATOR_PASS), _adminName(ADMIN_ID), _operatorName(OPERATOR_ID)
 {
 	this->_clients.assign(MAX_SOCKET_FD, NULL);
 	const std::string t[] = {
@@ -17,11 +17,11 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	const Server::cmdFn func_list[] = {
 		&Server::handle_admin, &Server::handle_away, &Server::handle_cap, &Server::handle_cnotice,
 		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handle_die, &Server::handle_error,
-		&Server::handle_help, &Server::handle_info, &Server::handle_invite, &Server::handle_ison,
+		&Server::handle_help, &Server::handleInfo, &Server::handle_invite, &Server::handle_ison,
 		&Server::handleJoin, &Server::handle_kick, &Server::handle_kill, &Server::handle_knock,
 		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handleMode,
 		&Server::handle_motd, &Server::handle_names, &Server::handleNick, &Server::handle_notice,
-		&Server::handle_oper, &Server::handlePart, &Server::handlePass, &Server::handlePing,
+		&Server::handleOper, &Server::handlePart, &Server::handlePass, &Server::handlePing,
 		&Server::handle_pong, &Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote,
 		&Server::handle_rehash, &Server::handle_rules, &Server::handle_server, &Server::handle_squery,
 		&Server::handle_squit, &Server::handle_setname, &Server::handle_silence, &Server::handle_stats,
@@ -136,6 +136,88 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 	}
 }
 
+static int ClientOnServerAccessType(char c, AccessType &flag)
+{
+	switch (c)
+	{
+		case 'i':
+			flag = CLIENT_ACCESS_INVISIBLE;
+			return (true);
+		case 'x':
+			flag = CLIENT_ACCESS_HIDDEN_HOST;
+			return (true);
+		case 'd':
+			flag = CLIENT_ACCESS_DEAF;
+			return (true);
+		case 'R':
+			flag = CLIENT_ACCESS_REGISTERED;
+			return (true);
+		case 'g':
+			flag = CLIENT_ACCESS_WHITELIST;
+			return (true);
+		case 'B':
+			flag = CLIENT_ACCESS_BOT;
+			return (true);
+		case 'o': case 'O':
+			flag = CLIENT_ACCESS_OPERATOR;
+			return (true);
+		case 'a': case 'A':
+			flag = CLIENT_ACCESS_ADMIN;
+			return (true);
+		default:
+			return (false);
+	}
+	return (false);
+}
+
+bool	Server::handleModeUser(Client &c, std::string targetName, std::string modeType)
+{
+	int clientFd = -1;
+	try {
+		clientFd = this->_clientTrie[targetName];
+	} catch (std::exception &e) {
+		return (this->handleErrNoSuchNick(c, targetName), this->poolOut.push(c.getFd()), false);
+	}
+	if (modeType.empty())
+	{
+		if (clientFd != c.getFd())
+			return (this->handleErrUsersDontMatch(c), this->poolOut.push(c.getFd()), false);
+		return (this->handleRplUModeIs(c), this->poolOut.push(clientFd), true);
+	}
+	if (modeType[0] != '+' && modeType[0] != '-')
+			return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
+	bool plusOrMinus = (modeType[0] == '+');
+	unsigned int i = 0;
+	bool checkErrorOnce = false;
+	while (modeType[++i])
+	{
+		if (modeType[i] == '+' || modeType[i] == '-')
+		{
+			plusOrMinus = (modeType[i] == '+'); continue ;
+		}
+		AccessType flag = 0;
+		if (!ClientOnServerAccessType(modeType[i], flag))
+		{
+			if (!checkErrorOnce)
+				this->handleErrUmodeunknownflag(c);
+			checkErrorOnce = true;
+		}
+    	if (plusOrMinus)
+		{
+			if (!(modeType[i] == 'o' || modeType[i] == 'O' || modeType[i] == 'a' || modeType[i] == 'A')) // peut pas s'add en admin
+    	    	c.addStatus(flag);
+		}
+    	else
+		{
+			if (!(modeType[i] == 'B')) // peut pas s'enlever de bot
+    	    	c.delStatus(flag);
+		}
+	}
+	if (checkErrorOnce)
+		return (this->poolOut.push(c.getFd()), false);
+	return (true);
+}
+
 Client	&Server::getClient(size_t fd)
 {
 	return (*(this->_clients[fd]));
@@ -155,6 +237,17 @@ void							Server::setIp(std::string ip)
 // 	std::string	hostMask(":");
 // 	return (hostMask.append(c.getNick()).append(1, '!').append(c.getUserName()).append(1, '@').append(c.getHostName()));
 // }
+
+bool	Server::sendToChannel(Channel &source, std::string message)
+{
+	std::vector<int>	&clients = source.getClientsFD();
+	for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); ++it) {
+		Client	&c = this->getClient(*it);
+		c.addBufferOut(message);
+		this->poolOut.push(c.getFd());
+	}
+	return (true);
+}
 
 bool	Server::sendToClient(Client &source, std::string message)
 {
@@ -179,6 +272,15 @@ void					Server::_sendAllWelcome(Client &c)
 	this->handleRplMotd(c);
 	this->handleRplEndofmotd(c);
 	this->addClientToChannel(c, "&general");
-	c.serverAccess |= CLIENT_ACCESS_FULL;
+	// c.addStatus(CLIENT_ACCESS_FULL);
 	this->poolOut.push(c.getFd());
+}
+
+bool _constantTimeCheck(const std::string &pass, const std::string &toCheck)
+{
+	unsigned char diff = 0;
+	for (unsigned int i = 0; i < pass.size(); i++) {
+		diff |= static_cast<unsigned char>(pass[i] ^ toCheck[i]);
+	}
+	return (diff == 0);
 }

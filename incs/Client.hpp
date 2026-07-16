@@ -6,6 +6,8 @@
 # include "Channel.hpp"
 # include <sys/socket.h>
 
+bool	_constantTimeCheck(const std::string &pass, const std::string &toCheck);
+
 # define CLIENT_QUIT_NONE 0x0
 # define CLIENT_QUIT_REQUEST 0x1
 # define CLIENT_QUIT_ACCEPT 0x2
@@ -20,9 +22,6 @@ const uint8_t FLAG_CLIENT_NICK = 0x2;
 const uint8_t FLAG_CLIENT_USER = 0x4;
 const uint8_t FLAG_CLIENT_FULL = FLAG_CLIENT_PASS | FLAG_CLIENT_NICK | FLAG_CLIENT_USER;
 
-const uint8_t USR_STATUS_NONE = 0x0;
-const uint8_t USR_STATUS_AWAY = 0x1;
-const uint8_t USR_STATUS_OPER = 0x2;
 
 /* Access client sur le serveur lui meme */
 const AccessType CLIENT_ACCESS_NONE			= 0x0;
@@ -34,7 +33,8 @@ const AccessType CLIENT_ACCESS_WHITELIST	= 0x10;	// +g	| rejette les message pri
 const AccessType CLIENT_ACCESS_BOT			= 0x20;	// +B	| indique que l'utilisateur est un bot
 const AccessType CLIENT_ACCESS_OPERATOR		= 0x40;	// +oO	| serveur operator
 const AccessType CLIENT_ACCESS_ADMIN		= 0x80;	// +aA	| server admin
-const AccessType CLIENT_ACCESS_FULL			= CLIENT_ACCESS_INVISIBLE | CLIENT_ACCESS_HIDDEN_HOST | CLIENT_ACCESS_DEAF | CLIENT_ACCESS_REGISTERED | CLIENT_ACCESS_WHITELIST | CLIENT_ACCESS_BOT | CLIENT_ACCESS_OPERATOR | CLIENT_ACCESS_ADMIN;
+const AccessType CLIENT_ACCESS_AWAY 		= 0x100;
+const AccessType CLIENT_ACCESS_FULL			= CLIENT_ACCESS_INVISIBLE | CLIENT_ACCESS_HIDDEN_HOST | CLIENT_ACCESS_DEAF | CLIENT_ACCESS_REGISTERED | CLIENT_ACCESS_WHITELIST | CLIENT_ACCESS_BOT | CLIENT_ACCESS_OPERATOR | CLIENT_ACCESS_ADMIN | CLIENT_ACCESS_AWAY;
 
 class Channel;
 
@@ -52,7 +52,7 @@ class Client {
 		std::string		_bufferQuit;
 		int				_port;
 		int				_avertissements;
-		uint8_t			_userStatus; // if away
+		AccessType		_userStatus; // if away
 		Trie<std::pair<Channel *, AccessType> >	_channel;
 	public:
 		Client(int socket, std::string host, int port);
@@ -81,14 +81,13 @@ class Client {
 		void									delChannelAccess(const std::string &toCheck, AccessType flag) const;
 		bool									checkChannelAccess(const std::string &toCheck, AccessType mode) const;
 		AccessType								getChannelAccess(const std::string &toCheck) const;
-		void									addStatus(uint8_t status);
-		void									delStatus(uint8_t status);
-		bool									checkStatus(uint8_t status) const;
-		uint8_t									getStatus() const;
+		void									addStatus(AccessType status);
+		void									delStatus(AccessType status);
+		bool									checkStatus(AccessType status) const;
+		AccessType								getStatus() const;
 		std::string								buffer;
 		uint8_t									quitRequest;
 		uint8_t									flagsLogin;
-		AccessType								serverAccess;
 };
 
 #endif

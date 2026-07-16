@@ -1,0 +1,58 @@
+
+			//const bool compTypeA = typeALetters.find(modeType[i]) != std::string::npos;
+			//const bool compTypeB = typeBLetters.find(modeType[i]) != std::string::npos;
+			//const bool compTypeC = typeCLetters.find(modeType[i]) != std::string::npos;
+			//if (compTypeC)
+			//{
+			//	this->_handleTypeCLetters(c, plusOrMinus, iss);
+			//}
+			//if (compTypeB)
+			//{
+			//	if (!(iss >> nextToken))
+			//		return (this->handleErrNeedMoreParams(c, "MODE"), this->poolOut.push(c.getFd()), false);
+			//	if (!plusOrMinus && !_constantTimeCheck(nextToken, channel->getPass()))
+			//		return (this->handleErrPasswdMismatch(c), this->poolOut.push(c.getFd()), false);
+			//	else if (plusOrMinus)
+			//	{
+			//		std::string		full(_makeHostMask(c, "MODE"));
+			//		full.append(channel->getNick()).append(" +k ").append(nextToken).append("\r\n");
+			//		channel->setPass(nextToken);
+			//		this->sendToChannel(*channel, full);
+			//	}
+			//}
+			//if (compTypeA)
+			//{
+			//	if (!(iss >> nextToken))
+			//	{
+			//		if (modeType[i] == 'b')
+			//		{
+			//			this->handleRplBanList(c, channel->getNick());
+			//			this->handleRplEndofbanlist(c, channel->getNick());
+			//		}
+			//		if (modeType[i] == 'e')
+			//		{
+			//			this->handleRplExceptlist(c, channel->getNick());
+			//			this->handleRplEndofexceptlist(c, channel->getNick());
+			//		}
+			//		if (modeType[i] == 'I')
+			//		{
+			//			this->handleRplInvitelist(c, channel->getNick());
+			//			this->handleRplEndofinvitelist(c, channel->getNick());
+			//		}
+			//	}
+			//	int clientFd = -1;
+			//	try {
+			//		clientFd = this->_clientTrie[targetName];
+			//	} catch (std::exception &e) {
+			//		return (this->handleErrNoSuchNick(c, targetName), this->poolOut.push(c.getFd()), false);
+			//	}
+			//	if (plusOrMinus && modeType[i] == 'b')
+			//		channel->addClientException(clientFd, EXCEPTION_BANNED);
+			//	else if (!plusOrMinus && modeType[i] == 'b')
+			//		channel->delClientException(clientFd, EXCEPTION_BANNED);
+			//	if (plusOrMinus && modeType[i] == 'e') {} // je sais pas ce qu'il faut faire la
+			//	else if (!plusOrMinus && modeType[i] == 'e') {} // je sais pas ce qu'il faut faire la
+			//	if (plusOrMinus && modeType[i] == 'I') {} // je sais pas ce qu'il faut faire la
+			//	else if (!plusOrMinus && modeType[i] == 'I') {} // je sais pas ce qu'il faut faire la
+			//	
+			//}

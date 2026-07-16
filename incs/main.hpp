@@ -13,13 +13,13 @@ class Client;
 class Server;
 class Channel;
 
+bool	_constantTimeCheck(const std::string &pass, const std::string &toCheck);
+
 # include "Trie.hpp"
 
 # include "Server.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
-
-bool	_constantTimeCheck(const std::string &pass, const std::string &toCheck);
 
 enum E_commands {
 	ADMIN, // ADMIN [<target>]

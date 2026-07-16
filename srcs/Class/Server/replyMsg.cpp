@@ -173,21 +173,22 @@ void	Server::handleRplUModeIs(Client &c)
 	std::string rplMessage(this->_rplPrefix("221", c.getNick()));
 	std::string modes("");
 	rplMessage.append(":");
-	if (c.serverAccess & CLIENT_ACCESS_INVISIBLE)
+	AccessType flag = c.getStatus();
+	if (flag & CLIENT_ACCESS_INVISIBLE)
 		modes.append("i");
-	if (c.serverAccess & CLIENT_ACCESS_HIDDEN_HOST)
+	if (flag & CLIENT_ACCESS_HIDDEN_HOST)
 		modes.append("x");
-	if (c.serverAccess & CLIENT_ACCESS_DEAF)
+	if (flag & CLIENT_ACCESS_DEAF)
 		modes.append("d");
-	if (c.serverAccess & CLIENT_ACCESS_REGISTERED)
+	if (flag & CLIENT_ACCESS_REGISTERED)
 		modes.append("R");
-	if (c.serverAccess & CLIENT_ACCESS_WHITELIST)
+	if (flag & CLIENT_ACCESS_WHITELIST)
 		modes.append("g");
-	if (c.serverAccess & CLIENT_ACCESS_BOT)
+	if (flag & CLIENT_ACCESS_BOT)
 		modes.append("B");
-	if (c.serverAccess & CLIENT_ACCESS_OPERATOR)
+	if (flag & CLIENT_ACCESS_OPERATOR)
 		modes.append("o");
-	if (c.serverAccess & CLIENT_ACCESS_ADMIN)
+	if (flag & CLIENT_ACCESS_ADMIN)
 		modes.append("a");
 	if (!modes.empty())
 		rplMessage.append("+");
@@ -405,20 +406,19 @@ void	Server::handleRplListStart(Client &c)
 void	Server::handleRplList(Client &c)
 {
 	std::list<Channel>::const_iterator end = this->_channel.end();
-	std::ostringstream amountUserStr;
 	for (std::list<Channel>::const_iterator it = this->_channel.begin(); it != end; it++)
 	{
+		std::ostringstream amountUserStr;
 		std::string rplMessage(this->_rplPrefix("322", c.getNick()));
 		const Channel currentChannel = *it;
 		amountUserStr << currentChannel.getClientsFD().size();
 		std::string channelTopic = currentChannel.getTopic().size() > 2 ? currentChannel.getTopic() : "No topic";
 		rplMessage.append(currentChannel.getNick()).append(1, ' ')
 			.append(amountUserStr.str()).append(" :").append(channelTopic).append("\r\n");
-		// std::cout << rplMessage << std::endl;
 		c.addBufferOut(rplMessage);
-		amountUserStr.clear();
 	}
 }
+
 void	Server::handleRplListEnd(Client &c)
 {
 	std::string rplMessage(this->_rplPrefix("323", c.getNick()));
@@ -533,13 +533,15 @@ void	Server::handleRplWhoReply(Client &c, Client &cWho, Channel &chan)
 {
 	std::string rplMessage(this->_rplPrefix("352", c.getNick()));
 	std::string	status;
-	uint8_t	usrStatus = cWho.getStatus();
-	if (usrStatus & USR_STATUS_AWAY)
+	AccessType	usrStatus = cWho.getStatus();
+	if (usrStatus & CLIENT_ACCESS_AWAY)
 		status = " G";
 	else
 		status = " H";
-	if (usrStatus & USR_STATUS_OPER)
+	if (usrStatus & (CLIENT_ACCESS_ADMIN | CLIENT_ACCESS_OPERATOR))
 		status.append(1, '*');
+	if (usrStatus & CLIENT_ACCESS_BOT)
+		status.append(1, 'B');
 	AccessType	access = cWho.getChannelAccess(chan.getNick());
 	if (access & USER_FOUNDER)
 		status.append(1, '~');
@@ -637,10 +639,10 @@ void	Server::handleRplEndofwhowas(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplInfo(Client &c)
+void	Server::handleRplInfo(Client &c, std::string message)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("371", c.getNick()));
+	c.addBufferOut(rplMessage.append(1, ':').append(message));
 }
 void	Server::handleRplMotd(Client &c)
 {
@@ -658,8 +660,8 @@ void	Server::handleRplInfostart(Client &c)
 }
 void	Server::handleRplEndofinfo(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("374", c.getNick()));
+	c.addBufferOut(rplMessage.append(" :End of INFO list"));
 }
 void	Server::handleRplMotdstart(Client &c)
 {
@@ -673,10 +675,10 @@ void	Server::handleRplEndofmotd(Client &c)
 	rplMessage.append(":End of /MOTD\r\n");
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplYoureoper(Client &c)
+void	Server::handleRplYoureOper(Client &c, std::string message)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("381", c.getNick()));
+	c.addBufferOut(rplMessage.append(1, ':').append(message).append("\r\n"));
 }
 void	Server::handleRplRehashing(Client &c)
 {
@@ -911,7 +913,7 @@ void	Server::handleErrNopermforhost(Client &c)
 void	Server::handleErrPasswdMismatch(Client &c)
 {
 	std::string rplMessage(this->_rplPrefix("464", c.getNick()));
-	std::string middlePrefix(":Password mismatch | This Server require a password\r\n");
+	std::string middlePrefix(":Password mismatch\r\n");
 	rplMessage.reserve(rplMessage.size() + middlePrefix.size());
 	rplMessage.append(middlePrefix);
 	c.addBufferOut(rplMessage);

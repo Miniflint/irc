@@ -1,24 +1,5 @@
 #include "Server.hpp"
 #include <cstring>
-template <typename T>
-static	bool _checkInTrieExist(Trie<T> &trie, const std::string &toCheck)
-{
-	try {
-		(void)trie[toCheck];
-	} catch (std::exception &e) {
-		return (true);
-	}
-	return (false);
-}
-
-bool _constantTimeCheck(const std::string &pass, const std::string &toCheck)
-{
-	unsigned char diff = 0;
-	for (unsigned int i = 0; i < pass.size(); i++) {
-		diff |= static_cast<unsigned char>(pass[i] ^ toCheck[i]);
-	}
-	return (diff == 0);
-}
 
 std::string	Server::_makeHostMask(Client &c, std::string functionName)
 {
@@ -114,11 +95,22 @@ bool	Server::handle_help(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_info(Client &c, std::istringstream &iss) 
+bool	Server::handleInfo(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "INFO");
+	(void)iss;
+	this->handleRplInfo(c, INFO_MSG_TAG0);
+	this->handleRplInfo(c, INFO_MSG_TAG1);
+	this->handleRplInfo(c, INFO_MSG_TAG2);
+	this->handleRplInfo(c, INFO_MSG_TAG3);
+	this->handleRplInfo(c, INFO_MSG_TAG4);
+	this->handleRplInfo(c, INFO_MSG_TAG5);
+	this->handleRplInfo(c, INFO_MSG_TAG6);
+	this->handleRplInfo(c, INFO_MSG_TAG7);
+	this->handleRplInfo(c, INFO_MSG_TAG8);
+	this->handleRplInfo(c, INFO_MSG_TAG9);
+	this->handleRplInfo(c, INFO_MSG_DATE);
+	this->handleRplInfo(c, INFO_MSG_VERSION);
+	this->handleRplEndofinfo(c);
 	this->poolOut.push(c.getFd());
 	return (true);
 }
@@ -228,71 +220,20 @@ bool	Server::handle_lusers(Client &c, std::istringstream &iss)
 	return (true);
 }
 
-static int ClientOnServerAccessType(char c, AccessType &flag)
-{
-	switch (c)
-	{
-		case 'i':
-			flag = CLIENT_ACCESS_INVISIBLE;
-			return (true);
-		case 'x':
-			flag = CLIENT_ACCESS_HIDDEN_HOST;
-			return (true);
-		case 'd':
-			flag = CLIENT_ACCESS_DEAF;
-			return (true);
-		case 'R':
-			flag = CLIENT_ACCESS_REGISTERED;
-			return (true);
-		case 'g':
-			flag = CLIENT_ACCESS_WHITELIST;
-			return (true);
-		case 'B':
-			flag = CLIENT_ACCESS_BOT;
-			return (true);
-		case 'o': case 'O':
-			flag = CLIENT_ACCESS_OPERATOR;
-			return (true);
-		case 'a': case 'A':
-			flag = CLIENT_ACCESS_ADMIN;
-			return (true);
-		default:
-			return (false);
-	}
-}
+/*
 
-static int ChannelAccessType(char c, AccessType &flag)
++qXgk-r
+while (mode)
+switch (mode[i])
 {
-	switch (c)
-	{
-		case 'i':
-			flag = CHANNEL_INVITE_ONLY;
-			return (true);
-		case 's':
-			flag = CHANNEL_SECRET;
-			return (true);
-		case 'm':
-			flag = CHANNEL_MODERATED;
-			return (true);
-		case 'n':
-			flag = CHANNEL_NOT_EXTERNAL;
-			return (true);
-		case 't':
-			flag = CHANNEL_TOPIC_PROTECTION;
-			return (true);
-		case 'k':
-			flag = CHANNEL_KEY;
-			return (true);
-		case 'l':
-			flag = CHANNEL_LIMIT_USER;
-			return (true);
-		case 'b':
-			flag = CHANNEL_BAN;
-			return (true);
-		default:
-			return (false);
-	}
+	'+':
+		FONCTION_PLUS(mode, i, iss)
+	'-':
+		FONCTION_MOINS
+	default:
+		FONCTION_NON_PLUS
 }
+*/
 
 bool	Server::handleMode(Client &c, std::istringstream &iss) 
 {
@@ -303,49 +244,11 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 	bool	channelOrClient = this->_channelSpecifiers.channelType.find(targetName[0]) == std::string::npos;
 	if (channelOrClient)
 	{
-		int clientFd = -1;
-		try {
-			clientFd = this->_clientTrie[targetName];
-		} catch (std::exception &e) {
-			return (this->handleErrNoSuchNick(c, targetName), this->poolOut.push(c.getFd()), false);
-		}
-		if (modeType.empty())
-		{
-			if (clientFd != c.getFd())
-				return (this->handleErrUsersDontMatch(c), this->poolOut.push(c.getFd()), false);
-			return (this->handleRplUModeIs(c), this->poolOut.push(clientFd), true);
-		}
-		if (modeType[0] != '+' && modeType[0] != '-')
-				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
-		bool plusOrMinus = (modeType[0] == '+');
-		unsigned int i = 0;
-		bool checkErrorOnce = false;
-		while (modeType[++i])
-		{
-			if (modeType[i] == '+' || modeType[i] == '-')
-			{
-				plusOrMinus = (modeType[i] == '+'); continue ;
-			}
-			AccessType flag = 0;
-			if (!ClientOnServerAccessType(modeType[i], flag))
-			{
-				if (!checkErrorOnce)
-					this->handleErrUmodeunknownflag(c);
-				checkErrorOnce = true;
-			}
-    		if (plusOrMinus)
-			{
-				if (!(modeType[i] == 'o' || modeType[i] == 'O' || modeType[i] == 'a' || modeType[i] == 'A')) // peut pas s'add en admin
-    		    	c.serverAccess |= flag;
-			}
-    		else
-			{
-				if (!(modeType[i] == 'B')) // peut pas s'enlever de bot
-    		    	c.serverAccess &= ~flag;
-			}
-		}
-		if (checkErrorOnce)
-			return (this->poolOut.push(c.getFd()), false);
+		if (!handleModeUser(c, targetName, modeType))
+			return (false);
+		std::string	message(this->_makeHostMask(c, "MODE"));
+		message.append(1, ':').append(targetName).append(1, ' ').append(modeType).append("\r\n");
+		this->sendToClient(c, message);
 	}
 	else
 	{
@@ -357,122 +260,39 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 		}
 		if (modeType.empty())
 		{
+			std::string	message(this->_makeHostMask(c, "MODE"));
+			message.append(1, ':').append(targetName).append(1, ' ').append(modeType).append("\r\n");
+			this->sendToClient(c, message);
 			return (this->handleRplChannelModeIs(c, *channel), this->poolOut.push(c.getFd()), true);
 		}
 		if (modeType[0] != '+' && modeType[0] != '-')
 				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
-		bool plusOrMinus = (modeType[0] == '+');
-		unsigned int i = 0;
+		int i = 0;
 		bool checkErrorOnce = false;
 		const AccessType userAccessOnChannel = c.getChannelAccess(targetName);
-		std::string halfOpAccess("bmtl");
-		std::string typeALetters("beI");
-		std::string typeBLetters("k");
-		std::string typeCLetters("l");
-		// to implement
-		std::string onUserCommand("qaohv");
-		std::string nextToken;
-		while (modeType[++i])
+		if (userAccessOnChannel < USER_HALFOP)
+			return (this->handleErrChanOPrivsNeeded(c, targetName), this->poolOut.push(c.getFd()), false);
+		while (modeType[i])
 		{
-			if (modeType[i] == '+' || modeType[i] == '-')
+			switch (modeType[i])
 			{
-				plusOrMinus = (modeType[i] == '+'); continue ;
+				case '+':
+					this->_handleCasePlus(c, modeType, &i, *channel, iss);
+					break ;
+				case '-':
+					this->_handleCaseMinus(c, modeType, &i, *channel, iss);
+					break ;
+				default:
+					break ;
 			}
-			AccessType flag = 0;
-			if (!ChannelAccessType(modeType[i], flag))
-			{
-				if (!checkErrorOnce)
-					this->handleErrUmodeunknownflag(c);
-				checkErrorOnce = true;
-			}
-    		if (plusOrMinus)
-			{
-				if (typeCLetters.find(modeType[i]) != std::string::npos)
-				{
-					int r;
-					iss >> r;
-					if (iss.fail())
-						return (this->handleErrNeedMoreParams(c, "MODE"), this->poolOut.push(c.getFd()), false);
-					channel->setMaxUsers(r);
-				}
-				if (userAccessOnChannel >= USER_OPERATOR ||
-					(userAccessOnChannel & USER_HALFOP && (halfOpAccess.find(modeType[i]) != std::string::npos)))
-					channel->addMode(flag);
-				else
-					this->handleErrChanOPrivsNeeded(c, targetName);
-			}
-    		else
-			{
-				if (userAccessOnChannel >= USER_OPERATOR ||
-					(userAccessOnChannel & USER_HALFOP && (halfOpAccess.find(modeType[i]) != std::string::npos)))
-					channel->delMode(flag);
-				else
-					this->handleErrChanOPrivsNeeded(c, targetName);
-			}
-			const bool compTypeA = typeALetters.find(modeType[i]) != std::string::npos;
-			const bool compTypeB = typeBLetters.find(modeType[i]) != std::string::npos;
-			if (compTypeB)
-			{
-				if (!(iss >> nextToken))
-					return (this->handleErrNeedMoreParams(c, "MODE"), this->poolOut.push(c.getFd()), false);
-				if (!plusOrMinus && !_constantTimeCheck(nextToken, channel->getPass()))
-					return (this->handleErrPasswdMismatch(c), this->poolOut.push(c.getFd()), false);
-				else if (plusOrMinus)
-				{
-					std::string		full(_makeHostMask(c, "MODE"));
-					full.append(channel->getNick()).append(" +k ").append(nextToken).append("\r\n");
-					channel->setPass(nextToken);
-					std::vector<int>::iterator end = channel->getClientsFD().end();
-					for (std::vector<int>::iterator it = channel->getClientsFD().begin(); it != end; it++) {
-						Client *curr = this->_clients[*it];
-						if (!curr)
-							continue ;
-						this->sendToClient(*curr, full);
-					}
-				}
-			}
-			if (compTypeA)
-			{
-				if (!(iss >> nextToken))
-				{
-					if (modeType[i] == 'b')
-					{
-						this->handleRplBanList(c, channel->getNick());
-						this->handleRplEndofbanlist(c, channel->getNick());
-					}
-					if (modeType[i] == 'e')
-					{
-						this->handleRplExceptlist(c, channel->getNick());
-						this->handleRplEndofexceptlist(c, channel->getNick());
-					}
-					if (modeType[i] == 'I')
-					{
-						this->handleRplInvitelist(c, channel->getNick());
-						this->handleRplEndofinvitelist(c, channel->getNick());
-					}
-				}
-				int clientFd = -1;
-				try {
-					clientFd = this->_clientTrie[targetName];
-				} catch (std::exception &e) {
-					return (this->handleErrNoSuchNick(c, targetName), this->poolOut.push(c.getFd()), false);
-				}
-				if (plusOrMinus && modeType[i] == 'b')
-					channel->addClientException(clientFd, EXCEPTION_BANNED);
-				else if (!plusOrMinus && modeType[i] == 'b')
-					channel->delClientException(clientFd, EXCEPTION_BANNED);
-				if (plusOrMinus && modeType[i] == 'e') {} // je sais pas ce qu'il faut faire la
-				else if (!plusOrMinus && modeType[i] == 'e') {} // je sais pas ce qu'il faut faire la
-				if (plusOrMinus && modeType[i] == 'I') {} // je sais pas ce qu'il faut faire la
-				else if (!plusOrMinus && modeType[i] == 'I') {} // je sais pas ce qu'il faut faire la
-				
-			}
+			/* check old_code.cpp.bak */
 		}
 		if (checkErrorOnce)
 			return (this->poolOut.push(c.getFd()), false);
 	}
 	return (true);
 }
+
 bool	Server::handle_motd(Client &c, std::istringstream &iss) 
 {
 	std::string token;
@@ -495,18 +315,28 @@ bool	Server::handleNick(Client &c, std::istringstream &iss)
 		return (this->handleErrNotregistered(c), this->poolOut.push(c.getFd()), false);
 	std::string token;
 
-	iss >> token >> std::noskipws;
+	iss >> token;
 	if (iss.fail() || token.empty())
 		return (this->handleErrNoNicknameGiven(c), this->poolOut.push(c.getFd()), false);
 	if (token.length() > this->_clientSpecifiers.nickLenMax)
 		return (this->handleErrErroneousNickname(c, token), this->poolOut.push(c.getFd()), false);
 	if (token[0] == ':' || this->_channelSpecifiers.channelType.find(token[0]) != std::string::npos)
 		return (this->handleErrNickCollision(c, token), this->poolOut.push(c.getFd()), false);
-	if (!_checkInTrieExist(this->_clientTrie, token))
+	if (this->_clientTrie.isIn(token))
 		return (this->handleErrNicknameInUse(c, token), this->poolOut.push(c.getFd()), false);
 	std::string oldUserName = c.getNick();
 	if (c.flagsLogin == FLAG_CLIENT_FULL)
 	{
+		std::list<Channel>::iterator end = this->_channel.end();
+		for (std::list<Channel>::iterator it = this->_channel.begin(); it != end; it++) {
+			if (std::find((*it).getClientsFD().begin(), (*it).getClientsFD().end(), c.getFd()) != (*it).getClientsFD().end())
+			{
+				std::string rplMessage(this->_makeHostMask(c, "NICK"));
+				rplMessage.append(token).append(" :Changed nickname from [").append(oldUserName);
+				rplMessage.append("] to [").append(token).append("]\r\n");
+				this->sendToChannel((*it), rplMessage);
+			}
+		}
 		this->_clientTrie.del(oldUserName);
 		// faire message pour changement de nom
 	}
@@ -528,11 +358,21 @@ bool	Server::handle_notice(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_oper(Client &c, std::istringstream &iss) 
+bool	Server::handleOper(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "OPER");
+	std::string name, pass;
+	iss >> name >> pass;
+	if (name.empty() || pass.empty())
+		return (this->handleErrNeedMoreParams(c, "OPER"), this->poolOut.push(c.getFd()), false);
+	if (name == this->_adminName && pass == this->_adminPass) {
+		c.addStatus(CLIENT_ACCESS_ADMIN | CLIENT_ACCESS_OPERATOR);
+		return (this->handleRplYoureOper(c, "You are now an IRC admin"), this->poolOut.push(c.getFd()), false);
+	}
+	if (name == this->_operatorName && pass == this->_operatorPass) {
+		c.addStatus(CLIENT_ACCESS_OPERATOR);
+		return (this->handleRplYoureOper(c, "You are now an IRC operator"), this->poolOut.push(c.getFd()), false);
+	}
+	this->handleErrPasswdMismatch(c);
 	this->poolOut.push(c.getFd());
 	return (true);
 }
