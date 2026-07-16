@@ -318,11 +318,15 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 		}
 		if (modeType[0] != '+' && modeType[0] != '-')
 				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
-		const bool plusOrMinus = (modeType[0] == '+');
+		bool plusOrMinus = (modeType[0] == '+');
 		unsigned int i = 0;
 		bool checkErrorOnce = false;
 		while (modeType[++i])
 		{
+			if (modeType[i] == '+' || modeType[i] == '-')
+			{
+				plusOrMinus = (modeType[i] == '+'); continue ;
+			}
 			AccessType flag = 0;
 			if (!ClientOnServerAccessType(modeType[i], flag))
 			{
@@ -358,13 +362,17 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 		}
 		if (modeType[0] != '+' && modeType[0] != '-')
 				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
-		const bool plusOrMinus = (modeType[0] == '+');
+		bool plusOrMinus = (modeType[0] == '+');
 		unsigned int i = 0;
 		bool checkErrorOnce = false;
 		const AccessType userAccessOnChannel = c.getChannelAccess(targetName);
 		std::string halfOpAccess("bmtl");
 		while (modeType[++i])
 		{
+			if (modeType[i] == '+' || modeType[i] == '-')
+			{
+				plusOrMinus = (modeType[i] == '+'); continue ;
+			}
 			AccessType flag = 0;
 			if (!ChannelAccessType(modeType[i], flag))
 			{
