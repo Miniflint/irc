@@ -32,7 +32,7 @@ bool	Bot::_register(int sockFd) {
 	std::string	welcome = " 001 ";
 	welcome.append(this->_name).append(" :Welcome");
 	std::string	registerToServ = "PASS ";
-	registerToServ.append(this->_password).append("\r\nNICK ").append(this->_name).append("\r\nUSER ").append(this->_name).append(" 0 * :bot").append(this->_name).append("\r\n");
+	registerToServ.append(this->_password).append("\r\nNICK ").append(this->_name).append("\r\nUSER ").append(this->_name).append(" 0 * :bot").append(this->_name).append("\r\n").append("MODE ").append(this->_name).append(" +B").append("\r\n");
 	int	sendValue;
 	sendValue = send(sockFd, registerToServ.c_str(), registerToServ.size(), 0);
 	if (sendValue <= 0)
