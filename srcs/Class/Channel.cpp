@@ -2,7 +2,7 @@
 
 Channel::Channel() : _nick("general"), _topic("general"), _password(""), _maxUsers(-1), _mode(NO_ACCESS) {}
 
-Channel::Channel(std::string nick, std::string topic) : _nick(nick), _topic(topic), _password(""), _maxUsers(-1), _mode(NO_ACCESS) {}
+Channel::Channel(std::string nick, std::string pass) : _nick(nick), _topic(""), _password(pass), _maxUsers(-1), _mode(NO_ACCESS) {}
 
 Channel::Channel(const Channel &src) : _nick(src.getNick()), _topic(src.getTopic()), _password(src.getPass()), _maxUsers(src.getMaxUsers()), _clientsFD(src.getClientsFD()), _mode(src.getMode()) {}
 

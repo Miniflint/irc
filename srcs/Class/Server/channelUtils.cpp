@@ -15,8 +15,37 @@ static inline Channel	*sendRet(Client &c, Server &serv, Channel *chan) {
 	return (chan);
 }
 
+// bool	Server::delClientToChannel(Client &c, Channel *chan, std::string &channelName) {
+// 	std::list<Channel>::iterator end = this->_channel.end();
+// 		std::list<Channel>::iterator it = this->_channel.begin();
+// 		while (it != end) {
+// 			try {
+// 				c->getChannel()[it->getNick()];
+// 				std::vector<int> &clientFd = it->getClientsFD();
+// 				for (std::vector<int>::iterator itB = clientFd.begin(); itB != clientFd.end();) {
+// 					Client	&itClient = this->getClient(*itB);
+// 					if (*itB == fd) {
+// 						itB = clientFd.erase(itB);
+// 					} else {
+// 						if (!c->getBufferQuit().empty() && itClient.quitRequest == CLIENT_QUIT_NONE)
+// 							this->sendToClient(itClient, c->getBufferQuit());
+// 						++itB;
+// 					}
+// 				}
+// 				std::vector<int>::iterator rtn = std::find(clientFd.begin(), clientFd.end(), c->getFd());
+// 				if (rtn != clientFd.end())
+// 					clientFd.erase(rtn);
+// 				if (clientFd.empty()) {
+// 					std::vector<int>	*
+// 					it = this->_channel.erase(it);
+// 				} else
+// 					++it;
+// 			} catch (std::exception &e) {(void)e;}
+// 		}
+// }
+
 Channel	*Server::_joinChannelSendMsg(Client &c, Channel *chan, std::string &channelName) {
-	std::string	joinMsg(this->_formatBaseRelayMessage(c, "JOIN"));
+	std::string	joinMsg(this->_makeHostMask(c, "JOIN"));
 	joinMsg.append(channelName).append("\r\n");
 	for (std::vector<int>::iterator it = chan->getClientsFD().begin(); it != chan->getClientsFD().end(); ++it)
 		this->sendToClient(this->getClient(*it), joinMsg);
@@ -30,6 +59,7 @@ Channel	*Server::createNewChannel(std::string name, std::string pass) {
 	Channel	chan(name, pass);
 	if (!pass.empty())
 		chan.setMode(CHANNEL_KEY);
+	chan.setPass(pass);
 	this->_channel.push_front(chan);
 	Channel	*retChan = &this->_channel.front();
 	this->_channelTrie.add(name, retChan);
@@ -50,13 +80,13 @@ Channel	*Server::addClientToChannel(Client &client, std::string channelName, std
 			return (NULL); //déjà dans le channel
 		} catch (std::exception &e) {
 			AccessType clientAccess = chan->getAccessClient(client.getFd());
-			if (chan->getMode() & CHANNEL_KEY && chan->getPass() != channelPass)
+			if ((chan->getMode() & CHANNEL_KEY) && !_constantTimeCheck(chan->getPass(),channelPass))
 				return (this->handleErrBadChannelKey(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //mauvais mot de passes
-			if (chan->getMode() & CHANNEL_BAN && clientAccess & EXCEPTION_BANNED)
+			if ((chan->getMode() & CHANNEL_BAN) && clientAccess & EXCEPTION_BANNED)
 				return (this->handleErrBannedFromChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //client bannis
-			if (chan->getMode() & CHANNEL_INVITE_ONLY && !(clientAccess & EXCEPTION_INVITED))
+			if ((chan->getMode() & CHANNEL_INVITE_ONLY) && !(clientAccess & EXCEPTION_INVITED))
 				return (this->handleErrInviteOnlyChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //pas invité
-			if (chan->getMode() & CHANNEL_LIMIT_USER && chan->getClientsFD().size() >= static_cast<size_t>(chan->getMaxUsers()))
+			if ((chan->getMode() & CHANNEL_LIMIT_USER) && chan->getClientsFD().size() >= static_cast<size_t>(chan->getMaxUsers()))
 				return (this->handleErrChannelisfull(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //plus de place sur le channel
 			client.getChannel().add(channelName, std::pair<Channel *, AccessType>(chan, NO_ACCESS));
 			chan->addClientsFD(client.getFd());

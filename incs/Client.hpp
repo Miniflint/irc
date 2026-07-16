@@ -18,11 +18,23 @@ const uint8_t FLAG_CLIENT_NONE = 0x0;
 const uint8_t FLAG_CLIENT_PASS = 0x1;
 const uint8_t FLAG_CLIENT_NICK = 0x2;
 const uint8_t FLAG_CLIENT_USER = 0x4;
-const uint8_t CHECK_CLIENT_LOG = 0x7;
+const uint8_t FLAG_CLIENT_FULL = FLAG_CLIENT_PASS | FLAG_CLIENT_NICK | FLAG_CLIENT_USER;
 
 const uint8_t USR_STATUS_NONE = 0x0;
 const uint8_t USR_STATUS_AWAY = 0x1;
-const uint8_t USR_STATUS_OPER = 0x3;
+const uint8_t USR_STATUS_OPER = 0x2;
+
+/* Access client sur le serveur lui meme */
+const AccessType CLIENT_ACCESS_NONE			= 0x0;
+const AccessType CLIENT_ACCESS_INVISIBLE	= 0x1;	// +i	| invisible par WHO
+const AccessType CLIENT_ACCESS_HIDDEN_HOST	= 0x2;	// +x	| masquage ip: xxx.xxx.xxx.xx => random.username.qwu.org 
+const AccessType CLIENT_ACCESS_DEAF 		= 0x4;	// +d	| bloque récéptions message de channels
+const AccessType CLIENT_ACCESS_REGISTERED	= 0x8;	// +R	| rejette les message privé
+const AccessType CLIENT_ACCESS_WHITELIST	= 0x10;	// +g	| rejette les message privé des personnes à qui tu n'as pas envoyé de message 
+const AccessType CLIENT_ACCESS_BOT			= 0x20;	// +B	| indique que l'utilisateur est un bot
+const AccessType CLIENT_ACCESS_OPERATOR		= 0x40;	// +oO	| serveur operator
+const AccessType CLIENT_ACCESS_ADMIN		= 0x80;	// +aA	| server admin
+const AccessType CLIENT_ACCESS_FULL			= CLIENT_ACCESS_INVISIBLE | CLIENT_ACCESS_HIDDEN_HOST | CLIENT_ACCESS_DEAF | CLIENT_ACCESS_REGISTERED | CLIENT_ACCESS_WHITELIST | CLIENT_ACCESS_BOT | CLIENT_ACCESS_OPERATOR | CLIENT_ACCESS_ADMIN;
 
 class Channel;
 
@@ -61,8 +73,8 @@ class Client {
 		void									setBufferQuit(std::string bufferQuit);
 		std::string								&getBufferQuit();
 		Trie<std::pair<Channel *, AccessType> >	&getChannel(void);
-		void									setFd(size_t fd);
-		size_t									getFd() const;
+		void									setFd(int fd);
+		int										getFd() const;
 		void									setWarning(int warn_lvl);
 		int										getWarning() const;
 		void									addChannelAccess(const std::string &toCheck, AccessType flag);
@@ -76,6 +88,7 @@ class Client {
 		std::string								buffer;
 		uint8_t									quitRequest;
 		uint8_t									flagsLogin;
+		AccessType								serverAccess;
 };
 
 #endif

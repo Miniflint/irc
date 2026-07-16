@@ -11,7 +11,7 @@ static	bool _checkInTrieExist(Trie<T> &trie, const std::string &toCheck)
 	return (false);
 }
 
-static bool _constantTimeCheck(const std::string &pass, const std::string &toCheck)
+bool _constantTimeCheck(const std::string &pass, const std::string &toCheck)
 {
 	unsigned char diff = 0;
 	for (unsigned int i = 0; i < pass.size(); i++) {
@@ -20,7 +20,7 @@ static bool _constantTimeCheck(const std::string &pass, const std::string &toChe
 	return (diff == 0);
 }
 
-std::string	Server::_formatBaseRelayMessage(Client &c, std::string functionName)
+std::string	Server::_makeHostMask(Client &c, std::string functionName)
 {
 	std::string rtn;
 	const size_t totalSize = rtn.size() + 5 + c.getNick().size() +
@@ -227,12 +227,167 @@ bool	Server::handle_lusers(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_mode(Client &c, std::istringstream &iss) 
+
+static int ClientOnServerAccessType(char c, AccessType &flag)
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "MODE");
-	this->poolOut.push(c.getFd());
+	switch (c)
+	{
+		case 'i':
+			flag = CLIENT_ACCESS_INVISIBLE;
+			return (true);
+		case 'x':
+			flag = CLIENT_ACCESS_HIDDEN_HOST;
+			return (true);
+		case 'd':
+			flag = CLIENT_ACCESS_DEAF;
+			return (true);
+		case 'R':
+			flag = CLIENT_ACCESS_REGISTERED;
+			return (true);
+		case 'g':
+			flag = CLIENT_ACCESS_WHITELIST;
+			return (true);
+		case 'B':
+			flag = CLIENT_ACCESS_BOT;
+			return (true);
+		case 'o': case 'O':
+			flag = CLIENT_ACCESS_OPERATOR;
+			return (true);
+		case 'a': case 'A':
+			flag = CLIENT_ACCESS_ADMIN;
+			return (true);
+		default:
+			return (false);
+	}
+}
+
+static int ChannelAccessType(char c, AccessType &flag)
+{
+	switch (c)
+	{
+		case 'i':
+			flag = CHANNEL_INVITE_ONLY;
+			return (true);
+		case 's':
+			flag = CHANNEL_SECRET;
+			return (true);
+		case 'm':
+			flag = CHANNEL_MODERATED;
+			return (true);
+		case 'n':
+			flag = CHANNEL_NOT_EXTERNAL;
+			return (true);
+		case 't':
+			flag = CHANNEL_TOPIC_PROTECTION;
+			return (true);
+		case 'k':
+			flag = CHANNEL_KEY;
+			return (true);
+		case 'l':
+			flag = CHANNEL_LIMIT_USER;
+			return (true);
+		case 'b':
+			flag = CHANNEL_BAN;
+			return (true);
+		default:
+			return (false);
+	}
+}
+
+bool	Server::handleMode(Client &c, std::istringstream &iss) 
+{
+	std::string 				targetName, modeType;
+	iss >> targetName >> modeType;
+	if (targetName.empty())
+		return (this->handleErrNeedMoreParams(c, "MODE"), this->poolOut.push(c.getFd()), false);
+	std::cout << targetName << std::endl;
+	bool	channelOrClient = this->_channelSpecifiers.channelType.find(targetName[0]) == std::string::npos;
+	if (channelOrClient)
+	{
+		int clientFd = -1;
+		try {
+			clientFd = this->_clientTrie[targetName];
+		} catch (std::exception &e) {
+			return (this->handleErrNoSuchNick(c, targetName), this->poolOut.push(c.getFd()), false);
+		}
+		if (modeType.empty())
+		{
+			if (clientFd != c.getFd())
+				return (this->handleErrUsersDontMatch(c), this->poolOut.push(c.getFd()), false);
+			return (this->handleRplUModeIs(c), this->poolOut.push(clientFd), true);
+		}
+		if (modeType[0] != '+' && modeType[0] != '-')
+				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
+		const bool plusOrMinus = (modeType[0] == '+');
+		unsigned int i = 0;
+		bool checkErrorOnce = false;
+		while (modeType[++i])
+		{
+			AccessType flag = 0;
+			if (!ClientOnServerAccessType(modeType[i], flag))
+			{
+				if (!checkErrorOnce)
+					this->handleErrUmodeunknownflag(c);
+				checkErrorOnce = true;
+			}
+    		if (plusOrMinus)
+			{
+				if (!(modeType[i] == 'o' || modeType[i] == 'O' || modeType[i] == 'a' || modeType[i] == 'A')) // peut pas s'add en admin
+    		    	c.serverAccess |= flag;
+			}
+    		else
+			{
+				if (!(modeType[i] == 'B')) // peut pas s'enlever de bot
+    		    	c.serverAccess &= ~flag;
+			}
+		}
+		if (checkErrorOnce)
+			return (this->poolOut.push(c.getFd()), false);
+	}
+	else
+	{
+		Channel *channel = NULL;
+		try {
+			channel = this->_channelTrie[targetName];
+		} catch (std::exception &e) {
+			return (this->handleErrNoSuchChannel(c, targetName), this->poolOut.push(c.getFd()), false);
+		}
+		if (modeType.empty())
+		{
+			return (this->handleRplChannelModeIs(c, *channel), this->poolOut.push(c.getFd()), true);
+		}
+		if (modeType[0] != '+' && modeType[0] != '-')
+				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
+		const bool plusOrMinus = (modeType[0] == '+');
+		unsigned int i = 0;
+		bool checkErrorOnce = false;
+		const AccessType userAccessOnChannel = c.getChannelAccess(targetName);
+		std::string halfOpAccess("bmtl");
+		while (modeType[++i])
+		{
+			AccessType flag = 0;
+			if (!ChannelAccessType(modeType[i], flag))
+			{
+				if (!checkErrorOnce)
+					this->handleErrUmodeunknownflag(c);
+				checkErrorOnce = true;
+			}
+    		if (plusOrMinus)
+			{
+				if (userAccessOnChannel >= USER_OPERATOR ||
+					(userAccessOnChannel & USER_HALFOP && halfOpAccess.find(modeType[i])))
+					channel->addMode(flag);
+			}
+    		else
+			{
+				if (userAccessOnChannel >= USER_OPERATOR ||
+					(userAccessOnChannel & USER_HALFOP && halfOpAccess.find(modeType[i])))
+					channel->delMode(flag);
+			}
+		}
+		if (checkErrorOnce)
+			return (this->poolOut.push(c.getFd()), false);
+	}
 	return (true);
 }
 bool	Server::handle_motd(Client &c, std::istringstream &iss) 
@@ -267,7 +422,7 @@ bool	Server::handleNick(Client &c, std::istringstream &iss)
 	if (!_checkInTrieExist(this->_clientTrie, token))
 		return (this->handleErrNicknameInUse(c, token), this->poolOut.push(c.getFd()), false);
 	std::string oldUserName = c.getNick();
-	if (c.flagsLogin == CHECK_CLIENT_LOG)
+	if (c.flagsLogin == FLAG_CLIENT_FULL)
 	{
 		this->_clientTrie.del(oldUserName);
 		// faire message pour changement de nom
@@ -298,7 +453,7 @@ bool	Server::handle_oper(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_part(Client &c, std::istringstream &iss) 
+bool	Server::handlePart(Client &c, std::istringstream &iss) 
 {
 	std::string token;
 	iss >> token;
@@ -372,8 +527,9 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 			if (!targetChannel->checkMode(CHANNEL_NOT_EXTERNAL))
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
+		AccessType t = c.getChannelAccess(targetChannel->getNick());
 		if (targetChannel->checkMode(CHANNEL_MODERATED) && 
-			!((c.checkChannelAccess(target, USER_OPERATOR) || c.checkChannelAccess(target, USER_VOICE))))
+			!(t & (USER_FOUNDER | USER_OPERATOR | USER_HALFOP | USER_VOICE)))
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
 	}
@@ -388,7 +544,7 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		clients.push_back(targetClient);
 		clients.push_back(c.getFd());
 	}
-	std::string		full(_formatBaseRelayMessage(c, "PRIVMSG"));
+	std::string		full(_makeHostMask(c, "PRIVMSG"));
 	// message.erase(0, 1);
 	full.append(target).append(1, ' ').append(message).append("\r\n");
 	std::vector<size_t>::const_iterator end = clients.end();

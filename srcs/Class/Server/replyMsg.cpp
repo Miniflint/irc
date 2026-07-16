@@ -21,7 +21,7 @@ void	Server::handleRplWelcome(Client &c)
 	rplMessage.append(middlePrefix).append(nickName).append(1, '!').append(userName).append(1, '@').append(hostName).append("\r\n");
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplYourhost(Client &c)
+void	Server::handleRplYourHost(Client &c)
 {
 	std::string rplMessage(this->_rplPrefix("002", c.getNick()));
 	std::string middlePrefix(":Your host is ");
@@ -168,10 +168,32 @@ void	Server::handleRplEndofstats(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplUmodeis(Client &c)
+void	Server::handleRplUModeIs(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("221", c.getNick()));
+	std::string modes("");
+	rplMessage.append(":");
+	if (c.serverAccess & CLIENT_ACCESS_INVISIBLE)
+		modes.append("i");
+	if (c.serverAccess & CLIENT_ACCESS_HIDDEN_HOST)
+		modes.append("x");
+	if (c.serverAccess & CLIENT_ACCESS_DEAF)
+		modes.append("d");
+	if (c.serverAccess & CLIENT_ACCESS_REGISTERED)
+		modes.append("R");
+	if (c.serverAccess & CLIENT_ACCESS_WHITELIST)
+		modes.append("g");
+	if (c.serverAccess & CLIENT_ACCESS_BOT)
+		modes.append("B");
+	if (c.serverAccess & CLIENT_ACCESS_OPERATOR)
+		modes.append("o");
+	if (c.serverAccess & CLIENT_ACCESS_ADMIN)
+		modes.append("a");
+	if (!modes.empty())
+		rplMessage.append("+");
+	else
+		modes.append("User has no particular mode");
+	c.addBufferOut(rplMessage.append(modes).append("\r\n"));
 }
 void	Server::handleRplServiceinfo(Client &c)
 {
@@ -404,10 +426,43 @@ void	Server::handleRplListEnd(Client &c)
 	// std::cout << rplMessage << std::endl;
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplChannelmodeis(Client &c)
+void	Server::handleRplChannelModeIs(Client &c, Channel &channel)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("221", c.getNick()));
+	rplMessage.append(channel.getNick());
+	std::vector<std::string>	args;
+	std::string modes("");
+	AccessType flag = channel.getMode();
+	if (flag & CHANNEL_INVITE_ONLY)
+		modes.append("i");
+	if (flag & CHANNEL_SECRET)
+		modes.append("s");
+	if (flag & CHANNEL_MODERATED)
+		modes.append("m");
+	if (flag & CHANNEL_NOT_EXTERNAL)
+		modes.append("n");
+	if (flag & CHANNEL_TOPIC_PROTECTION)
+		modes.append("t");
+	if (flag & CHANNEL_KEY)
+	{
+		modes.append("k");
+		args.push_back(channel.getPass());
+	}
+	if (flag & CHANNEL_LIMIT_USER)
+	{
+		std::ostringstream oss;
+		modes.append("l");
+		if (oss << channel.getMaxUsers())
+			args.push_back(oss.str());
+	}
+	rplMessage.append(" +");
+	rplMessage.append(modes);
+	std::vector<std::string>::iterator end = args.end();
+	for (std::vector<std::string>::iterator it = args.begin(); it != end; it++) {
+		if (!((*it).empty()))
+			rplMessage.append(1, ' ').append(*it);
+	};
+	c.addBufferOut(rplMessage.append("\r\n"));
 }
 void	Server::handleRplUniqopis(Client &c)
 {
@@ -482,8 +537,12 @@ void	Server::handleRplWhoReply(Client &c, Client &cWho, Channel &chan)
 	AccessType	access = cWho.getChannelAccess(chan.getNick());
 	if (access & USER_FOUNDER)
 		status.append(1, '~');
+	else if (access & USER_PROTECTED)
+		status.append(1, '&');
 	else if (access & USER_OPERATOR)
 		status.append(1, '@');
+	else if (access & USER_HALFOP)
+		status.append(1, '%');
 	else if (access & USER_VOICE)
 		status.append(1, '+');
 	c.addBufferOut(rplMessage.append(chan.getNick()).append(1, ' ').append(cWho.getUserName()).append(1, ' ').append(cWho.getHostName()).append(1, ' ').append(SERV_HOST_NAME).append(1, ' ').append(cWho.getNick()).append(status).append(" :0 ").append(cWho.getRealName()).append("\r\n"));
@@ -505,8 +564,12 @@ void	Server::handleRplNameReply(Client &c, std::string channelName, Channel &cha
 		std::string	user;
 		if (access & USER_FOUNDER)
 			user.append(1, '~');
+		else if (access & USER_PROTECTED)
+			user.append(1, '&');
 		else if (access & USER_OPERATOR)
 			user.append(1, '@');
+		else if (access & USER_HALFOP)
+			user.append(1, '%');
 		else if (access & USER_VOICE)
 			user.append(1, '+');
 		user.append(itClient.getNick());
@@ -944,11 +1007,12 @@ void	Server::handleErrNoservicehost(Client &c)
 }
 void	Server::handleErrUmodeunknownflag(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("501", c.getNick()));
+	c.addBufferOut(rplMessage.append(":Unknown MODE flag\r\n"));
 }
-void	Server::handleErrUsersdontmatch(Client &c)
+void	Server::handleErrUsersDontMatch(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("502", c.getNick()));
+	rplMessage.append(":Can't view mode for other users\r\n");
 	c.addBufferOut(rplMessage);
 }

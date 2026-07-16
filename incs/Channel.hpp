@@ -23,11 +23,11 @@ typedef uint16_t AccessType;
 const AccessType NO_ACCESS					= 0x0;
 
 /* differents access possible de user sur un channel */
-const AccessType USER_FOUNDER				= 0x1;	// (~)q
-const AccessType USER_PROTECTED				= 0x2;	// (&)a
+const AccessType USER_FOUNDER				= 0x10;	// (~)q
+const AccessType USER_PROTECTED				= 0x8;	// (&)a
 const AccessType USER_OPERATOR				= 0x4;	// (@)o
-const AccessType USER_HALFOP				= 0x8;	// (%)h
-const AccessType USER_VOICE					= 0x10;	// (+)v
+const AccessType USER_HALFOP				= 0x2;	// (%)h
+const AccessType USER_VOICE					= 0x1;	// (+)v
 
 /* different mode de channel possible */
 const AccessType CHANNEL_INVITE_ONLY		= 0x1;	 // i
@@ -54,7 +54,7 @@ class Channel {
 		AccessType						_mode;
 	public:
 		Channel();
-		Channel(std::string nick, std::string topic);
+		Channel(std::string nick, std::string pass);
 		Channel(const Channel &src);
 		~Channel();
 		Channel	&operator=(const Channel &src);

@@ -53,8 +53,7 @@ class Server {
 		const std::string		&_getPassword();
 		std::string 			_rplPrefix(std::string code, std::string nick) const;
 		void					_sendAllWelcome(Client &c);
-		std::string				_formatBaseRelayMessage(Client &c, std::string functionName);
-		// std::string				_makeHostMask(Client &c);
+		std::string				_makeHostMask(Client &c, std::string functionName);
 		Channel					*_joinChannelSendMsg(Client &c, Channel *chan, std::string &channelName);
 		Server() {};
 		Server(const Server &src) {(void)src;};
@@ -100,13 +99,13 @@ class Server {
 		bool	handle_links(Client &c, std::istringstream &rest);
 		bool	handleList(Client &c, std::istringstream &rest);
 		bool	handle_lusers(Client &c, std::istringstream &rest);
-		bool	handle_mode(Client &c, std::istringstream &rest);
+		bool	handleMode(Client &c, std::istringstream &rest);
 		bool	handle_motd(Client &c, std::istringstream &rest);
 		bool	handle_names(Client &c, std::istringstream &rest);
 		bool	handleNick(Client &c, std::istringstream &rest);
 		bool	handle_notice(Client &c, std::istringstream &rest);
 		bool	handle_oper(Client &c, std::istringstream &rest);
-		bool	handle_part(Client &c, std::istringstream &rest);
+		bool	handlePart(Client &c, std::istringstream &rest);
 		bool	handlePass(Client &c, std::istringstream &rest);
 		bool	handlePing(Client &c, std::istringstream &rest);
 		bool	handle_pong(Client &c, std::istringstream &rest);
@@ -138,7 +137,7 @@ class Server {
 		bool	handleDcc(Client &c, std::istringstream &rest);
 		bool	handle_message(Client &c, std::istringstream &rest);
 		void	handleRplWelcome(Client &c);
-		void	handleRplYourhost(Client &c);
+		void	handleRplYourHost(Client &c);
 		void	handleRplCreated(Client &c);
 		void	handleRplMyinfo(Client &c);
 		void	handleRplISupport(Client &c);
@@ -162,7 +161,7 @@ class Server {
 		void	handleRplStatsqline(Client &c);
 		void	handleRplStatsyline(Client &c);
 		void	handleRplEndofstats(Client &c);
-		void	handleRplUmodeis(Client &c);
+		void	handleRplUModeIs(Client &c);
 		void	handleRplServiceinfo(Client &c);
 		void	handleRplEndofservices(Client &c);
 		void	handleRplService(Client &c);
@@ -206,7 +205,7 @@ class Server {
 		void	handleRplListStart(Client &c);
 		void	handleRplList(Client &c);
 		void	handleRplListEnd(Client &c);
-		void	handleRplChannelmodeis(Client &c);
+		void	handleRplChannelModeIs(Client &c, Channel &channel);
 		void	handleRplUniqopis(Client &c);
 		void	handleRplNotopic(Client &c);
 		void	handleRplTopic(Client &c, std::string channelName, std::string topic);
@@ -296,7 +295,7 @@ class Server {
 		void	handleErrNooperhost(Client &c);
 		void	handleErrNoservicehost(Client &c);
 		void	handleErrUmodeunknownflag(Client &c);
-		void	handleErrUsersdontmatch(Client &c);
+		void	handleErrUsersDontMatch(Client &c);
 };
 
 #endif

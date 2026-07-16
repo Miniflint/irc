@@ -19,9 +19,9 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handle_die, &Server::handle_error,
 		&Server::handle_help, &Server::handle_info, &Server::handle_invite, &Server::handle_ison,
 		&Server::handleJoin, &Server::handle_kick, &Server::handle_kill, &Server::handle_knock,
-		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handle_mode,
+		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handleMode,
 		&Server::handle_motd, &Server::handle_names, &Server::handleNick, &Server::handle_notice,
-		&Server::handle_oper, &Server::handle_part, &Server::handlePass, &Server::handlePing,
+		&Server::handle_oper, &Server::handlePart, &Server::handlePass, &Server::handlePing,
 		&Server::handle_pong, &Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote,
 		&Server::handle_rehash, &Server::handle_rules, &Server::handle_server, &Server::handle_squery,
 		&Server::handle_squit, &Server::handle_setname, &Server::handle_silence, &Server::handle_stats,
@@ -60,7 +60,7 @@ bool    Server::_validateAccess(Client &c, std::string &command)
 	// 	return (false);
 	if (command == "PASS" || command == "NICK" || command == "USER" || command == "QUIT" || command=="CAP")
 		return (true);
-	if (c.flagsLogin != CHECK_CLIENT_LOG)
+	if (c.flagsLogin != FLAG_CLIENT_FULL)
 		return (this->handleErrNotregistered(c), this->poolOut.push(c.getFd()), false);
 	return (true);
 }
@@ -171,7 +171,7 @@ const std::string		&Server::_getPassword()
 void					Server::_sendAllWelcome(Client &c)
 {
 	this->handleRplWelcome(c);
-	this->handleRplYourhost(c);
+	this->handleRplYourHost(c);
 	this->handleRplCreated(c);
 	this->handleRplMyinfo(c);
 	this->handleRplISupport(c);
@@ -179,5 +179,6 @@ void					Server::_sendAllWelcome(Client &c)
 	this->handleRplMotd(c);
 	this->handleRplEndofmotd(c);
 	this->addClientToChannel(c, "&general");
+	c.serverAccess |= CLIENT_ACCESS_FULL;
 	this->poolOut.push(c.getFd());
 }
