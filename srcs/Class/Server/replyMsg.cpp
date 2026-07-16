@@ -496,24 +496,30 @@ void	Server::handleRplSummoning(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplInvitelist(Client &c)
+/* TO DO. too tired - check handler.cpp */
+void	Server::handleRplInvitelist(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("336", c.getNick()));
+	rplMessage.append(channelName).append(" :Start of invite list\r\n");
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplEndofinvitelist(Client &c)
+void	Server::handleRplEndofinvitelist(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("337", c.getNick()));
+	rplMessage.append(channelName).append(" :End of invite list\r\n");
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplExceptlist(Client &c)
+/* TO DO. too tired - check handler.cpp */
+void	Server::handleRplExceptlist(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("348", c.getNick()));
+	rplMessage.append(channelName).append(" :Start of Except list\r\n");
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplEndofexceptlist(Client &c)
+void	Server::handleRplEndofexceptlist(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("349", c.getNick()));
+	rplMessage.append(channelName).append(" :End of Except list\r\n");
 	c.addBufferOut(rplMessage);
 }
 
@@ -613,14 +619,17 @@ void	Server::handleRplEndofnames(Client &c, std::string channelName)
 	std::string rplMessage(this->_rplPrefix("366", c.getNick()));
 	c.addBufferOut(rplMessage.append(channelName).append(" :End of /NAMES list\r\n"));
 }
-void	Server::handleRplBanlist(Client &c)
+/* TO DO. too tired - check handler.cpp */
+void	Server::handleRplBanList(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("367", c.getNick()));
+	rplMessage.append(channelName).append(" :idk vro\r\n");
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplEndofbanlist(Client &c)
+void	Server::handleRplEndofbanlist(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("368", c.getNick()));
+	rplMessage.append(channelName).append(" :End of Channel Ban List\r\n");
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleRplEndofwhowas(Client &c)
@@ -975,9 +984,10 @@ void	Server::handleErrNoprivileges(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleErrChanoprivsneeded(Client &c)
+void	Server::handleErrChanOPrivsNeeded(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("482", c.getNick()));
+	rplMessage.append(channelName).append(" :Insufficient rights to do this command\r\n");
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleErrCantkillserver(Client &c)

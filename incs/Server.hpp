@@ -211,10 +211,10 @@ class Server {
 		void	handleRplTopic(Client &c, std::string channelName, std::string topic);
 		void	handleRplInviting(Client &c);
 		void	handleRplSummoning(Client &c);
-		void	handleRplInvitelist(Client &c);
-		void	handleRplEndofinvitelist(Client &c);
-		void	handleRplExceptlist(Client &c);
-		void	handleRplEndofexceptlist(Client &c);
+		void	handleRplInvitelist(Client &c, std::string channelName);
+		void	handleRplEndofinvitelist(Client &c, std::string channelName);
+		void	handleRplExceptlist(Client &c, std::string channelName);
+		void	handleRplEndofexceptlist(Client &c, std::string channelName);
 		void	handleRplVersion(Client &c);
 		void	handleRplWhoReply(Client &c, Client &cWho, Channel &chan);
 		void	handleRplNameReply(Client &c, std::string channelName, Channel &chan);
@@ -224,8 +224,8 @@ class Server {
 		void	handleRplLinks(Client &c);
 		void	handleRplEndoflinks(Client &c);
 		void	handleRplEndofnames(Client &c, std::string channelName);
-		void	handleRplBanlist(Client &c);
-		void	handleRplEndofbanlist(Client &c);
+		void	handleRplBanList(Client &c, std::string channelName);
+		void	handleRplEndofbanlist(Client &c, std::string channelName);
 		void	handleRplEndofwhowas(Client &c);
 		void	handleRplInfo(Client &c);
 		void	handleRplMotd(Client &c);
@@ -288,7 +288,7 @@ class Server {
 		void	handleErrNochanmodes(Client &c, std::string channelName);
 		void	handleErrBanlistfull(Client &c);
 		void	handleErrNoprivileges(Client &c);
-		void	handleErrChanoprivsneeded(Client &c);
+		void	handleErrChanOPrivsNeeded(Client &c, std::string channelName);
 		void	handleErrCantkillserver(Client &c);
 		void	handleErrRestricted(Client &c);
 		void	handleErrUniqoprivsneeded(Client &c);

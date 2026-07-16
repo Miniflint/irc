@@ -80,7 +80,7 @@ Channel	*Server::addClientToChannel(Client &client, std::string channelName, std
 			return (NULL); //déjà dans le channel
 		} catch (std::exception &e) {
 			AccessType clientAccess = chan->getAccessClient(client.getFd());
-			if ((chan->getMode() & CHANNEL_KEY) && !_constantTimeCheck(chan->getPass(),channelPass))
+			if ((chan->getMode() & CHANNEL_KEY) && chan->getPass() != channelPass)
 				return (this->handleErrBadChannelKey(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //mauvais mot de passes
 			if ((chan->getMode() & CHANNEL_BAN) && clientAccess & EXCEPTION_BANNED)
 				return (this->handleErrBannedFromChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //client bannis

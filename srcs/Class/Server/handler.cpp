@@ -300,7 +300,6 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 	iss >> targetName >> modeType;
 	if (targetName.empty())
 		return (this->handleErrNeedMoreParams(c, "MODE"), this->poolOut.push(c.getFd()), false);
-	std::cout << targetName << std::endl;
 	bool	channelOrClient = this->_channelSpecifiers.channelType.find(targetName[0]) == std::string::npos;
 	if (channelOrClient)
 	{
@@ -367,6 +366,12 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 		bool checkErrorOnce = false;
 		const AccessType userAccessOnChannel = c.getChannelAccess(targetName);
 		std::string halfOpAccess("bmtl");
+		std::string typeALetters("beI");
+		std::string typeBLetters("k");
+		std::string typeCLetters("l");
+		// to implement
+		std::string onUserCommand("qaohv");
+		std::string nextToken;
 		while (modeType[++i])
 		{
 			if (modeType[i] == '+' || modeType[i] == '-')
@@ -382,15 +387,85 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 			}
     		if (plusOrMinus)
 			{
+				if (typeCLetters.find(modeType[i]) != std::string::npos)
+				{
+					int r;
+					iss >> r;
+					if (iss.fail())
+						return (this->handleErrNeedMoreParams(c, "MODE"), this->poolOut.push(c.getFd()), false);
+					channel->setMaxUsers(r);
+				}
 				if (userAccessOnChannel >= USER_OPERATOR ||
-					(userAccessOnChannel & USER_HALFOP && halfOpAccess.find(modeType[i])))
+					(userAccessOnChannel & USER_HALFOP && (halfOpAccess.find(modeType[i]) != std::string::npos)))
 					channel->addMode(flag);
+				else
+					this->handleErrChanOPrivsNeeded(c, targetName);
 			}
     		else
 			{
 				if (userAccessOnChannel >= USER_OPERATOR ||
-					(userAccessOnChannel & USER_HALFOP && halfOpAccess.find(modeType[i])))
+					(userAccessOnChannel & USER_HALFOP && (halfOpAccess.find(modeType[i]) != std::string::npos)))
 					channel->delMode(flag);
+				else
+					this->handleErrChanOPrivsNeeded(c, targetName);
+			}
+			const bool compTypeA = typeALetters.find(modeType[i]) != std::string::npos;
+			const bool compTypeB = typeBLetters.find(modeType[i]) != std::string::npos;
+			if (compTypeB)
+			{
+				if (!(iss >> nextToken))
+					return (this->handleErrNeedMoreParams(c, "MODE"), this->poolOut.push(c.getFd()), false);
+				if (!plusOrMinus && !_constantTimeCheck(nextToken, channel->getPass()))
+					return (this->handleErrPasswdMismatch(c), this->poolOut.push(c.getFd()), false);
+				else if (plusOrMinus)
+				{
+					std::string		full(_makeHostMask(c, "MODE"));
+					full.append(channel->getNick()).append(" +k ").append(nextToken).append("\r\n");
+					channel->setPass(nextToken);
+					std::vector<int>::iterator end = channel->getClientsFD().end();
+					for (std::vector<int>::iterator it = channel->getClientsFD().begin(); it != end; it++) {
+						Client *curr = this->_clients[*it];
+						if (!curr)
+							continue ;
+						this->sendToClient(*curr, full);
+					}
+				}
+			}
+			if (compTypeA)
+			{
+				if (!(iss >> nextToken))
+				{
+					if (modeType[i] == 'b')
+					{
+						this->handleRplBanList(c, channel->getNick());
+						this->handleRplEndofbanlist(c, channel->getNick());
+					}
+					if (modeType[i] == 'e')
+					{
+						this->handleRplExceptlist(c, channel->getNick());
+						this->handleRplEndofexceptlist(c, channel->getNick());
+					}
+					if (modeType[i] == 'I')
+					{
+						this->handleRplInvitelist(c, channel->getNick());
+						this->handleRplEndofinvitelist(c, channel->getNick());
+					}
+				}
+				int clientFd = -1;
+				try {
+					clientFd = this->_clientTrie[targetName];
+				} catch (std::exception &e) {
+					return (this->handleErrNoSuchNick(c, targetName), this->poolOut.push(c.getFd()), false);
+				}
+				if (plusOrMinus && modeType[i] == 'b')
+					channel->addClientException(clientFd, EXCEPTION_BANNED);
+				else if (!plusOrMinus && modeType[i] == 'b')
+					channel->delClientException(clientFd, EXCEPTION_BANNED);
+				if (plusOrMinus && modeType[i] == 'e') {} // je sais pas ce qu'il faut faire la
+				else if (!plusOrMinus && modeType[i] == 'e') {} // je sais pas ce qu'il faut faire la
+				if (plusOrMinus && modeType[i] == 'I') {} // je sais pas ce qu'il faut faire la
+				else if (!plusOrMinus && modeType[i] == 'I') {} // je sais pas ce qu'il faut faire la
+				
 			}
 		}
 		if (checkErrorOnce)
