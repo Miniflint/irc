@@ -36,12 +36,13 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_channelSpecifiers.channelType = "&#";
 	this->_channelSpecifiers.channelLen = 32;
 	this->_channelSpecifiers.channelAuthPrefix = "(qaohv)~&@%+";
-	this->_channelSpecifiers.channelMode = ",,,ismntklb";
+	this->_channelSpecifiers.channelMode = "b,k,l,ismnt";
 	this->_motd.motd = "This is the current message of the day";
-	this->_motd.announcements.push_back("Today is the day we are working on channels");
-	this->_motd.announcements.push_back("And we hope to be able to live long");
+	this->_motd.announcements.push_back("Today we are working on littles bug fixes");
+	this->_motd.announcements.push_back("And we hope to be able to live long happy lifes");
 	this->_motd.announcements.push_back("Please Respect the rules !");
 	this->_clientSpecifiers.nickLenMax = 12;
+	this->_clientSpecifiers.userMode = "ixdRgBoOaA";
 }
 
 Server::~Server()

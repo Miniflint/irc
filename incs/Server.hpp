@@ -42,7 +42,8 @@ typedef struct S_ChannelSpecifiers {
 }	t_ChannelSpecifiers;
 
 typedef struct S_ClientSpecifiers {
-	uint16_t	nickLenMax;
+	AccessType	nickLenMax;
+	std::string	userMode;
 }	t_ClientSpecifiers;
 
 typedef struct S_Motd {
@@ -81,8 +82,8 @@ class Server {
 		void					_sendAllWelcome(Client &c);
 		std::string				_makeHostMask(Client &c, std::string functionName);
 		Channel					*_joinChannelSendMsg(Client &c, Channel *chan, std::string &channelName);
-		int						_handleCaseAdd(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
-		int						_handleCaseDel(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
+		int						_handleCaseAdd(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss, std::string &message);
+		int						_handleCaseDel(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss, std::string &message);
 
 		/* Channel Access */
 		bool					_bCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
@@ -346,6 +347,7 @@ class Server {
 		void	handleErrBannedFromChan(Client &c, std::string channelName);
 		void	handleErrBadChannelKey(Client &c, std::string channelName);
 		void	handleErrBadChanMask(Client &c, std::string channelName);
+		void	handleErrBadChanName(Client &c, std::string channelName);
 		void	handleErrNochanmodes(Client &c, std::string channelName);
 		void	handleErrBanlistfull(Client &c);
 		void	handleErrNoprivileges(Client &c);

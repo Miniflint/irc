@@ -24,6 +24,7 @@ void	Server::delClientToChannel(Client &c, std::list<Channel>::iterator &chan, s
 		else
 			++it;
 	}
+	c.getChannel().del((*chan).getNick());
 	if (clients.empty()) {
 		this->_channelTrie.del(chan->getNick());
 		chan = this->_channel.erase(chan);
@@ -33,13 +34,14 @@ void	Server::delClientToChannel(Client &c, std::list<Channel>::iterator &chan, s
 
 void	Server::delClientToChannel(Client &c, Channel &chan, std::string message) {
 	std::vector<int>	&clients = chan.getClientsFD();
-	for (std::vector<int>::iterator it = clients.begin(); it != clients.begin(); ) {
+	for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); ) {
 		this->sendToClient(this->getClient(*it), message);
 		if (*it == c.getFd())
 			it = clients.erase(it);
 		else
 			++it;
 	}
+	c.getChannel().del(chan.getNick());
 	if (clients.empty()) {
 		this->_channelTrie.del(chan.getNick());
 		for (std::list<Channel>::iterator it = this->_channel.begin(); it != this->_channel.end(); ++it) {
@@ -87,14 +89,16 @@ Channel	*Server::addClientToChannel(Client &client, std::string channelName, std
 			return (NULL); //déjà dans le channel
 		} catch (std::exception &e) {
 			AccessType clientAccess = chan->getAccessClient(client.getFd());
-			if ((chan->getMode() & CHANNEL_KEY) && chan->getPass() != channelPass)
-				return (this->handleErrBadChannelKey(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //mauvais mot de passes
-			if ((chan->getMode() & CHANNEL_BAN) && clientAccess & EXCEPTION_BANNED)
-				return (this->handleErrBannedFromChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //client bannis
-			if ((chan->getMode() & CHANNEL_INVITE_ONLY) && !(clientAccess & EXCEPTION_INVITED))
-				return (this->handleErrInviteOnlyChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //pas invité
-			if ((chan->getMode() & CHANNEL_LIMIT_USER) && chan->getClientsFD().size() >= static_cast<size_t>(chan->getMaxUsers()))
-				return (this->handleErrChannelisfull(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //plus de place sur le channel
+			if (client.getStatus() < CLIENT_ACCESS_OPERATOR) {
+				if ((chan->getMode() & CHANNEL_KEY) && chan->getPass() != channelPass)
+					return (this->handleErrBadChannelKey(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //mauvais mot de passes
+				if ((chan->getMode() & CHANNEL_BAN) && clientAccess & EXCEPTION_BANNED)
+					return (this->handleErrBannedFromChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //client bannis
+				if ((chan->getMode() & CHANNEL_INVITE_ONLY) && !(clientAccess & EXCEPTION_INVITED))
+					return (this->handleErrInviteOnlyChan(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //pas invité
+				if ((chan->getMode() & CHANNEL_LIMIT_USER) && chan->getClientsFD().size() >= static_cast<size_t>(chan->getMaxUsers()))
+					return (this->handleErrChannelisfull(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //plus de place sur le channel
+			}
 			client.getChannel().add(channelName, std::pair<Channel *, AccessType>(chan, NO_ACCESS));
 			chan->addClientsFD(client.getFd());
 			return (this->_joinChannelSendMsg(client, chan, channelName));
@@ -102,6 +106,8 @@ Channel	*Server::addClientToChannel(Client &client, std::string channelName, std
 	} catch (std::exception &e) {
 		if (this->_channelSpecifiers.channelType.find(channelName[0]) == std::string::npos)
 			return (this->handleErrBadChanMask(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL))); //nom de channel invalid
+		if (channelName.size() > this->_channelSpecifiers.channelLen)
+			return (this->handleErrBadChanName(client, channelName), sendRet(client, *this, reinterpret_cast<Channel *>(NULL)));
 		chan = this->createNewChannel(channelName, channelPass);
 		client.getChannel().add(channelName, std::pair<Channel *, AccessType>(chan, USER_OPERATOR | USER_FOUNDER));
 		chan->addClientsFD(client.getFd());

@@ -270,15 +270,16 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
 		int i = 0;
 		bool checkErrorOnce = false;
+		std::string fullStr(this->_makeHostMask(c, "MODE")); 
 		while (modeType[i])
 		{
 			switch (modeType[i])
 			{
 				case '+':
-					this->_handleCaseAdd(c, modeType, &i, *channel, iss);
+					this->_handleCaseAdd(c, modeType, &i, *channel, iss, fullStr);
 					break ;
 				case '-':
-					this->_handleCaseDel(c, modeType, &i, *channel, iss);
+					this->_handleCaseDel(c, modeType, &i, *channel, iss, fullStr);
 					break ;
 				default:
 					break ;
@@ -487,7 +488,7 @@ bool	Server::handleQuit(Client &c, std::istringstream &iss)
 	std::string message(":");
 	message.append(c.getNick()).append(1, '!').append(c.getUserName()).append(1, '@').append(c.getHostName()).append(" QUIT :");
 	if (token.empty())
-		token += "Left without a message";
+		token = "Left without a message";
 	if (token[0] == ':')
 		token.erase(0, 1);
 	token.append("\r\n");
@@ -616,7 +617,7 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 	size_t indexTrim = realName.find_first_not_of(' ');
 	if (indexTrim == std::string::npos)
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
-	realName.erase(0, indexTrim + 1);
+	realName.erase(0, indexTrim);
 	if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1 || realName.length() < 1)
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	c.setUserName(userName);
