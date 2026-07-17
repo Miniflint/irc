@@ -37,6 +37,10 @@ ifeq ($(HARD),yes)
 	FLAGS += -Winit-self -Wold-style-cast -Woverloaded-virtual -Wuninitialized -Winit-self -ansi -fno-elide-constructors -pedantic-errors
 endif
 
+ifeq ($(DEV),yes)
+	FLAGS += -DDEV
+endif
+
 all: $(TARGET)
 
 bonus: $(TARGET)
