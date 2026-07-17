@@ -39,31 +39,15 @@ void Server::delClient(int fd) {
 	std::string nick = c->getNick();
 	if (!nick.empty()) {
 		std::list<Channel>::iterator end = this->_channel.end();
-		for (std::list<Channel>::iterator it = this->_channel.begin(); it != end; it++) {
-			try {
-				c->getChannel()[it->getNick()];
-				std::vector<int> &clientFd = it->getClientsFD();
-				for (std::vector<int>::iterator itB = clientFd.begin(); itB != clientFd.end();) {
-					Client	&itClient = this->getClient(*itB);
-					if (*itB == fd) {
-						itB = clientFd.erase(itB);
-					} else {
-						if (!c->getBufferQuit().empty() && itClient.quitRequest == CLIENT_QUIT_NONE)
-							this->sendToClient(itClient, c->getBufferQuit());
-						++itB;
-					}
-				}
-				std::vector<int>::iterator rtn = std::find(clientFd.begin(), clientFd.end(), c->getFd());
-				if (rtn != clientFd.end())
-					clientFd.erase(rtn);
-			} catch (std::exception &e) {(void)e;}
-		}
+		for (std::list<Channel>::iterator it = this->_channel.begin(); it != end; )
+			if (c->getChannel().isIn(it->getNick()))
+				this->delClientToChannel(*c, it, c->getBufferQuit());
+			else
+				++it;
 		this->_clientTrie.del(nick);
 	}
-	if (c != NULL) {
-		delete c;
-		this->_clients[fd] = NULL;
-	}
+	delete c;
+	this->_clients[fd] = NULL;
 	std::cout << nick << ": Deconected" << std::endl;
 }
 

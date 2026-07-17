@@ -80,6 +80,8 @@ void		Client::setBufferOut(std::string bufferOut)
 
 void		Client::addBufferOut(std::string bufferOut)
 {
+	if (this->quitRequest)
+		return ;
 	const size_t index = bufferOut.find("\r\n");
 	if (index == std::string::npos)
 		return ;

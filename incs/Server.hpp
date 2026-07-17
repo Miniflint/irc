@@ -81,26 +81,35 @@ class Server {
 		void					_sendAllWelcome(Client &c);
 		std::string				_makeHostMask(Client &c, std::string functionName);
 		Channel					*_joinChannelSendMsg(Client &c, Channel *chan, std::string &channelName);
-		int						_handleCasePlus(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
-		int						_handleCaseMinus(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
+		int						_handleCaseAdd(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
+		int						_handleCaseDel(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
 
 		/* Channel Access */
-		bool					_bCasePlus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_bCaseMinus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_kCasePlus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_kCaseMinus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_lCasePlus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_lCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_tCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_tCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_nCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_nCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_mCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_mCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_sCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_sCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_iCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel);
-		bool					_iCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_bCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_bCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_kCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_kCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_lCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_lCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_tCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_tCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_nCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_nCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_mCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_mCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_sCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_sCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_iCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel);
+		bool					_iCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel);
+
+		bool					_aCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_aCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_oCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_oCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_hCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_hCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_vCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_vCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
 
 		
 		Server() {};
@@ -111,6 +120,8 @@ class Server {
 		// std::pair<size_t, std::string>	getVals();
 		int 							newConnection();
 		void							delClient(int fd);
+		void							delClientToChannel(Client &c, Channel &chan, std::string message);
+		void							delClientToChannel(Client &c, std::list<Channel>::iterator &chan, std::string message);
 		bool							run();
 		bool							doCommand(size_t fd);
 		Client							&getClient(size_t fd);
@@ -274,7 +285,7 @@ class Server {
 		void	handleRplLinks(Client &c);
 		void	handleRplEndoflinks(Client &c);
 		void	handleRplEndofnames(Client &c, std::string channelName);
-		void	handleRplBanList(Client &c, std::string channelName);
+		void	handleRplBanList(Client &c, Channel &channel);
 		void	handleRplEndofbanlist(Client &c, std::string channelName);
 		void	handleRplEndofwhowas(Client &c);
 		void	handleRplInfo(Client &c, std::string message);

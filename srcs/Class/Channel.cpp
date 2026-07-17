@@ -105,10 +105,7 @@ AccessType			Channel::getAccessClient(int fd)
 
 void				Channel::addClientException(int fd, AccessType flag)
 {
-	std::map<int, AccessType>::iterator it = this->_exceptionList.find(fd);
-	if (it == this->_exceptionList.end())
-		this->_exceptionList[fd] = flag;
-	it->second |= flag;
+	this->_exceptionList[fd] |= flag;
 }
 void				Channel::delClientException(int fd, AccessType flag)
 {
@@ -118,4 +115,9 @@ void				Channel::delClientException(int fd, AccessType flag)
 	it->second &= ~flag;
 	if (it->second == NO_ACCESS)
 		this->_exceptionList.erase(it);
+}
+
+const std::map<int, AccessType>	&Channel::getClientException() const
+{
+	return (this->_exceptionList);
 }

@@ -621,12 +621,20 @@ void	Server::handleRplEndofnames(Client &c, std::string channelName)
 	std::string rplMessage(this->_rplPrefix("366", c.getNick()));
 	c.addBufferOut(rplMessage.append(channelName).append(" :End of /NAMES list\r\n"));
 }
-/* TO DO. too tired - check handler.cpp */
-void	Server::handleRplBanList(Client &c, std::string channelName)
+void	Server::handleRplBanList(Client &c, Channel &channel)
 {
-	std::string rplMessage(this->_rplPrefix("367", c.getNick()));
-	rplMessage.append(channelName).append(" :idk vro\r\n");
-	c.addBufferOut(rplMessage);
+	const std::map<int, AccessType>	exceptionList = channel.getClientException();
+
+	std::map<int, AccessType>::const_iterator end = exceptionList.end();
+	for (std::map<int, AccessType>::const_iterator it = exceptionList.begin(); it != end; it++) {
+		if ((*it).second & EXCEPTION_BANNED)
+		{
+			std::string rplMessage(this->_rplPrefix("367", c.getNick()));
+			rplMessage.append(channel.getNick()).append(1, ' ').append((this->_clients[it->first])->getNick());
+			rplMessage.append("!*@*\r\n");
+			c.addBufferOut(rplMessage);
+		}
+	}
 }
 void	Server::handleRplEndofbanlist(Client &c, std::string channelName)
 {

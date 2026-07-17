@@ -1,25 +1,60 @@
 #include "Server.hpp"
 
-bool					Server::_bCasePlus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+bool	Server::_bCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
 {
-	(void)c;
-	(void)channel;
-	(void)iss;
-	(void)userAccessOnChannel;
+    const std::string channelName = channel.getNick();
+
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
+		return (this->handleErrChanOPrivsNeeded(c, channelName), true);
+	std::string userTarget;
+
+	iss >> userTarget;
+	if (iss.fail() || userTarget.empty())
+	{
+		this->handleRplBanList(c, channel);
+		this->handleRplEndofbanlist(c, channelName);
+		return (true);
+	}
+	int bannedClient = -1;
+	Trie<int>	*trieClient;
+	if (!(trieClient = this->_clientTrie.find(userTarget)))
+		return (false);
+	bannedClient = trieClient->getElem();
+	if (bannedClient > 0)
+	{
+		this->delClientToChannel(*(this->_clients[bannedClient]), channel, "Va te faire foutre\r\n");
+	}
+	channel.addClientException(bannedClient, CHANNEL_BAN);
 	return (true);
 }
 
-bool					Server::_bCaseMinus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+bool	Server::_bCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
 {
-	(void)c;
-	(void)channel;
-	(void)iss;
-	(void)userAccessOnChannel;
+    const std::string channelName = channel.getNick();
+
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
+		return (this->handleErrChanOPrivsNeeded(c, channelName), true);
+	std::string userTarget;
+
+	iss >> userTarget;
+	if (iss.fail() || userTarget.empty())
+		return (true);
+	int bannedClient = -1;
+	Trie<int>	*trieClient;
+	if (!(trieClient = this->_clientTrie.find(userTarget)))
+		return (false);
+	bannedClient = trieClient->getElem();
+	if (bannedClient > 0)
+	{
+		// this->delClientToChannel(*bannedChannel, channelName);
+	}
+	channel.delClientException(bannedClient, CHANNEL_BAN);
 	return (true);
+
 }
 
 
-bool					Server::_lCasePlus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+bool	Server::_lCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
 {
     const std::string targetName = channel.getNick();
 
@@ -32,15 +67,10 @@ bool					Server::_lCasePlus(Client &c, Channel &channel, std::istringstream &iss
 
 	channel.setMaxUsers(r);
 	channel.addMode(CHANNEL_LIMIT_USER);
-	std::string		full(_makeHostMask(c, "MODE"));
-	std::ostringstream convertToString;
-	convertToString << r;
-	full.append(targetName).append(" +l ").append(convertToString.str()).append("\r\n");
-	this->sendToChannel(channel, full);
     return (true);
 }
 
-bool					Server::_lCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_lCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
     const std::string targetName = channel.getNick();
  
@@ -48,17 +78,14 @@ bool					Server::_lCaseMinus(Client &c, Channel &channel, AccessType userAccessO
 		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
 
 	channel.delMode(CHANNEL_LIMIT_USER);
-	std::string		full(_makeHostMask(c, "MODE"));
-	full.append(targetName).append(" -l\r\n");
-	this->sendToChannel(channel, full);
     return (true);
 }
 
-bool					Server::_kCasePlus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+bool	Server::_kCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
 {
     const std::string targetName = channel.getNick();
 
-    if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_HALFOP)
+    if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
 		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
     std::string nextToken;
 	if (!(iss >> nextToken))
@@ -68,16 +95,13 @@ bool					Server::_kCasePlus(Client &c, Channel &channel, std::istringstream &iss
 
 	channel.setPass(nextToken);
 	std::string		full(_makeHostMask(c, "MODE"));
-	full.append(targetName).append(" +k ").append(nextToken).append("\r\n");
-    channel.addMode(CHANNEL_KEY);
-	this->sendToChannel(channel, full);
 	return (true);
 }
 
-bool					Server::_kCaseMinus(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+bool	Server::_kCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
 {
     const std::string targetName = channel.getNick();
-    if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_HALFOP)
+    if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
 		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
     std::string nextToken;
 	if (!(iss >> nextToken))
@@ -86,14 +110,10 @@ bool					Server::_kCaseMinus(Client &c, Channel &channel, std::istringstream &is
 		return (this->handleErrPasswdMismatch(c), this->poolOut.push(c.getFd()), false);
 
 	std::string		full(_makeHostMask(c, "MODE"));
-	full.append(targetName).append(" -k ").append(nextToken).append("\r\n");
-    channel.delMode(CHANNEL_KEY);
-	channel.setPass(nextToken);
-	this->sendToChannel(channel, full);
 	return (true);
 }
 
-bool					Server::_tCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_tCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
     const std::string targetName = channel.getNick();
 
@@ -103,7 +123,7 @@ bool					Server::_tCasePlus(Client &c, Channel &channel, AccessType userAccessOn
 	return (true);
 }
 
-bool					Server::_tCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_tCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
 	const std::string targetName = channel.getNick();
 
@@ -113,7 +133,7 @@ bool					Server::_tCaseMinus(Client &c, Channel &channel, AccessType userAccessO
 	return (true);
 }
 
-bool					Server::_nCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_nCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
 	const std::string targetName = channel.getNick();
 
@@ -123,7 +143,7 @@ bool					Server::_nCasePlus(Client &c, Channel &channel, AccessType userAccessOn
 	return (true);
 }
 
-bool					Server::_nCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_nCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
 	const std::string targetName = channel.getNick();
 
@@ -133,7 +153,7 @@ bool					Server::_nCaseMinus(Client &c, Channel &channel, AccessType userAccessO
 	return (true);
 }
 
-bool					Server::_mCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_mCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
 	const std::string targetName = channel.getNick();
 
@@ -143,7 +163,7 @@ bool					Server::_mCasePlus(Client &c, Channel &channel, AccessType userAccessOn
 	return (true);
 }
 
-bool					Server::_mCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_mCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
 	const std::string targetName = channel.getNick();
 
@@ -153,48 +173,203 @@ bool					Server::_mCaseMinus(Client &c, Channel &channel, AccessType userAccessO
 	return (true);
 }
 
-bool					Server::_sCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_sCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
 	const std::string targetName = channel.getNick();
 
-	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_HALFOP)
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
 		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
 	channel.addMode(CHANNEL_SECRET);
 	return (true);
 }
 
-bool					Server::_sCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_sCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
 	const std::string targetName = channel.getNick();
 
-	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_HALFOP)
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
 		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
 	channel.delMode(CHANNEL_SECRET);
 	return (true);
 }
 
-bool					Server::_iCasePlus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_iCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
 	const std::string targetName = channel.getNick();
 
-	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_HALFOP)
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
 		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
 	channel.addMode(CHANNEL_INVITE_ONLY);
 	return (true);
 }
 
-bool					Server::_iCaseMinus(Client &c, Channel &channel, AccessType userAccessOnChannel)
+bool	Server::_iCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel)
 {
 	const std::string targetName = channel.getNick();
 
-	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_HALFOP)
+	std::cout << c.getNick() << " " << c.getStatus() << std::endl;
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
 		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
 	channel.delMode(CHANNEL_INVITE_ONLY);
 	return (true);
 }
 
+bool	Server::_aCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+{
+	const std::string targetName = channel.getNick();
 
-int						Server::_handleCasePlus(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss)
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_FOUNDER)
+		return (this->handleErrChanOPrivsNeeded(c, targetName), this->poolOut.push(c.getFd()), true);
+	std::string	targetUser;
+
+	if (!(iss >> targetUser))
+		return (this->handleErrNeedMoreParams(c, "MODE"), this->poolOut.push(c.getFd()), false);
+	int	client;
+	try {
+		client = this->_clientTrie[targetUser];
+	} catch (std::exception &e) {
+		return (this->handleErrNoSuchNick(c, targetUser), this->poolOut.push(c.getFd()), false);
+	}
+	this->_clients[client]->addChannelAccess(targetName, USER_PROTECTED);
+	std::cout << "added " << this->_clients[client]->getNick() << " to admin" << std::endl;
+	return (true);
+}
+bool	Server::_aCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+{
+	const std::string targetName = channel.getNick();
+
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_FOUNDER)
+		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
+	std::string	targetUser;
+
+	if (!(iss >> targetUser))
+		return (this->handleErrNeedMoreParams(c, "MODE"), false);
+	int client;
+	try {
+		client = this->_clientTrie[targetUser];
+	} catch (std::exception &e) {
+		return (this->handleErrNoSuchNick(c, targetUser), false);
+	}
+	this->_clients[client]->delChannelAccess(targetName, USER_PROTECTED);
+	return (true);
+}
+bool	Server::_oCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+{
+	const std::string targetName = channel.getNick();
+
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_PROTECTED)
+		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
+	std::string	targetUser;
+
+	if (!(iss >> targetUser))
+		return (this->handleErrNeedMoreParams(c, "MODE"), false);
+	int client;
+	try {
+		client = this->_clientTrie[targetUser];
+	} catch (std::exception &e) {
+		return (this->handleErrNoSuchNick(c, targetUser), false);
+	}
+	this->_clients[client]->addChannelAccess(targetName, USER_OPERATOR);
+	return (true);
+}
+bool	Server::_oCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+{
+	const std::string targetName = channel.getNick();
+
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_PROTECTED)
+		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
+	std::string	targetUser;
+
+	if (!(iss >> targetUser))
+		return (this->handleErrNeedMoreParams(c, "MODE"), false);
+	int client;
+	try {
+		client = this->_clientTrie[targetUser];
+	} catch (std::exception &e) {
+		return (this->handleErrNoSuchNick(c, targetUser), false);
+	}
+	this->_clients[client]->delChannelAccess(targetName, USER_OPERATOR);
+	return (true);
+}
+bool	Server::_hCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+{
+	const std::string targetName = channel.getNick();
+
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
+		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
+	std::string	targetUser;
+
+	if (!(iss >> targetUser))
+		return (this->handleErrNeedMoreParams(c, "MODE"), false);
+	int client;
+	try {
+		client = this->_clientTrie[targetUser];
+	} catch (std::exception &e) {
+		return (this->handleErrNoSuchNick(c, targetUser), false);
+	}
+	this->_clients[client]->addChannelAccess(targetName, USER_HALFOP);
+	return (true);
+}
+bool	Server::_hCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+{
+	const std::string targetName = channel.getNick();
+
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
+		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
+	std::string	targetUser;
+
+	if (!(iss >> targetUser))
+		return (this->handleErrNeedMoreParams(c, "MODE"), false);
+	int client;
+	try {
+		client = this->_clientTrie[targetUser];
+	} catch (std::exception &e) {
+		return (this->handleErrNoSuchNick(c, targetUser), false);
+	}
+	this->_clients[client]->delChannelAccess(targetName, USER_HALFOP);
+	return (true);
+}
+bool	Server::_vCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+{
+	const std::string targetName = channel.getNick();
+
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_HALFOP)
+		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
+	std::string	targetUser;
+
+	if (!(iss >> targetUser))
+		return (this->handleErrNeedMoreParams(c, "MODE"), false);
+	int client;
+	try {
+		client = this->_clientTrie[targetUser];
+	} catch (std::exception &e) {
+		return (this->handleErrNoSuchNick(c, targetUser), false);
+	}
+	this->_clients[client]->addChannelAccess(targetName, USER_VOICE);
+	return (true);
+}
+bool	Server::_vCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel)
+{
+	const std::string targetName = channel.getNick();
+
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_HALFOP)
+		return (this->handleErrChanOPrivsNeeded(c, targetName), true);
+	std::string	targetUser;
+
+	if (!(iss >> targetUser))
+		return (this->handleErrNeedMoreParams(c, "MODE"), false);
+	int client;
+	try {
+		client = this->_clientTrie[targetUser];
+	} catch (std::exception &e) {
+		return (this->handleErrNoSuchNick(c, targetUser), false);
+	}
+	this->_clients[client]->delChannelAccess(targetName, USER_VOICE);
+	return (true);
+}
+
+
+int		Server::_handleCaseAdd(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss)
 {
     const AccessType userAccessOnChannel = c.getChannelAccess(channel.getNick());
     (*i)++;
@@ -203,35 +378,47 @@ int						Server::_handleCasePlus(Client &c, std::string modeType, int *i, Channe
         switch (modeType[*i])
         {
 	    	case 'b':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_bCaseAdd(c, channel, iss, userAccessOnChannel);
                 break ;
             case 'l':
-                this->_lCasePlus(c, channel, iss, userAccessOnChannel);
+                this->_lCaseAdd(c, channel, iss, userAccessOnChannel);
                 break ;
             case 'k':
-                this->_kCasePlus(c, channel, iss, userAccessOnChannel);
+                this->_kCaseAdd(c, channel, iss, userAccessOnChannel);
                 break ;
 	    	case 't':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_tCaseAdd(c, channel, userAccessOnChannel);
                 break ;
 	    	case 'n':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_nCaseAdd(c, channel, userAccessOnChannel);
                 break ;
 	    	case 'm':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_mCaseAdd(c, channel, userAccessOnChannel);
                 break ;
 	    	case 's':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_sCaseAdd(c, channel, userAccessOnChannel);
                 break ;
 	    	case 'i':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_iCaseAdd(c, channel, userAccessOnChannel);
+                break ;
+	    	case 'a':
+	    		this->_aCaseAdd(c, channel, iss, userAccessOnChannel);
+                break ;
+	    	case 'o':
+	    		this->_oCaseAdd(c, channel, iss, userAccessOnChannel);
+                break ;
+	    	case 'h':
+	    		this->_hCaseAdd(c, channel, iss, userAccessOnChannel);
+                break ;
+	    	case 'v':
+	    		this->_vCaseAdd(c, channel, iss, userAccessOnChannel);
                 break ;
         }
         (*i)++;
     }
 	return (true);
 }
-int						Server::_handleCaseMinus(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss)
+int		Server::_handleCaseDel(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss)
 {
     const AccessType userAccessOnChannel = c.getChannelAccess(channel.getNick());
     (*i)++;
@@ -240,28 +427,40 @@ int						Server::_handleCaseMinus(Client &c, std::string modeType, int *i, Chann
 	    switch (modeType[*i])
 	    {
 	    	case 'b':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_bCaseDel(c, channel, iss, userAccessOnChannel);
                 break ;
 	    	case 'l':
-	    		this->_lCaseMinus(c, channel, userAccessOnChannel);
+	    		this->_lCaseDel(c, channel, userAccessOnChannel);
                 break ;
 	    	case 'k':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_kCaseDel(c, channel, iss, userAccessOnChannel);
                 break ;
 	    	case 't':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_tCaseDel(c, channel, userAccessOnChannel);
                 break ;
 	    	case 'n':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_nCaseDel(c, channel, userAccessOnChannel);
                 break ;
 	    	case 'm':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_mCaseDel(c, channel, userAccessOnChannel);
                 break ;
 	    	case 's':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_sCaseDel(c, channel, userAccessOnChannel);
                 break ;
 	    	case 'i':
-	    		this->_kCaseMinus(c, channel, iss, userAccessOnChannel);
+	    		this->_iCaseDel(c, channel, userAccessOnChannel);
+                break ;
+	    	case 'a':
+	    		this->_aCaseDel(c, channel, iss, userAccessOnChannel);
+                break ;
+	    	case 'o':
+	    		this->_oCaseDel(c, channel, iss, userAccessOnChannel);
+                break ;
+	    	case 'h':
+	    		this->_hCaseDel(c, channel, iss, userAccessOnChannel);
+                break ;
+	    	case 'v':
+	    		this->_vCaseDel(c, channel, iss, userAccessOnChannel);
                 break ;
 	    }
         (*i)++;

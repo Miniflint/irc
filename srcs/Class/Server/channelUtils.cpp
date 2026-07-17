@@ -15,34 +15,41 @@ static inline Channel	*sendRet(Client &c, Server &serv, Channel *chan) {
 	return (chan);
 }
 
-// bool	Server::delClientToChannel(Client &c, Channel *chan, std::string &channelName) {
-// 	std::list<Channel>::iterator end = this->_channel.end();
-// 		std::list<Channel>::iterator it = this->_channel.begin();
-// 		while (it != end) {
-// 			try {
-// 				c->getChannel()[it->getNick()];
-// 				std::vector<int> &clientFd = it->getClientsFD();
-// 				for (std::vector<int>::iterator itB = clientFd.begin(); itB != clientFd.end();) {
-// 					Client	&itClient = this->getClient(*itB);
-// 					if (*itB == fd) {
-// 						itB = clientFd.erase(itB);
-// 					} else {
-// 						if (!c->getBufferQuit().empty() && itClient.quitRequest == CLIENT_QUIT_NONE)
-// 							this->sendToClient(itClient, c->getBufferQuit());
-// 						++itB;
-// 					}
-// 				}
-// 				std::vector<int>::iterator rtn = std::find(clientFd.begin(), clientFd.end(), c->getFd());
-// 				if (rtn != clientFd.end())
-// 					clientFd.erase(rtn);
-// 				if (clientFd.empty()) {
-// 					std::vector<int>	*
-// 					it = this->_channel.erase(it);
-// 				} else
-// 					++it;
-// 			} catch (std::exception &e) {(void)e;}
-// 		}
-// }
+void	Server::delClientToChannel(Client &c, std::list<Channel>::iterator &chan, std::string message) {
+	std::vector<int>	&clients = chan->getClientsFD();
+	for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); ) {
+		this->getClient(*it).addBufferOut(message);
+		if (*it == c.getFd())
+			it = clients.erase(it);
+		else
+			++it;
+	}
+	if (clients.empty()) {
+		this->_channelTrie.del(chan->getNick());
+		chan = this->_channel.erase(chan);
+	} else
+		++chan;
+}
+
+void	Server::delClientToChannel(Client &c, Channel &chan, std::string message) {
+	std::vector<int>	&clients = chan.getClientsFD();
+	for (std::vector<int>::iterator it = clients.begin(); it != clients.begin(); ) {
+		this->getClient(*it).addBufferOut(message);
+		if (*it == c.getFd())
+			it = clients.erase(it);
+		else
+			++it;
+	}
+	if (clients.empty()) {
+		this->_channelTrie.del(chan.getNick());
+		for (std::list<Channel>::iterator it = this->_channel.begin(); it != this->_channel.end(); ++it) {
+			if (&(*it) == &chan) {
+				this->_channel.erase(it);
+				break ;
+			}
+		}
+	}
+}
 
 Channel	*Server::_joinChannelSendMsg(Client &c, Channel *chan, std::string &channelName) {
 	std::string	joinMsg(this->_makeHostMask(c, "JOIN"));

@@ -58,26 +58,26 @@ class Channel {
 		Channel(const Channel &src);
 		~Channel();
 		Channel	&operator=(const Channel &src);
-		std::string			getNick(void) const;
-		void				setNick(std::string nick);
-		std::string			getTopic(void) const;
-		void				setTopic(std::string topic);
-		std::string			getPass(void) const;
-		void				setPass(std::string pass);
-		int					getMaxUsers(void) const;
-		void				setMaxUsers(int limit);
-		std::vector<int>	getClientsFD(void) const;
-		std::vector<int>	&getClientsFD(void);
-		void				addClientsFD(int fd);
-		AccessType			getAccessClient(int fd);
-		void				addClientException(int fd, AccessType flag);
-		void				delClientException(int fd, AccessType flag);
-
-		AccessType			getMode(void) const;
-		bool				checkMode(AccessType mode) const;
-		void				setMode(AccessType mode);
-		void				addMode(AccessType mode);
-		void				delMode(AccessType mode);
+		std::string						getNick(void) const;
+		void							setNick(std::string nick);
+		std::string						getTopic(void) const;
+		void							setTopic(std::string topic);
+		std::string						getPass(void) const;
+		void							setPass(std::string pass);
+		int								getMaxUsers(void) const;
+		void							setMaxUsers(int limit);
+		std::vector<int>				getClientsFD(void) const;
+		std::vector<int>				&getClientsFD(void);
+		void							addClientsFD(int fd);
+		AccessType						getAccessClient(int fd);
+		void							addClientException(int fd, AccessType flag);
+		void							delClientException(int fd, AccessType flag);
+		const std::map<int, AccessType>	&getClientException() const;
+		AccessType						getMode(void) const;
+		bool							checkMode(AccessType mode) const;
+		void							setMode(AccessType mode);
+		void							addMode(AccessType mode);
+		void							delMode(AccessType mode);
 };
 
 // addMode(CHANNEL_INVITE)

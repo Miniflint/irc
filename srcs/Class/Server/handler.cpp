@@ -270,18 +270,15 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
 		int i = 0;
 		bool checkErrorOnce = false;
-		const AccessType userAccessOnChannel = c.getChannelAccess(targetName);
-		if (userAccessOnChannel < USER_HALFOP)
-			return (this->handleErrChanOPrivsNeeded(c, targetName), this->poolOut.push(c.getFd()), false);
 		while (modeType[i])
 		{
 			switch (modeType[i])
 			{
 				case '+':
-					this->_handleCasePlus(c, modeType, &i, *channel, iss);
+					this->_handleCaseAdd(c, modeType, &i, *channel, iss);
 					break ;
 				case '-':
-					this->_handleCaseMinus(c, modeType, &i, *channel, iss);
+					this->_handleCaseDel(c, modeType, &i, *channel, iss);
 					break ;
 				default:
 					break ;
