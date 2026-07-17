@@ -11,14 +11,15 @@
 1. [ ] faire KICK
 1. [ ] faire TOPIC
 1. [ ] faire MODE
+1. [ ] Faire INVITE
 1. [ ] Faire README.MD
+1. [ ] Enlever fcntl de events.cpp
 
 ## PRIORITY
 
-1. [X] ajouter code erreur
+1. [X] ajouter code erreur<
 1. [ ] Faire QUIT
 1. [ ] Faire KILL
-1. [ ] Faire INVITE
 1. [ ] Faire PART
 
 ## Lower Priority

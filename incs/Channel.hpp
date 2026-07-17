@@ -31,13 +31,13 @@ const AccessType USER_VOICE					= 0x1;	// (+)v
 
 /* different mode de channel possible */
 const AccessType CHANNEL_INVITE_ONLY		= 0x1;	 // i
-const AccessType CHANNEL_SECRET 			= 0x2;	 // s
+const AccessType CHANNEL_SECRET 			= 0x2;	 // s | à prendre en compte
 const AccessType CHANNEL_MODERATED 			= 0x4;	 // m
 const AccessType CHANNEL_NOT_EXTERNAL		= 0x8;	 // n
-const AccessType CHANNEL_TOPIC_PROTECTION	= 0x10;	 // t
+const AccessType CHANNEL_TOPIC_PROTECTION	= 0x10;	 // t | a prendre en compte
 const AccessType CHANNEL_KEY				= 0x20;  // k
 const AccessType CHANNEL_LIMIT_USER			= 0x40;  // l
-const AccessType CHANNEL_BAN				= 0x80;  // b
+const AccessType CHANNEL_BAN				= 0x80;  // b | a terminer
 
 /* Liste d'exception sur les channels | qui est invité / qui est ban */
 const AccessType EXCEPTION_INVITED			= 0x1;

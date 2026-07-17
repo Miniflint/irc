@@ -20,6 +20,7 @@ static int	initListenSocket(int port) {
 		return (-1);
 	int	opt = 1;
 	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	// a changer - trouver alternative linux
 	fcntl(listenSock, F_SETFL, O_NONBLOCK);
 	struct sockaddr_in addr;
 	std::memset(&addr, 0, sizeof(addr));

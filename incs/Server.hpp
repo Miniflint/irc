@@ -18,13 +18,13 @@
 # define OPERATOR_PASS "0p3r4t0r"
 
 # define INFO_MSG_TAG0 "---------------------------------------------------------------------------\r\n"
-# define INFO_MSG_TAG1 "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc     |\r\n"
-# define INFO_MSG_TAG2 "| | $$  | $$ /$$__  $$|_  $$_/| $$__  $$ /$$__  $$ | With love by:         |\r\n"
-# define INFO_MSG_TAG3 "| | $$  | $$|__/  \\ $$  | $$  | $$  \\ $$| $$  \\__/ | - Miniflint           |\r\n"
-# define INFO_MSG_TAG4 "| | $$$$$$$$  /$$$$$$/  | $$  | $$$$$$$/| $$       | - Simon               |\r\n"
-# define INFO_MSG_TAG5 "| |_____  $$ /$$____/   | $$  | $$__  $$| $$       | - and Tricaducee      |\r\n"
-# define INFO_MSG_TAG6 "|       | $$| $$        | $$  | $$  \\ $$| $$    $$ | Tested with:          |\r\n"
-# define INFO_MSG_TAG7 "|       | $$| $$$$$$$$ /$$$$$$| $$  | $$|  $$$$$$/ | Halloy irc client     |\r\n"
+# define INFO_MSG_TAG1 "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc    |\r\n"
+# define INFO_MSG_TAG2 "| | $$  | $$ /$$__  $$|_  $$_/| $$__  $$ /$$__  $$ | With love by:        |\r\n"
+# define INFO_MSG_TAG3 "| | $$  | $$|__/  \\ $$  | $$  | $$  \\ $$| $$  \\__/ | - Miniflint          |\r\n"
+# define INFO_MSG_TAG4 "| | $$$$$$$$  /$$$$$$/  | $$  | $$$$$$$/| $$       | - Simon              |\r\n"
+# define INFO_MSG_TAG5 "| |_____  $$ /$$____/   | $$  | $$__  $$| $$       | - and Tricaducee     |\r\n"
+# define INFO_MSG_TAG6 "|       | $$| $$        | $$  | $$  \\ $$| $$    $$ | Tested with:         |\r\n"
+# define INFO_MSG_TAG7 "|       | $$| $$$$$$$$ /$$$$$$| $$  | $$|  $$$$$$/ | Halloy irc client    |\r\n"
 # define INFO_MSG_TAG8 "|       |__/|________/|______/|__/  |__/ \\______/  | https://halloy.chat/ |\r\n"
 # define INFO_MSG_TAG9 "---------------------------------------------------------------------------\r\n"
 # define INFO_MSG_DATE "The server repository was created at this date: [2026-06-13 14:16 GMT+2]\r\n"
@@ -327,7 +327,7 @@ class Server {
 		void	handleErrNickCollision(Client &c, std::string targetNickName);
 		void	handleErrUnavailresource(Client &c);
 		void	handleErrUsernotinchannel(Client &c);
-		void	handleErrNotonchannel(Client &c);
+		void	handleErrNotOnChannel(Client &c, std::string channelName);
 		void	handleErrUseronchannel(Client &c);
 		void	handleErrNologin(Client &c);
 		void	handleErrSummondisabled(Client &c);

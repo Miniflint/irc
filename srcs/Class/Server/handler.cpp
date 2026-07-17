@@ -283,7 +283,6 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 				default:
 					break ;
 			}
-			/* check old_code.cpp.bak */
 		}
 		if (checkErrorOnce)
 			return (this->poolOut.push(c.getFd()), false);
@@ -378,8 +377,16 @@ bool	Server::handlePart(Client &c, std::istringstream &iss)
 {
 	std::string token;
 	iss >> token;
-	this->handleErrUnknowncommand(c, "PART");
-	this->poolOut.push(c.getFd());
+	if (iss.fail() || token.empty())
+		return (this->handleErrNeedMoreParams(c, "PASS"), this->poolOut.push(c.getFd()), false);
+	Trie<Channel *>	*channelTrie = this->_channelTrie.find(token);
+	if (!channelTrie)
+		return (this->handleErrNoSuchChannel(c, token), this->poolOut.push(c.getFd()), false);
+	if (!c.getChannel().isIn(token))
+		return (this->handleErrNotOnChannel(c, token), this->poolOut.push(c.getFd()), false);
+	Channel	&channel = *channelTrie->getElem();
+	this->delClientToChannel(c, channel, this->_makeHostMask(c, "PART").append(token).append(" :").append(iss.str()).append("\r\n"));
+	// this->poolOut.push(c.getFd());
 	return (true);
 }
 bool	Server::handlePass(Client &c, std::istringstream &iss) 
@@ -428,10 +435,6 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		std::getline(iss, buff);
 		message += buff;
 	}
-	// size_t index = message.find_first_not_of(' ');
-	// if (index == std::string::npos || message[index] != ':')
-	// 	return (this->handleErrNoTextToSend(c), this->poolOut.push(c.getFd()), false);
-
 	std::vector<size_t>	clients;
 	std::string realTarget(target);
 	if (this->_channelSpecifiers.channelType.find(target[0]) != std::string::npos)
@@ -449,8 +452,7 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
 		AccessType t = c.getChannelAccess(targetChannel->getNick());
-		if (targetChannel->checkMode(CHANNEL_MODERATED) && 
-			!(t & (USER_FOUNDER | USER_OPERATOR | USER_HALFOP | USER_VOICE)))
+		if (targetChannel->checkMode(CHANNEL_MODERATED) && t == NO_ACCESS)
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
 	}

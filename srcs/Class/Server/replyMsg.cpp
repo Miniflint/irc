@@ -867,10 +867,10 @@ void	Server::handleErrUsernotinchannel(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleErrNotonchannel(Client &c)
+void	Server::handleErrNotOnChannel(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	// uint32_t t = ERR_NOTONCHANNEL;
+	std::string rplMessage(this->_rplPrefix("442", c.getNick()));
+	rplMessage.append(channelName).append(" :You're not on that channel\r\n");
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleErrUseronchannel(Client &c)

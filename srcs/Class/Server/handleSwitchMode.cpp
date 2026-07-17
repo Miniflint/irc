@@ -94,7 +94,7 @@ bool	Server::_kCaseAdd(Client &c, Channel &channel, std::istringstream &iss, Acc
 		return (this->handleErrPasswdMismatch(c), this->poolOut.push(c.getFd()), false);
 
 	channel.setPass(nextToken);
-	std::string		full(_makeHostMask(c, "MODE"));
+	channel.addMode(CHANNEL_KEY);
 	return (true);
 }
 
@@ -109,7 +109,7 @@ bool	Server::_kCaseDel(Client &c, Channel &channel, std::istringstream &iss, Acc
 	if (!_constantTimeCheck(nextToken, channel.getPass()))
 		return (this->handleErrPasswdMismatch(c), this->poolOut.push(c.getFd()), false);
 
-	std::string		full(_makeHostMask(c, "MODE"));
+	channel.delMode(CHANNEL_KEY);
 	return (true);
 }
 
@@ -416,6 +416,7 @@ int		Server::_handleCaseAdd(Client &c, std::string modeType, int *i, Channel &ch
         }
         (*i)++;
     }
+	this->poolOut.push(c.getFd());
 	return (true);
 }
 int		Server::_handleCaseDel(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss)
@@ -465,5 +466,6 @@ int		Server::_handleCaseDel(Client &c, std::string modeType, int *i, Channel &ch
 	    }
         (*i)++;
     }
+	this->poolOut.push(c.getFd());
     return (true);
 }
