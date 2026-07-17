@@ -378,7 +378,7 @@ bool	Server::handlePart(Client &c, std::istringstream &iss)
 	std::string token;
 	iss >> token;
 	if (iss.fail() || token.empty())
-		return (this->handleErrNeedMoreParams(c, "PASS"), this->poolOut.push(c.getFd()), false);
+		return (this->handleErrNeedMoreParams(c, "PART"), this->poolOut.push(c.getFd()), false);
 	Trie<Channel *>	*channelTrie = this->_channelTrie.find(token);
 	if (!channelTrie)
 		return (this->handleErrNoSuchChannel(c, token), this->poolOut.push(c.getFd()), false);
