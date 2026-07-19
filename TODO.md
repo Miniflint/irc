@@ -1,3 +1,16 @@
+
+## TOP SUBJECT PRIOERITY
+1. [ ] Faire KICK
+2. [ ] Assurer MODE
+3. [ ] Assurer PRIVMSG
+4. [ ] Retirer atoi
+5. [ ] Regler WARNING halloy
+6. [ ] BONUS
+   - [ ] Quit propre sur le bot
+   - [ ] Join sur invite avec le bot
+   - [ ] RPN command bot
+   - [ ] Faire DCC
+
 ## TOP PRIORITY
 1. [x] Faire NICK
 1. [x] Faire USER
@@ -27,7 +40,8 @@
 6. [x] faire RESTART
 7. [x] fair SIGQUIT
 8. [ ] Regarder error et warning de halloy
-9. [ ] tester 
+9. [ ] Faire WHOIS
+10. [ ] tester 
    - [ ] faire UNIT_TEST // pour checker toute les fonctions
 
 ## Lower Priority
