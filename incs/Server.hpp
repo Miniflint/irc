@@ -276,7 +276,7 @@ class Server {
 		void	handleRplUniqopis(Client &c);
 		void	handleRplNoTopic(Client &c, std::string channelName);
 		void	handleRplTopic(Client &c, std::string channelName, std::string topic);
-		void	handleRplInviting(Client &c, std::string &targetNick, std::string channelName);
+		void	handleRplInviting(Client &c, std::string &targetNick, std::string channelName, bool isInvited);
 		void	handleRplSummoning(Client &c);
 		void	handleRplInvitelist(Client &c, std::string channelName);
 		void	handleRplEndofinvitelist(Client &c, std::string channelName);

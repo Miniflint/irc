@@ -9,6 +9,7 @@
 2. [ ] Prendre en compte tout les modes pour PRIVMSG
 3. [x] Faire channels
 4. [X] Faire JOIN
+   - [ ] si invité, bypass MDP
 6. [x] faire LIST
 5. [ ] faire KICK
 6. [x] faire TOPIC //new à test
@@ -21,20 +22,21 @@
 
 1. [X] ajouter code erreur
 2. [ ] Faire QUIT // change messages
-1. [ ] Faire KILL
-1. [ ] Faire PART // verify message //faire liste de channel
-1. [x] faire DIE
-2. [x] faire RESTART
-3. [x] fair SIGQUIT
-4. [ ] Regarder error et warning de halloy
-5. [ ] tester 
+3. [ ] Faire KILL
+4. [ ] Faire PART // verify message //faire liste de channel
+5. [x] faire DIE
+6. [x] faire RESTART
+7. [x] fair SIGQUIT
+8. [ ] Regarder error et warning de halloy
+9. [ ] tester 
    - [ ] faire UNIT_TEST // pour checker toute les fonctions
 
 ## Lower Priority
 
 1. [ ] Terminer WHO // prendre en compte user et pas que channel
 2. [ ] Faire AWAY // ajouter std::string avec un message
-1. [ ] Faire HELP
+3. [ ] Faire HELP
+4. [ ] Faire NAMES //namesrpl est déjà codé
 
 ## OTHERS
 
@@ -43,4 +45,4 @@
    - [x] répond au message
    - [ ] peut faire des commandes dynamiquement
    - [ ] join sur invite
-1. [ ] Faire DCC
+2. [ ] Faire DCC

@@ -490,11 +490,18 @@ void	Server::handleRplTopic(Client &c, std::string channelName, std::string topi
 	rplMessage.append(channelName).append(" :").append(topic).append("\r\n");
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplInviting(Client &c, std::string &targetNick, std::string channelName)
+void	Server::handleRplInviting(Client &c, std::string &targetNick, std::string channelName, bool isInvited)
 {
-	std::string rplMessage(this->_rplPrefix("341", c.getNick()));
-	rplMessage.append(targetNick).append(1, ' ').append(channelName).append("\r\n");
-	c.addBufferOut(rplMessage);
+	if (!isInvited)
+	{
+		std::string rplMessage(this->_rplPrefix("341", c.getNick()));
+		rplMessage.append(targetNick).append(1, ' ').append(channelName).append("\r\n");
+		c.addBufferOut(rplMessage);
+	} else {
+		std::string rplMessage(this->_rplPrefix("341", targetNick));
+		rplMessage.append(c.getNick()).append(1, ' ').append(channelName).append("\r\n");
+		c.addBufferOut(rplMessage);
+	}
 }
 void	Server::handleRplSummoning(Client &c)
 {

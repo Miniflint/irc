@@ -144,7 +144,12 @@ bool	Server::handleInvite(Client &c, std::istringstream &iss)
 		(c.getStatus() < CLIENT_ACCESS_OPERATOR) && c.getChannelAccess(channelName) < USER_HALFOP)
 		return (this->handleErrChanOPrivsNeeded(c, channelName), this->poolOut.push(c.getFd()), false);
 	chan->addClientException(clientTrie->getElem(), EXCEPTION_INVITED);
-	return (this->handleRplInviting(c, nickname, channelName), this->poolOut.push(c.getFd()), true);
+	Client	&receiver = *(this->_clients[clientTrie->getElem()]);
+	this->sendToClient(receiver, this->_makeHostMask(c, "INVITE").append(receiver.getNick())
+		.append(1, ' ').append(channelName).append("\r\n"))
+	this->poolOut.push(c.getFd());
+
+	return (this->handleRplInviting(c, nickname, channelName, 0), this->poolOut.push(c.getFd()), true);
 }
 bool	Server::handle_ison(Client &c, std::istringstream &iss) 
 {
@@ -634,7 +639,7 @@ bool	Server::handleTopic(Client &c, std::istringstream &iss)
 		newTopic.append(rest);
 	}
 	chanTopic = newTopic;
-	this->sendToChannel(chan, this->_makeHostMask(c, "TOPIC").append(1, ':').append(chanTopic).append("\r\n"));
+	this->sendToChannel(chan, this->_makeHostMask(c, "TOPIC").append(token).append(" :").append(chanTopic).append("\r\n"));
 	return (true);
 }
 bool	Server::handle_trace(Client &c, std::istringstream &iss) 
