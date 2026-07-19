@@ -146,9 +146,7 @@ bool	Server::handleInvite(Client &c, std::istringstream &iss)
 	chan->addClientException(clientTrie->getElem(), EXCEPTION_INVITED);
 	Client	&receiver = *(this->_clients[clientTrie->getElem()]);
 	this->sendToClient(receiver, this->_makeHostMask(c, "INVITE").append(receiver.getNick())
-		.append(1, ' ').append(channelName).append("\r\n"))
-	this->poolOut.push(c.getFd());
-
+		.append(1, ' ').append(channelName).append("\r\n"));
 	return (this->handleRplInviting(c, nickname, channelName, 0), this->poolOut.push(c.getFd()), true);
 }
 bool	Server::handle_ison(Client &c, std::istringstream &iss) 
