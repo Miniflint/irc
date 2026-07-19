@@ -414,10 +414,8 @@ void	Server::handleRplList(Client &c)
 	std::list<Channel>::const_iterator end = this->_channel.end();
 	for (std::list<Channel>::const_iterator it = this->_channel.begin(); it != end; it++)
 	{
-		const Channel currentChannel = *it;
-		// checker le channel trie de l'utilisateur pour voir s'il est déjà dans le channel
-		// si il l'es. il faut lister le channel quand meme
-		if ((*it).getMode() & CHANNEL_SECRET && c.getStatus() < CLIENT_ACCESS_OPERATOR)
+		Channel currentChannel = *it;
+		if ((*it).getMode() & CHANNEL_SECRET && c.getStatus() < CLIENT_ACCESS_OPERATOR && !c.getChannel().isIn(currentChannel.getNick()))
 			continue ;
 		std::ostringstream amountUserStr;
 		std::string rplMessage(this->_rplPrefix("322", c.getNick()));
@@ -479,26 +477,23 @@ void	Server::handleRplUniqopis(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplNotopic(Client &c)
+void	Server::handleRplNoTopic(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("331", c.getNick()));
+	rplMessage.append(channelName).append(" :No topic is set").append("\r\n");
 	c.addBufferOut(rplMessage);
 }
 //WILL BE USED
 void	Server::handleRplTopic(Client &c, std::string channelName, std::string topic)
 {
 	std::string rplMessage(this->_rplPrefix("332", c.getNick()));
-	rplMessage.append(channelName).append(" :");
-	if (topic.empty())
-		rplMessage.append("No topic");
-	else
-		rplMessage.append(topic);
-	rplMessage.append("\r\n");
+	rplMessage.append(channelName).append(" :").append(topic).append("\r\n");
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplInviting(Client &c)
+void	Server::handleRplInviting(Client &c, std::string &targetNick, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("341", c.getNick()));
+	rplMessage.append(targetNick).append(1, ' ').append(channelName).append("\r\n");
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleRplSummoning(Client &c)
@@ -999,9 +994,10 @@ void	Server::handleErrBanlistfull(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleErrNoprivileges(Client &c)
+void	Server::handleErrNoPrivileges(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("481", c.getNick()));
+	rplMessage.append(":Permission Denied- You're not an IRC operator or Administrator\r\n");
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleErrBadChanName(Client &c, std::string channelName)

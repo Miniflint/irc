@@ -14,6 +14,27 @@
 #endif
 # define MAX_EVENTS 10
 
+static volatile sig_atomic_t	sigIntQuit = 0;
+
+static void	handleSig(int signum) {
+	(void)signum;
+	sigIntQuit = 1;
+}
+
+static void	setSignal() {
+	struct sigaction sa;
+	struct sigaction saSigPipe;	
+	sa.sa_handler = handleSig;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGQUIT, &sa, NULL);
+	saSigPipe.sa_handler = SIG_IGN;
+	sigemptyset(&saSigPipe.sa_mask);
+	saSigPipe.sa_flags = 0;
+	sigaction(SIGPIPE, &saSigPipe, NULL);
+}
+
 static int	initListenSocket(int port) {
 	int	listenSock = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSock == -1)
@@ -21,7 +42,9 @@ static int	initListenSocket(int port) {
 	int	opt = 1;
 	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	// a changer - trouver alternative linux
-	fcntl(listenSock, F_SETFL, O_NONBLOCK);
+	#ifdef __APPLE__
+		fcntl(listenSock, F_SETFL, O_NONBLOCK);
+	#endif
 	struct sockaddr_in addr;
 	std::memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
@@ -87,7 +110,7 @@ void	delKqueueClient(Server &serv, int evfd, int fd) {
 }
 
 bool	Server::run() {
-	signal(SIGPIPE, SIG_IGN);
+	setSignal();
 	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)
 		return (false);
 	int evfd = kqueue();
@@ -97,7 +120,8 @@ bool	Server::run() {
 	}
 	setKqueueMode(evfd, this->_sockServerFD, EVFILT_READ, EV_ADD);
 	struct kevent events[MAX_EVENTS];
-	while (true) {
+	this->runStatus = RUN_ON;
+	while (this->runStatus == RUN_ON) {
 		int nEvents = kevent(evfd, NULL, 0, events, MAX_EVENTS, NULL);
 		for (int i = 0; i < nEvents; ++i) {
 			int currFd = events[i].ident;
@@ -151,7 +175,12 @@ bool	Server::run() {
 			} else
 				++it;
 		}
+		if (sigIntQuit)
+			this->runStatus = RUN_SHUTDOWN;
 	}
+	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+		if (*it)
+			delKqueueClient(*this, evfd, (*it)->getFd());
 	close(evfd);
 	close(this->_sockServerFD);
 	return (true);
@@ -174,7 +203,7 @@ static void	setEpollMode(int epfd, int fd, uint16_t mode, uint32_t flag) {
 }
 
 bool	Server::run() {
-	signal(SIGPIPE, SIG_IGN);
+	setSignal();
 	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)
 		return (false);
 	int epfd = epoll_create(1);
@@ -188,7 +217,8 @@ bool	Server::run() {
 	ev.data.fd = this->_sockServerFD;
 	epoll_ctl(epfd, EPOLL_CTL_ADD, this->_sockServerFD, &ev);
 	struct epoll_event events[MAX_EVENTS];
-	while (true) {
+	this->runStatus = RUN_ON;
+	while (this->runStatus == RUN_ON) {
 		int nEvents = epoll_wait(epfd, events, MAX_EVENTS, -1);
 		for (int i = 0; i < nEvents; ++i) {
 			int currFd = events[i].data.fd;
@@ -201,7 +231,7 @@ bool	Server::run() {
 			} else {
 				if (events[i].events & EPOLLIN) {
 					char	buffer[MAX_PACKET_SIZE + 1];
-					ssize_t	readN = recv(currFd, buffer, MAX_PACKET_SIZE, 0);
+					ssize_t	readN = recv(currFd, buffer, MAX_PACKET_SIZE, MSG_DONTWAIT);
 					if (readN < 1) {
 						delEpollClient(*this, epfd, currFd);
 						continue ;
@@ -217,7 +247,7 @@ bool	Server::run() {
 				}
 				if (events[i].events & EPOLLOUT) {
 					int	outFd = currFd;
-					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), this->_clients[outFd]->getBufferOut().size(), 0);
+					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), this->_clients[outFd]->getBufferOut().size(), MSG_DONTWAIT);
 					if (writeN != -1) {
 						this->_clients[outFd]->getBufferOut().erase(0, writeN);
 					} else {
@@ -240,7 +270,12 @@ bool	Server::run() {
 			} else
 				++it;
 		}
+		if (sigIntQuit)
+			this->runStatus = RUN_SHUTDOWN;
 	}
+	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+		if (*it)
+			delEpollClient(*this, epfd, (*it)->getFd());
 	close(epfd);
 	close(this->_sockServerFD);
 	return (true);

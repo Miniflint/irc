@@ -72,14 +72,24 @@ bool	Server::handle_connect(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_die(Client &c, std::istringstream &iss) 
+bool	Server::handleDie(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "DIE");
-	this->poolOut.push(c.getFd());
+	(void)iss;
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR)
+		return (this->handleErrNoPrivileges(c), this->poolOut.push(c.getFd()), false);
+	this->runStatus = RUN_SHUTDOWN;
 	return (true);
 }
+
+bool	Server::handleRestart(Client &c, std::istringstream &iss) 
+{
+	(void)iss;
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR)
+		return (this->handleErrNoPrivileges(c), this->poolOut.push(c.getFd()), false);
+	this->runStatus = RUN_RESTART;
+	return (true);
+}
+
 bool	Server::handle_error(Client &c, std::istringstream &iss) 
 {
 	std::string token;
@@ -115,13 +125,26 @@ bool	Server::handleInfo(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_invite(Client &c, std::istringstream &iss) 
+bool	Server::handleInvite(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "INVITE");
-	this->poolOut.push(c.getFd());
-	return (true);
+	std::string nickname, channelName;
+	iss >> nickname >> channelName;
+	if (iss.fail() || nickname.empty() || channelName.empty())
+		return (this->handleErrNeedMoreParams(c, "INVITE"), this->poolOut.push(c.getFd()), false);
+	Trie<Channel *>	*channelTrie = this->_channelTrie.find(channelName);
+	if (!channelTrie)
+		return (this->handleErrNoSuchChannel(c, channelName), this->poolOut.push(c.getFd()), false);
+	Trie<int> *clientTrie = this->_clientTrie.find(nickname);
+	if (!clientTrie)
+		return (this->handleErrNoSuchNick(c, channelName), this->poolOut.push(c.getFd()), false);
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && !c.getChannel().isIn(channelName))
+		return (this->handleErrNotOnChannel(c, channelName), this->poolOut.push(c.getFd()), false);
+	Channel *chan = channelTrie->getElem();
+	if (chan->getMode() & CHANNEL_INVITE_ONLY &&
+		(c.getStatus() < CLIENT_ACCESS_OPERATOR) && c.getChannelAccess(channelName) < USER_HALFOP)
+		return (this->handleErrChanOPrivsNeeded(c, channelName), this->poolOut.push(c.getFd()), false);
+	chan->addClientException(clientTrie->getElem(), EXCEPTION_INVITED);
+	return (this->handleRplInviting(c, nickname, channelName), this->poolOut.push(c.getFd()), true);
 }
 bool	Server::handle_ison(Client &c, std::istringstream &iss) 
 {
@@ -147,21 +170,10 @@ bool	Server::handleJoin(Client &c, std::istringstream &iss)
 	unsigned int i = 0;
 	for (std::vector<std::string>::iterator it = channelList.begin(); it != end; it++) {
 		std::string channelName = *it;
-		if (i < keyList.size()) {
-			this->addClientToChannel(c, channelName, keyList[i]);
-			++i;
-		} else
+		if (i < keyList.size())
+			this->addClientToChannel(c, channelName, keyList[i++]);
+		else
 			this->addClientToChannel(c, channelName, "");
-		// if (!keyList.empty())
-		// {
-		// 	size_t index = i > keyList.size() - 1 ? keyList.size() - 1 : i;
-		// 	if (this->addClientToChannel(c, channelName, keyList[index]) == NULL)
-		// 		this->poolOut.push(c.getFd());
-		// } else {
-		// 	if (this->addClientToChannel(c, channelName, "") == NULL)
-		// 		this->poolOut.push(c.getFd());
-		// }
-		// i++;
 	}
 	return (true);
 }
@@ -270,23 +282,30 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
 		int i = 0;
 		bool checkErrorOnce = false;
-		std::string fullStr(this->_makeHostMask(c, "MODE")); 
+		std::string fullStr(this->_makeHostMask(c, "MODE"));
+		std::string usedTokens;
+		fullStr.append(1, modeType[i]);
 		while (modeType[i])
 		{
 			switch (modeType[i])
 			{
 				case '+':
-					this->_handleCaseAdd(c, modeType, &i, *channel, iss, fullStr);
+					if (this->_handleCaseAdd(c, modeType, &i, *channel, iss, fullStr, usedTokens) && modeType[i])
+						fullStr.append(1, modeType[i]);
 					break ;
 				case '-':
-					this->_handleCaseDel(c, modeType, &i, *channel, iss, fullStr);
+					if (this->_handleCaseDel(c, modeType, &i, *channel, iss, fullStr, usedTokens) && modeType[i])
+						fullStr.append(1, modeType[i]);
 					break ;
 				default:
 					break ;
 			}
 		}
+		fullStr.append(1, ' ').append(usedTokens).append("\r\n");
+		this->sendToChannel(*channel, fullStr);
+		this->poolOut.push(c.getFd());
 		if (checkErrorOnce)
-			return (this->poolOut.push(c.getFd()), false);
+			return (false);
 	}
 	return (true);
 }
@@ -449,11 +468,11 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 			} catch (std::exception &e) {
 				return (this->handleErrNoSuchChannel(c, target), this->poolOut.push(c.getFd()), false);
 			}
-			if (!targetChannel->checkMode(CHANNEL_NOT_EXTERNAL))
+			if (c.getStatus() < CLIENT_ACCESS_OPERATOR && !(targetChannel->getMode() & CHANNEL_NOT_EXTERNAL))
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
 		AccessType t = c.getChannelAccess(targetChannel->getNick());
-		if (targetChannel->checkMode(CHANNEL_MODERATED) && t == NO_ACCESS)
+		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && (targetChannel->getMode() & CHANNEL_MODERATED && t < USER_VOICE))
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
 	}
@@ -583,12 +602,39 @@ bool	Server::handle_time(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_topic(Client &c, std::istringstream &iss) 
+
+
+bool	Server::handleTopic(Client &c, std::istringstream &iss) 
 {
 	std::string token;
 	iss >> token;
-	this->handleErrUnknowncommand(c, "TOPIC");
-	this->poolOut.push(c.getFd());
+	if (iss.fail() || token.empty())
+		return (this->handleErrNeedMoreParams(c, "TOPIC"), this->poolOut.push(c.getFd()), false);
+	if (!this->_channelTrie.isIn(token))
+		return (this->handleErrNoSuchChannel(c, token), this->poolOut.push(c.getFd()), false);
+	Trie<std::pair<Channel *, AccessType> >	*channelTrieElem = c.getChannel().find(token);
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && !channelTrieElem)
+		return (this->handleErrNotOnChannel(c, token), this->poolOut.push(c.getFd()), false);
+	std::string	newTopic;
+	iss >> newTopic;
+	Channel	&chan = *(channelTrieElem->getElem().first);
+	std::string	&chanTopic = chan.getTopic();
+	if (newTopic.empty()) {
+		if (chanTopic.empty())
+			return (this->handleRplNoTopic(c, token), this->poolOut.push(c.getFd()), true);
+		else
+			return (this->handleRplTopic(c, token, chanTopic), this->poolOut.push(c.getFd()), true);
+	}
+	if (chan.checkMode(CHANNEL_TOPIC_PROTECTION) && c.getStatus() < CLIENT_ACCESS_OPERATOR && channelTrieElem->getElem().second < USER_HALFOP)
+		return (this->handleErrChanOPrivsNeeded(c, token), this->poolOut.push(c.getFd()), false);
+	if (newTopic[0] == ':') {
+		newTopic.erase(0, 1);
+		std::string	rest;
+		std::getline(iss, rest);
+		newTopic.append(rest);
+	}
+	chanTopic = newTopic;
+	this->sendToChannel(chan, this->_makeHostMask(c, "TOPIC").append(1, ':').append(chanTopic).append("\r\n"));
 	return (true);
 }
 bool	Server::handle_trace(Client &c, std::istringstream &iss) 
@@ -618,7 +664,9 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 	if (indexTrim == std::string::npos)
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	realName.erase(0, indexTrim);
-	if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1 || realName.length() < 1)
+	if (!realName.empty() && realName[0] == ':')
+		realName.erase(0, 1);
+	if (/*userName.empty() || hostName.empty() || serverName.empty() || */realName.empty())
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	c.setUserName(userName);
 	// c.setHostName(hostName);
@@ -685,12 +733,29 @@ bool	Server::handleWho(Client &c, std::istringstream &iss)
 	std::string token;
 	iss >> token;
 	if (token.empty())
-		return (false);
-	try {
-		Channel	*chan = c.getChannel()[token].first;
-		for (std::vector<int>::iterator it = chan->getClientsFD().begin(); it != chan->getClientsFD().end(); ++it)
-			this->handleRplWhoReply(c, this->getClient(*it), *chan);
-	} catch (std::exception &e) { (void)e; }
+		return (this->handleErrNeedMoreParams(c, "WHO"), this->poolOut.push(c.getFd()), false);
+	if (this->_channelSpecifiers.channelType.find(token[0]) != std::string::npos)
+	{
+		Trie<Channel *> *trieClientChan = this->_channelTrie.find(token);
+		if (trieClientChan) {
+			Channel	&chan = *(trieClientChan->getElem());
+			// if (c.getStatus() < CLIENT_ACCESS_OPERATOR && !c.getChannel().isIn(token))
+			// 	return (this->handleErrNotOnChannel(c, token), this->poolOut.push(c.getFd()), false);
+			for (std::vector<int>::iterator it = chan.getClientsFD().begin(); it != chan.getClientsFD().end(); ++it) {
+				if (c.getStatus() < CLIENT_ACCESS_OPERATOR && c.getChannelAccess(token) < USER_HALFOP && this->_clients[*it]->checkStatus(CLIENT_ACCESS_INVISIBLE))
+					continue ;
+				this->handleRplWhoReply(c, this->getClient(*it), chan);
+			}
+		}/* else
+			return (this->handleErrNoSuchChannel(c, token), this->poolOut.push(c.getFd()), false); */
+	}/* else {
+		Trie<int> *trieClient = this->_clientTrie.find(token);
+		if (trieClient) {
+			Client	&whoClient = *(this->_clients[trieClient->getElem()]);
+			if (!(c.getStatus() < CLIENT_ACCESS_OPERATOR && whoClient.checkStatus(CLIENT_ACCESS_INVISIBLE)))
+				this->handleRplWhoReply(c, whoClient, chan);
+		}
+	} */
 	this->handleRplEndOfWho(c, token);
 	this->poolOut.push(c.getFd());
 	return (true);

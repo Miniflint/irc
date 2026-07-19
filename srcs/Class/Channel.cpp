@@ -28,7 +28,12 @@ void				Channel::setNick(std::string nick)
 	this->_nick = nick;
 }
 
-std::string			Channel::getTopic(void) const
+std::string			&Channel::getTopic(void)
+{
+	return (this->_topic);
+}
+
+const std::string			&Channel::getTopic(void) const
 {
 	return (this->_topic);
 }

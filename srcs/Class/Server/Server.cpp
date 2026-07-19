@@ -6,7 +6,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 {
 	this->_clients.assign(MAX_SOCKET_FD, NULL);
 	const std::string t[] = {
-		"ADMIN", "AWAY", "CAP", "CNOTICE", "CPRIVMSG", "CONNECT", "DIE", "ERROR",
+		"ADMIN", "AWAY", "CAP", "CNOTICE", "CPRIVMSG", "CONNECT", "DIE", "RESTART", "ERROR",
 		"HELP", "INFO", "INVITE", "ISON", "JOIN", "KICK", "KILL", "KNOCK",
 		"LINKS","LIST","LUSERS","MODE","MOTD","NAMES","NICK","NOTICE","OPER",
 		"PART","PASS","PING","PONG","PRIVMSG","QUIT","QUOTE","REHASH","RULES",
@@ -16,8 +16,8 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	};
 	const Server::cmdFn func_list[] = {
 		&Server::handle_admin, &Server::handle_away, &Server::handle_cap, &Server::handle_cnotice,
-		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handle_die, &Server::handle_error,
-		&Server::handle_help, &Server::handleInfo, &Server::handle_invite, &Server::handle_ison,
+		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handleDie, &Server::handleRestart, &Server::handle_error,
+		&Server::handle_help, &Server::handleInfo, &Server::handleInvite, &Server::handle_ison,
 		&Server::handleJoin, &Server::handle_kick, &Server::handle_kill, &Server::handle_knock,
 		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handleMode,
 		&Server::handle_motd, &Server::handle_names, &Server::handleNick, &Server::handle_notice,
@@ -25,7 +25,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		&Server::handle_pong, &Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote,
 		&Server::handle_rehash, &Server::handle_rules, &Server::handle_server, &Server::handle_squery,
 		&Server::handle_squit, &Server::handle_setname, &Server::handle_silence, &Server::handle_stats,
-		&Server::handle_summon, &Server::handle_time, &Server::handle_topic, &Server::handle_trace,
+		&Server::handle_summon, &Server::handle_time, &Server::handleTopic, &Server::handle_trace,
 		&Server::handleUser, &Server::handle_userhost, &Server::handle_userip, &Server::handle_users,
 		&Server::handle_version, &Server::handle_wallops, &Server::handle_watch, &Server::handleWho,
 		&Server::handle_whois, &Server::handle_whowas, &Server::handleDcc, &Server::handle_message
@@ -127,9 +127,14 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 			const int warnings = c->getWarning() + 1;
 			c->setWarning(warnings);
 			// kick user
-			if (warnings > 2)
+			#ifndef UNITTEST
+			if (warnings >= WARNING_LIMIT)
 				this->deconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick\r\n");
-			std::cout << "You get a warning (" << warnings << ")" << std::endl;
+			#endif
+			if (c->getNick().empty())
+				std::cout << fd << ": You get a warning (" << warnings << ")" << std::endl;
+			else
+				std::cout << c->getNick() << ": You get a warning (" << warnings << ")" << std::endl;
 			continue ;
 		}
 		serverReceivesLog(sanitizedClientBuffer);
