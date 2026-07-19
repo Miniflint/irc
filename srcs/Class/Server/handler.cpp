@@ -304,7 +304,11 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 					break ;
 			}
 		}
-		fullStr.append(1, ' ').append(usedTokens).append("\r\n");
+		size_t index = usedTokens.find_first_not_of(' ');
+		if (usedTokens[index])
+			fullStr.append(1, ' ').append(channel->getNick()).append(1, ' ').append(usedTokens).append("\r\n");
+		if (!usedTokens.empty())
+			fullStr.append(1, ' ').append(channel->getNick()).append("\r\n");
 		this->sendToChannel(*channel, fullStr);
 		this->poolOut.push(c.getFd());
 		if (checkErrorOnce)

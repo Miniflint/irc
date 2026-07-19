@@ -57,6 +57,12 @@ void	Server::handleRplISupport(Client &c)
 		oss << this->_channelSpecifiers.channelLen;
 		chanLen += oss.str();
 	}
+	std::string chanModesChange(" MODES=");
+	{
+		std::ostringstream oss;
+		oss << this->_channelSpecifiers.channelModeChanges;
+		chanModesChange += oss.str();
+	}
 	std::string chanMode(" CHANMODES=");
 	chanMode.append(this->_channelSpecifiers.channelMode);
 	std::string chanPrefix(" PREFIX=");
@@ -70,7 +76,7 @@ void	Server::handleRplISupport(Client &c)
 	std::string userMode(" UMODE=");
 	chanPrefix.append(this->_clientSpecifiers.userMode);
 	std::string endComment(" :are supported by this server\r\n");
-	rplMessage.append(chanType).append(chanLen).append(chanMode)
+	rplMessage.append(chanType).append(chanLen).append(chanModesChange).append(chanMode)
 		.append(chanPrefix).append(nickLen).append(userMode).append(endComment);
 	c.addBufferOut(rplMessage);
 }
@@ -579,6 +585,8 @@ void	Server::handleRplNameReply(Client &c, std::string channelName, Channel &cha
 	rplMessage.append(" :");
 	std::string	actualReply(rplMessage);
 	for (std::vector<int>::iterator it = chan.getClientsFD().begin(); it != chan.getClientsFD().end(); ++it) {
+		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && c.getChannelAccess(channelName) < USER_HALFOP && this->_clients[*it]->checkStatus(CLIENT_ACCESS_INVISIBLE))
+			continue ;
 		Client  &itClient = this->getClient(*it);
 		AccessType  access = itClient.getChannelAccess(channelName);
 		std::string	user;
@@ -603,6 +611,7 @@ void	Server::handleRplNameReply(Client &c, std::string channelName, Channel &cha
 	actualReply.resize(actualReply.size() - 1);
 	c.addBufferOut(actualReply.append("\r\n"));
 }
+
 void	Server::handleRplKilldone(Client &c)
 {
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));

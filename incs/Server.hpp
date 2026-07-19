@@ -10,7 +10,7 @@
 # include <sstream>
 # include <queue>
 # define SOCK_DOMAIN AF_LOCAL
-# define SERV_HOST_NAME "ft_irc.42.com"
+# define SERV_HOST_NAME "startrek.synology.com"
 # define MAX_SOCKET_FD 2048U
 # define ADMIN_ID "2Tri"
 # define ADMIN_PASS "2TriIsBetterThanOne"
@@ -43,6 +43,7 @@ typedef struct S_ChannelSpecifiers {
 	std::string	channelMode;
 	uint16_t	channelLen;
 	std::string	channelAuthPrefix;
+	uint16_t	channelModeChanges;
 }	t_ChannelSpecifiers;
 
 typedef struct S_ClientSpecifiers {

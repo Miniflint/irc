@@ -37,6 +37,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_channelSpecifiers.channelLen = 32;
 	this->_channelSpecifiers.channelAuthPrefix = "(qaohv)~&@%+";
 	this->_channelSpecifiers.channelMode = "b,k,l,ismnt";
+	this->_channelSpecifiers.channelModeChanges = 5;
 	this->_motd.motd = "This is the current message of the day";
 	this->_motd.announcements.push_back("Today we are working on littles bug fixes");
 	this->_motd.announcements.push_back("And we hope to be able to live long happy lifes");
