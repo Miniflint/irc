@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <map>
 
-Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _host(std::string(SERV_HOST_NAME)), _adminPass(ADMIN_PASS), _operatorPass(OPERATOR_PASS), _adminName(ADMIN_ID), _operatorName(OPERATOR_ID)
+Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _host(std::string(SERV_HOST_NAME)), _serverVersion(std::string(SERV_VERSION)), _adminPass(ADMIN_PASS), _operatorPass(OPERATOR_PASS), _adminName(ADMIN_ID), _operatorName(OPERATOR_ID)
 {
 	this->_clients.assign(MAX_SOCKET_FD, NULL);
 	const std::string t[] = {
@@ -15,7 +15,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		"WALLOPS","WATCH","WHO","WHOIS","WHOWAS", "DCC", ":"
 	};
 	const Server::cmdFn func_list[] = {
-		&Server::handle_admin, &Server::handle_away, &Server::handle_cap, &Server::handle_cnotice,
+		&Server::handle_admin, &Server::handle_away, &Server::handleCap, &Server::handle_cnotice,
 		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handleDie, &Server::handleRestart, &Server::handle_error,
 		&Server::handle_help, &Server::handleInfo, &Server::handleInvite, &Server::handle_ison,
 		&Server::handleJoin, &Server::handle_kick, &Server::handle_kill, &Server::handle_knock,
@@ -33,7 +33,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	for (unsigned int i = 0; i <= END; i++)
 		this->_commands.add(t[i], func_list[i]);
 	this->_commands.createGraph();
-	this->_channelSpecifiers.channelType = "&#";
+	this->_channelSpecifiers.channelType = "#&";
 	this->_channelSpecifiers.channelLen = 32;
 	this->_channelSpecifiers.channelAuthPrefix = "(qaohv)~&@%+";
 	this->_channelSpecifiers.channelMode = "b,k,l,ismnt";
@@ -60,6 +60,10 @@ bool    Server::_validateAccess(Client &c, std::string &command)
 	// 	return (false);
 	// if (command == "USER" && (c->flagsLogin & FLAG_CLIENT_USER))
 	// 	return (false);
+	/* 
+		std::string rplMessage(this->_makeHostMask(c, "CAP * LS"));
+		rplMessage.append(":echo-message\r\n");
+	*/
 	if (command == "PASS" || command == "NICK" || command == "USER" || command == "QUIT" || command=="CAP")
 		return (true);
 	if (c.flagsLogin != FLAG_CLIENT_FULL)

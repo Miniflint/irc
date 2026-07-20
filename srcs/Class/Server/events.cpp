@@ -41,7 +41,6 @@ static int	initListenSocket(int port) {
 		return (-1);
 	int	opt = 1;
 	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	// a changer - trouver alternative linux
 	#ifdef __APPLE__
 		fcntl(listenSock, F_SETFL, O_NONBLOCK);
 	#endif
@@ -92,7 +91,7 @@ int Server::newConnection()
 	} else {
 		return (-1);
 	}
-	std::cout << "New Client connected: IP: " << this->_clients[clientSock]->getHostName() << " IP: " << host << " port: " << port << std::endl;
+	std::cout << "New Client connected: IP: " << host << " port: " << port << std::endl;
 	return (clientSock);
 }
 

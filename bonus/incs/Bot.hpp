@@ -14,6 +14,7 @@ class Bot {
 	private:
 		Bot();
 		bool	_register(int sockFd);
+		void	_joinChannel(int sockFd, std::string &token, std::istringstream &iss);
 		std::string _ip;
 		int			_port;
 		std::string	_password;

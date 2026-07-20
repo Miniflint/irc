@@ -1,15 +1,21 @@
 
-## TOP SUBJECT PRIOERITY
+## TOP SUBJECT PRIORITY
 1. [ ] Faire KICK
 2. [ ] Assurer MODE
 3. [ ] Assurer PRIVMSG
-4. [ ] Retirer atoi
-5. [ ] Regler WARNING halloy
-6. [ ] BONUS
-   - [ ] Quit propre sur le bot
-   - [ ] Join sur invite avec le bot
-   - [ ] RPN command bot
-   - [ ] Faire DCC
+4. [x] Retirer atoi
+5. [x] Regler WARNING halloy
+6. [ ] Class canonique
+7. [X] Faire CAP LS et/ou CAP LS 302
+8. [ ] Faire README.md
+9. [ ] Tout tester
+10. [ ] Changer message auto kill
+11. [ ] BONUS
+   - [x] BOT //Il manque des blagues
+      - [x] Quit propre sur le bot
+      - [x] Join sur invite avec le bot
+      - [x] RPN command bot
+   - [ ] Faire DCC //Normalement ok à verifier 
 
 ## TOP PRIORITY
 1. [x] Faire NICK
@@ -41,7 +47,8 @@
 7. [x] fair SIGQUIT
 8. [ ] Regarder error et warning de halloy
 9. [ ] Faire WHOIS
-10. [ ] tester 
+10. [ ] IPV6
+11. [ ] tester 
    - [ ] faire UNIT_TEST // pour checker toute les fonctions
 
 ## Lower Priority

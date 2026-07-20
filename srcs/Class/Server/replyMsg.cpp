@@ -1,5 +1,5 @@
 #include "Server.hpp"
-
+#include <algorithm>
 std::string Server::_rplPrefix(std::string code, std::string nickName) const
 {
 	if (nickName.empty())
@@ -40,10 +40,15 @@ void	Server::handleRplCreated(Client &c)
 }
 void	Server::handleRplMyinfo(Client &c)
 {
+	std::string channelModes;
+	channelModes.reserve(this->_channelSpecifiers.channelMode.size());
+	for (size_t i = 0; i < this->_channelSpecifiers.channelMode.size(); i++) {
+		if (this->_channelSpecifiers.channelMode[i] != ',')
+			channelModes += this->_channelSpecifiers.channelMode[i];
+	}
 	std::string rplMessage(this->_rplPrefix("004", c.getNick()));
-	std::string middlePrefix(":Bla bla\r\n");
-	rplMessage.reserve(rplMessage.size() + middlePrefix.size());
-	rplMessage.append(middlePrefix);
+	rplMessage.append(this->_host).append(1, ' ').append(this->_serverVersion).append(1, ' ')
+		.append(this->_clientSpecifiers.userMode).append(1, ' ').append(channelModes).append("\r\n");
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleRplISupport(Client &c)
@@ -74,8 +79,8 @@ void	Server::handleRplISupport(Client &c)
 		nickLen += oss.str();
 	}
 	std::string userMode(" UMODE=");
-	chanPrefix.append(this->_clientSpecifiers.userMode);
-	std::string endComment(" :are supported by this server\r\n");
+	userMode.append(this->_clientSpecifiers.userMode);
+	std::string endComment(" SAFELIST :are supported by this server\r\n");
 	rplMessage.append(chanType).append(chanLen).append(chanModesChange).append(chanMode)
 		.append(chanPrefix).append(nickLen).append(userMode).append(endComment);
 	c.addBufferOut(rplMessage);

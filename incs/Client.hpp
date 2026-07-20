@@ -20,6 +20,7 @@ const uint8_t FLAG_CLIENT_NONE = 0x0;
 const uint8_t FLAG_CLIENT_PASS = 0x1;
 const uint8_t FLAG_CLIENT_NICK = 0x2;
 const uint8_t FLAG_CLIENT_USER = 0x4;
+const uint8_t FLAG_CLIENT_CAPL = 0x8;
 const uint8_t FLAG_CLIENT_FULL = FLAG_CLIENT_PASS | FLAG_CLIENT_NICK | FLAG_CLIENT_USER;
 
 
@@ -34,6 +35,7 @@ const AccessType CLIENT_ACCESS_WHITELIST	= 0x20;		// +g	| rejette les message pr
 const AccessType CLIENT_ACCESS_BOT			= 0x40;		// +B	| indique que l'utilisateur est un bot
 const AccessType CLIENT_ACCESS_OPERATOR		= 0x80;		// +oO	| serveur operator
 const AccessType CLIENT_ACCESS_ADMIN		= 0x100;	// +aA	| server admin
+const AccessType CLIENT_ECHO_MESSAGE		= 0x200;	// si les message doivent se renvoyer a lui meme
 const AccessType CLIENT_ACCESS_FULL			= CLIENT_ACCESS_INVISIBLE | CLIENT_ACCESS_HIDDEN_HOST | CLIENT_ACCESS_DEAF | CLIENT_ACCESS_REGISTERED | CLIENT_ACCESS_WHITELIST | CLIENT_ACCESS_BOT | CLIENT_ACCESS_OPERATOR | CLIENT_ACCESS_ADMIN | CLIENT_ACCESS_AWAY;
 
 class Channel;

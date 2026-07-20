@@ -56,7 +56,12 @@ int	main(int ac, char **argv)
 	unsigned int i = parse_av(ac, argv);
 	if (i >= 1)
 		return (i - 1);
-	Server	serv(atoi(argv[1]), argv[2]);
+	std::istringstream iss(argv[1]);
+	int	port;
+	iss >> port;
+	if (iss.fail())
+		return (std::cerr << "Error parsing the port" << std::endl, 1);
+	Server	serv(port, argv[2]);
 	tag();
 	do {
 		serv.run();

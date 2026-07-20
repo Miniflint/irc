@@ -9,7 +9,6 @@
 # include <iostream>
 # include <sstream>
 # include <queue>
-# define SOCK_DOMAIN AF_LOCAL
 # define SERV_HOST_NAME "startrek.synology.com"
 # define MAX_SOCKET_FD 2048U
 # define ADMIN_ID "2Tri"
@@ -20,6 +19,7 @@
 # define RUN_RESTART 0x1
 # define RUN_SHUTDOWN 0x2
 # define WARNING_LIMIT 5
+# define SERV_VERSION "0.7.3"
 
 # define INFO_MSG_TAG0 "---------------------------------------------------------------------------\r\n"
 # define INFO_MSG_TAG1 "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc    |\r\n"
@@ -65,6 +65,7 @@ class Server {
 		int						_sockServerFD;
 		std::string				_password;
 		std::string				_host;
+		std::string				_serverVersion;
 		Trie<Server::cmdFn>		_commands;
 		Trie<int>				_clientTrie;
 		std::vector<Client *>	_clients;
@@ -149,7 +150,7 @@ class Server {
 		// c'est horrible
 		bool	handle_admin(Client &c, std::istringstream &rest);
 		bool	handle_away(Client &c, std::istringstream &rest);
-		bool	handle_cap(Client &c, std::istringstream &iss);
+		bool	handleCap(Client &c, std::istringstream &iss);
 		bool	handle_cnotice(Client &c, std::istringstream &rest);
 		bool	handle_cprivmsg(Client &c, std::istringstream &rest);
 		bool	handle_connect(Client &c, std::istringstream &rest);

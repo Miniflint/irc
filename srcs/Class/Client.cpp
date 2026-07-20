@@ -3,7 +3,7 @@
 
 Client::Client() {}
 
-Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), _userStatus(CLIENT_ACCESS_NONE), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
+Client::Client(int socket, std::string host, int port) : _fd(socket), _nick("*"), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), _userStatus(CLIENT_ACCESS_NONE), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
 
 Client::~Client() {}
 

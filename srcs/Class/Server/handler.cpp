@@ -42,10 +42,52 @@ bool	Server::handle_away(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_cap(Client &c, std::istringstream &iss) 
+bool	Server::handleCap(Client &c, std::istringstream &iss) 
 {
-	(void)c;
-	(void)iss;
+	std::string typeCap;
+
+	if (c.flagsLogin == FLAG_CLIENT_FULL)
+		return (this->handleErrAlreadyRegistered(c), this->poolOut.push(c.getFd()), false);
+	if (!(iss >> typeCap))
+		return (this->handleErrNeedMoreParams(c, "CAP"), this->poolOut.push(c.getFd()), false);
+	if (typeCap == "LS")
+	{
+		int versionCap;
+		if (!(iss >> versionCap) || versionCap > 302)
+			versionCap = 300;
+		if (versionCap == 302)
+			c.flagsLogin |= FLAG_CLIENT_CAPL;
+	}
+	if (typeCap == "REQ" && c.flagsLogin & FLAG_CLIENT_CAPL)
+	{
+		std::string tokenRequested;
+		std::string rplMessage(this->_rplPrefix("CAP", "*"));
+		if (!(iss >> tokenRequested))
+		{
+			rplMessage.append("NAK :\r\n");
+			return (c.addBufferOut(rplMessage), this->poolOut.push(c.getFd()), false);
+		}
+		if (tokenRequested[0] == ':')
+			tokenRequested.erase(0, 1);
+		if (tokenRequested == "echo-message")
+		{
+			c.addStatus(CLIENT_ECHO_MESSAGE);
+			rplMessage.append("ACK ").append(tokenRequested).append("\r\n");
+			return (c.addBufferOut(rplMessage), this->poolOut.push(c.getFd()), false);
+		}
+		else
+		{
+			rplMessage.append("NAK :").append(tokenRequested).append("\r\n");
+			return (c.addBufferOut(rplMessage), this->poolOut.push(c.getFd()), false);
+		}
+	}
+	if (typeCap == "END" && c.flagsLogin & FLAG_CLIENT_CAPL)
+		c.flagsLogin &= ~FLAG_CLIENT_CAPL;
+	if (c.flagsLogin == FLAG_CLIENT_FULL)
+	{
+		this->_clientTrie.add(c.getNick(), c.getFd());
+		this->_sendAllWelcome(c);
+	}
 	return (true);
 }
 bool	Server::handle_cnotice(Client &c, std::istringstream &iss) 
@@ -362,16 +404,23 @@ bool	Server::handleNick(Client &c, std::istringstream &iss)
 			}
 		}
 		this->_clientTrie.del(oldUserName);
-		// faire message pour changement de nom
 	}
 	c.setNick(token);
-	if (c.flagsLogin & FLAG_CLIENT_USER)
-	{
-		this->_clientTrie.add(token, c.getFd());
-		if (!(c.flagsLogin & FLAG_CLIENT_NICK))
+	if (!(c.flagsLogin & FLAG_CLIENT_NICK)) {
+		c.flagsLogin |= FLAG_CLIENT_NICK;
+		if (c.flagsLogin == (FLAG_CLIENT_FULL | FLAG_CLIENT_CAPL))
+		{
+			std::string rplMessage(this->_rplPrefix("CAP", "* LS"));
+			rplMessage.append(":echo-message\r\n");
+			c.addBufferOut(rplMessage);
+			this->poolOut.push(c.getFd());
+		}
+		else if (c.flagsLogin == FLAG_CLIENT_FULL)
+		{
 			this->_sendAllWelcome(c);
+			this->_clientTrie.add(token, c.getFd());
+		}
 	}
-	c.flagsLogin |= FLAG_CLIENT_NICK;
 	return (true);
 }
 bool	Server::handle_notice(Client &c, std::istringstream &iss) 
@@ -500,7 +549,7 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 	std::vector<size_t>::const_iterator end = clients.end();
 	for (std::vector<size_t>::const_iterator it = clients.begin(); it != end; it++) {
 		Client *curr = this->_clients[*it];
-		if (!curr)
+		if (!curr || (!(curr->getStatus() & CLIENT_ECHO_MESSAGE) && curr->getFd() == c.getFd()))
 			continue ;
 		this->sendToClient(*curr, full);
 	}
@@ -679,12 +728,19 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 	// c.setHostName(hostName);
 	c.setServerName(serverName);
 	c.setRealName(realName);
-	if (c.flagsLogin & FLAG_CLIENT_NICK)
+	c.flagsLogin |= FLAG_CLIENT_USER;
+	if (c.flagsLogin == FLAG_CLIENT_FULL)
 	{
 		this->_clientTrie.add(c.getNick(), c.getFd());
 		this->_sendAllWelcome(c);
 	}
-	c.flagsLogin |= FLAG_CLIENT_USER;
+	else if (c.flagsLogin == (FLAG_CLIENT_FULL | FLAG_CLIENT_CAPL))
+	{
+		std::string rplMessage(this->_rplPrefix("CAP", "* LS"));
+		rplMessage.append(":echo-message\r\n");
+		c.addBufferOut(rplMessage);
+		this->poolOut.push(c.getFd());
+	}
 	return (true);
 }
 bool	Server::handle_userhost(Client &c, std::istringstream &iss) 
