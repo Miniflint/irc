@@ -15,7 +15,7 @@
       - [x] Quit propre sur le bot
       - [x] Join sur invite avec le bot
       - [x] RPN command bot
-   - [ ] Faire DCC //Normalement ok à verifier 
+   - [x] Faire DCC
 
 ## TOP PRIORITY
 1. [x] Faire NICK
@@ -65,4 +65,4 @@
    - [x] répond au message
    - [ ] peut faire des commandes dynamiquement
    - [ ] join sur invite
-2. [ ] Faire DCC
+2. [x] Faire DCC
