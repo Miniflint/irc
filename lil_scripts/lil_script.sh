@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Configuration du serveur
-SERVER="127.0.0.1"
+SERVER="192.168.1.213"
 PORT="6667"
-PASSWORD="pass"
+PASSWORD="2x3Mpqw0(krn));"
 NICKNAME="mini2"
 USERNAME="miniflin2"
 REALNAME="anyUser3"
@@ -59,7 +59,7 @@ while read -r line <&3; do
     fi
 done &
 
-TOTAL_CHANNELS=1000000
+TOTAL_CHANNELS=500000
 COUNTER=1
 
 sleep 3

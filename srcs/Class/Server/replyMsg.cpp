@@ -54,7 +54,13 @@ void	Server::handleRplMyinfo(Client &c)
 void	Server::handleRplISupport(Client &c)
 {
 	std::string rplMessage(this->_rplPrefix("005", c.getNick()));
-	std::string chanType("CHANTYPES=");
+	rplMessage.append("DCC=1 TARGMAX=PRIVMSG:1 LINELEN=");
+	{
+		std::ostringstream oss;
+		oss << this->_channelSpecifiers.channelLen;
+		rplMessage += oss.str();
+	}
+	std::string chanType(" CHANTYPES=");
 	chanType.append(this->_channelSpecifiers.channelType);
 	std::string chanLen(" CHANNELLEN=");
 	{
