@@ -347,12 +347,11 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 			}
 		}
 		size_t index = usedTokens.find_first_not_of(' ');
-		if (usedTokens[index])
+		if (index != std::string::npos)
 			fullStr.append(1, ' ').append(channel->getNick()).append(1, ' ').append(usedTokens).append("\r\n");
-		if (!usedTokens.empty())
+		else
 			fullStr.append(1, ' ').append(channel->getNick()).append("\r\n");
 		this->sendToChannel(*channel, fullStr);
-		this->poolOut.push(c.getFd());
 		if (checkErrorOnce)
 			return (false);
 	}

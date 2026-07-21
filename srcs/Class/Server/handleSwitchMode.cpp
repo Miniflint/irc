@@ -447,7 +447,6 @@ int		Server::_handleCaseAdd(Client &c, std::string modeType, int *i, Channel &ch
 		returnValue += ret;
         (*i)++;
     }
-	this->poolOut.push(c.getFd());
 	return (returnValue);
 }
 int		Server::_handleCaseDel(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss, std::string &message, std::string &usedToken)
@@ -502,5 +501,6 @@ int		Server::_handleCaseDel(Client &c, std::string modeType, int *i, Channel &ch
 		returnValue += ret;
         (*i)++;
     }
+	std::cout << returnValue << std::endl;
     return (returnValue);
 }
