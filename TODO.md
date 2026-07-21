@@ -1,11 +1,10 @@
 
 ## TOP SUBJECT PRIORITY
 1. [ ] Faire KICK
-2. [ ] Assurer MODE
+2. [x] Assurer MODE
 3. [ ] Assurer PRIVMSG
 4. [x] Retirer atoi
 5. [x] Regler WARNING halloy
-6. [ ] Class canonique
 7. [X] Faire CAP LS et/ou CAP LS 302
 8. [ ] Faire README.md
 9. [ ] Tout tester

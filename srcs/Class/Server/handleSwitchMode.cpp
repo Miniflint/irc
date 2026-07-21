@@ -16,7 +16,7 @@ int	Server::_bCaseAdd(Client &c, Channel &channel, std::istringstream &iss, Acce
 		for (std::map<int, AccessType>::const_iterator it = channel.getClientException().begin(); it != end; it++) {
 		const std::string targetName = (*this->_clients[(*it).first]).getNick();
 		std::string rplMessage(this->_makeHostMask(c, "MODE"));
-		rplMessage.append("has re-banned ").append(targetName).append("\r\n");
+		rplMessage.append("has banned ").append(targetName).append("\r\n");
 			if ((*it).second & EXCEPTION_BANNED)
 				this->delClientToChannel(*this->_clients[(*it).first], channel, rplMessage);
 		}
@@ -24,11 +24,10 @@ int	Server::_bCaseAdd(Client &c, Channel &channel, std::istringstream &iss, Acce
 		this->handleRplEndofbanlist(c, channelName);
 		return (2);
 	}
-	int bannedClient = -1;
 	Trie<int>	*trieClient;
 	if (!(trieClient = this->_clientTrie.find(userTarget)))
 		return (false);
-	bannedClient = trieClient->getElem();
+	int bannedClient = trieClient->getElem();
 	if (bannedClient > 0)
 	{
 		const std::string targetName = (*this->_clients[bannedClient]).getNick();
@@ -110,8 +109,6 @@ bool	Server::_kCaseAdd(Client &c, Channel &channel, std::istringstream &iss, Acc
     std::string nextToken;
 	if (!(iss >> nextToken))
 		return (this->handleErrNeedMoreParams(c, "MODE"), this->poolOut.push(c.getFd()), false);
-	if (channel.getMode() & CHANNEL_KEY && !_constantTimeCheck(nextToken, channel.getPass()))
-		return (this->handleErrPasswdMismatch(c), this->poolOut.push(c.getFd()), false);
 
 	usedToken.append(1, ' ').append(nextToken);
 	channel.setPass(nextToken);
@@ -131,6 +128,7 @@ bool	Server::_kCaseDel(Client &c, Channel &channel, std::istringstream &iss, Acc
 		return (this->handleErrPasswdMismatch(c), this->poolOut.push(c.getFd()), false);
 
 	usedToken.append(1, ' ').append(nextToken);
+	channel.setPass("");
 	channel.delMode(CHANNEL_KEY);
 	return (true);
 }
@@ -229,7 +227,6 @@ bool	Server::_iCaseDel(Client &c, Channel &channel, AccessType userAccessOnChann
 {
 	const std::string targetName = channel.getNick();
 
-	std::cout << c.getNick() << " " << c.getStatus() << std::endl;
 	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && userAccessOnChannel < USER_OPERATOR)
 		return (this->handleErrChanOPrivsNeeded(c, targetName), false);
 	channel.delMode(CHANNEL_INVITE_ONLY);

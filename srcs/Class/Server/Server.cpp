@@ -56,15 +56,7 @@ Server::~Server()
 
 bool    Server::_validateAccess(Client &c, std::string &command)
 {
-	// if (command != "PASS" && !(c->flagsLogin & FLAG_CLIENT_PASS))
-	// 	return (false);
-	// if (command == "USER" && (c->flagsLogin & FLAG_CLIENT_USER))
-	// 	return (false);
-	/* 
-		std::string rplMessage(this->_makeHostMask(c, "CAP * LS"));
-		rplMessage.append(":echo-message\r\n");
-	*/
-	if (command == "PASS" || command == "NICK" || command == "USER" || command == "QUIT" || command=="CAP")
+	if (command=="CAP" || command == "PASS" || command == "NICK" || command == "USER" || command == "QUIT")
 		return (true);
 	if (c.flagsLogin != FLAG_CLIENT_FULL)
 		return (this->handleErrNotregistered(c), this->poolOut.push(c.getFd()), false);

@@ -28,6 +28,8 @@ void	tag() {
 void	display_help(char *filename)
 {
 	std::cout << filename << " <port> <password>" << std::endl;
+	std::cout << "<port> must be a postive integer > 3" << std::endl;
+	std::cout << "<password> must be at least 2 chars" << std::endl;
 	std::cout << "options: \n\t" << "-h, --help: Display this page" << std::endl;
 	std::cout << "\t" << "-o, --output: set the output file for the graph" << std::endl;
 }
@@ -61,6 +63,8 @@ int	main(int ac, char **argv)
 	iss >> port;
 	if (iss.fail())
 		return (std::cerr << "Error parsing the port" << std::endl, 1);
+	if (std::string(argv[2]).length() < 2 || port <= 3)
+		return (display_help(argv[0]), 1);
 	Server	serv(port, argv[2]);
 	tag();
 	do {
