@@ -2,14 +2,14 @@
 ## TOP SUBJECT PRIORITY
 1. [ ] Faire KICK
 2. [x] Assurer MODE
-3. [ ] Assurer PRIVMSG
+3. [x] Assurer PRIVMSG //No external //no away
 4. [x] Retirer atoi
 5. [x] Regler WARNING halloy
 7. [X] Faire CAP LS et/ou CAP LS 302
 8. [ ] Faire README.md
 9. [ ] Tout tester
 10. [ ] Changer message auto kill
-11. [ ] BONUS
+11. [x] BONUS
    - [x] BOT //Il manque des blagues
       - [x] Quit propre sur le bot
       - [x] Join sur invite avec le bot
@@ -18,13 +18,13 @@
 
 ## TOP PRIORITY
 1. [x] Faire NICK
-1. [x] Faire USER
+1. [x] Faire USERs
 1. [x] Faire boucle event
    - [x] recv()
    - [x] send()
 1. [x] Faire Server::sendToClient()
 1. [x] Faire PRIVMSG
-2. [ ] Prendre en compte tout les modes pour PRIVMSG
+2. [x] Prendre en compte tout les modes pour PRIVMSG
 3. [x] Faire channels
 4. [X] Faire JOIN
 6. [x] faire LIST
@@ -38,16 +38,15 @@
 ## PRIORITY
 
 1. [X] ajouter code erreur
-2. [ ] Faire QUIT // change messages formaté
+2. [x] Faire QUIT // change messages formaté
 3. [ ] Faire KILL
 4. [ ] Faire PART // verify message //faire liste de channel
 5. [x] faire DIE
 6. [x] faire RESTART
 7. [x] fair SIGQUIT
-8. [ ] Regarder error et warning de halloy
-9. [ ] Faire WHOIS
-10. [ ] IPV6
-11. [ ] tester 
+8. [x] Regarder error et warning de halloy
+9. [x] IPV6 //nope | impossible
+10. [ ] tester 
    - [ ] faire UNIT_TEST // pour checker toute les fonctions
 
 ## Lower Priority

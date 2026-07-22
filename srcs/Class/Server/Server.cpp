@@ -73,7 +73,7 @@ bool    Server::_validateCommand(Client &c, cmdFn &func, std::string &command)
 	return (true);
 }
 
-void	Server::deconnectClient(int fd, std::string error, std::string message) {
+void	Server::disconnectClient(int fd, std::string error, std::string message) {
 	Client	&c = this->getClient(fd);
 	if (!error.empty())
 	{
@@ -126,7 +126,7 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 			// kick user
 			#ifndef UNITTEST
 			if (warnings >= WARNING_LIMIT)
-				this->deconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick\r\n");
+				this->disconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick\r\n");
 			#endif
 			if (c->getNick().empty())
 				std::cout << fd << ": You get a warning (" << warnings << ")" << std::endl;

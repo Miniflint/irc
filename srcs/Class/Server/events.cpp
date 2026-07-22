@@ -61,6 +61,10 @@ void Server::delClient(int fd) {
 	close(fd);
 	std::string nick = c->getNick();
 	if (!nick.empty()) {
+		if (!(c->quitRequest & (CLIENT_QUIT_ACCEPT | CLIENT_QUIT_REQUEST))) {
+			c->getBufferQuit() = ":";
+			c->getBufferQuit().append(c->getNick()).append(1, '!').append(c->getUserName()).append(1, '@').append(c->getHostName()).append(" QUIT :Quit: Connection lost\r\n");
+		}
 		std::list<Channel>::iterator end = this->_channel.end();
 		for (std::list<Channel>::iterator it = this->_channel.begin(); it != end; )
 			if (c->getChannel().isIn(it->getNick()))
@@ -188,7 +192,7 @@ bool	Server::run() {
 
 void	delEpollClient(Server &serv, int epfd, int fd) {
 	struct epoll_event ev;
-	std::memset(&ev, 0, sizeof(ev)); 
+	std::memset(&ev, 0, sizeof(ev));
 	epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
 	serv.delClient(fd);
 }

@@ -137,7 +137,7 @@ class Server {
 		void							setIp(std::string ip);
 		bool							sendToClient(Client &source, std::string message);
 		bool							sendToChannel(Channel &source, std::string message);
-		void							deconnectClient(int fd, std::string error, std::string message);
+		void							disconnectClient(int fd, std::string error, std::string message);
 		Channel							*createNewChannel(std::string name, std::string pass);
 		Channel							*addClientToChannel(int fd, std::string channelName, std::string channelPass);
 		Channel							*addClientToChannel(Client &client, std::string channelName, std::string channelPass);

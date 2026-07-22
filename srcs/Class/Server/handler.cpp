@@ -305,7 +305,10 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 		if (!handleModeUser(c, targetName, modeType))
 			return (false);
 		std::string	message(this->_makeHostMask(c, "MODE"));
-		message.append(1, ':').append(targetName).append(1, ' ').append(modeType).append("\r\n");
+		if (modeType.empty())
+			message.append(1, ':').append(targetName).append("\r\n");
+		else
+			message.append(1, ':').append(targetName).append(1, ' ').append(modeType).append("\r\n");
 		this->sendToClient(c, message);
 	}
 	else
@@ -328,29 +331,30 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 		int i = 0;
 		bool checkErrorOnce = false;
 		std::string fullStr(this->_makeHostMask(c, "MODE"));
+		std::string letters(1, modeType[i]);
 		std::string usedTokens;
-		fullStr.append(1, modeType[i]);
 		while (modeType[i])
 		{
 			switch (modeType[i])
 			{
 				case '+':
-					if (this->_handleCaseAdd(c, modeType, &i, *channel, iss, fullStr, usedTokens) && modeType[i])
-						fullStr.append(1, modeType[i]);
+					if (this->_handleCaseAdd(c, modeType, &i, *channel, iss, letters, usedTokens) && modeType[i])
+						letters.append(1, modeType[i]);
 					break ;
 				case '-':
-					if (this->_handleCaseDel(c, modeType, &i, *channel, iss, fullStr, usedTokens) && modeType[i])
-						fullStr.append(1, modeType[i]);
+					if (this->_handleCaseDel(c, modeType, &i, *channel, iss, letters, usedTokens) && modeType[i])
+						letters.append(1, modeType[i]);
 					break ;
 				default:
 					break ;
 			}
 		}
 		size_t index = usedTokens.find_first_not_of(' ');
+		fullStr.append(channel->getNick()).append(1, ' ').append(letters);
 		if (index != std::string::npos)
-			fullStr.append(1, ' ').append(channel->getNick()).append(1, ' ').append(usedTokens).append("\r\n");
+			fullStr.append(usedTokens).append("\r\n");
 		else
-			fullStr.append(1, ' ').append(channel->getNick()).append("\r\n");
+			fullStr.append("\r\n");
 		this->sendToChannel(*channel, fullStr);
 		if (checkErrorOnce)
 			return (false);
@@ -523,12 +527,14 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 			} catch (std::exception &e) {
 				return (this->handleErrNoSuchChannel(c, target), this->poolOut.push(c.getFd()), false);
 			}
-			if (c.getStatus() < CLIENT_ACCESS_OPERATOR && !(targetChannel->getMode() & CHANNEL_NOT_EXTERNAL))
+			if (c.getStatus() < CLIENT_ACCESS_OPERATOR && targetChannel->getMode() & CHANNEL_NOT_EXTERNAL)
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
-		AccessType t = c.getChannelAccess(targetChannel->getNick());
-		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && (targetChannel->getMode() & CHANNEL_MODERATED && t < USER_VOICE))
-				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
+		AccessType t = c.getChannelAccess(target);
+		std::cout << "client channel access =>" << t << " client status =>" << c.getStatus() << " channel mode =>" << targetChannel->getMode() << std::endl;
+		std::cout << "bool resulet : client channel access =>" << bool(t < USER_VOICE) << "client status =>" << bool(c.getStatus() < CLIENT_ACCESS_OPERATOR) << "channel mode =>" << bool(targetChannel->getMode() & CHANNEL_MODERATED) << std::endl;
+		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && targetChannel->getMode() & CHANNEL_MODERATED && t < USER_VOICE)
+			return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
 	}
 	else
@@ -566,7 +572,12 @@ bool	Server::handleQuit(Client &c, std::istringstream &iss)
 	if (token[0] == ':')
 		token.erase(0, 1);
 	token.append("\r\n");
-	this->deconnectClient(c.getFd(), message + "Thanks for being with us\r\n", message + token);
+	std::string rplSelfMessage(message);
+	rplSelfMessage.append("Quit: Thanks for being with us\r\n");
+	std::string rplChannelsMessages(message);
+	rplChannelsMessages.append("Quit: ");
+	rplChannelsMessages.append(token);
+	this->disconnectClient(c.getFd(), rplSelfMessage, rplChannelsMessages);
 	return (true);
 }
 bool	Server::handle_quote(Client &c, std::istringstream &iss) 
