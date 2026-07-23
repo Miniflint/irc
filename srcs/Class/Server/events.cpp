@@ -41,9 +41,9 @@ static int	initListenSocket(int port) {
 		return (-1);
 	int	opt = 1;
 	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	#ifdef __APPLE__
+	// #ifdef __APPLE__
 		fcntl(listenSock, F_SETFL, O_NONBLOCK);
-	#endif
+	// #endif
 	struct sockaddr_in addr;
 	std::memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
@@ -147,11 +147,6 @@ bool	Server::run() {
 					buffer[readN]= '\0';
 					this->_clients[currFd]->buffer += buffer;
 					this->doCommand(currFd);
-					while (!this->poolOut.empty()) {
-						int	outFd = this->poolOut.front();
-						setKqueueMode(evfd, outFd, EVFILT_WRITE, EV_ADD);
-						this->poolOut.pop();
-					}
 				}
 				if (events[i].filter == EVFILT_WRITE) {
 					int	outFd = currFd;
@@ -169,6 +164,11 @@ bool	Server::run() {
 					}
 				}
 			}
+		}
+		while (!this->poolOut.empty()) {
+			int	outFd = this->poolOut.front();
+			setKqueueMode(evfd, outFd, EVFILT_WRITE, EV_ADD);
+			this->poolOut.pop();
 		}
 		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
 			Client	&c = this->getClient(*it);
@@ -242,13 +242,9 @@ bool	Server::run() {
 					buffer[readN]= '\0';
 					this->_clients[currFd]->buffer += buffer;
 					this->doCommand(currFd);
-					while (!this->poolOut.empty()) {
-						int	outFd = this->poolOut.front();
-						setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
-						this->poolOut.pop();
-					}
 				}
 				if (events[i].events & EPOLLOUT) {
+					std::cout << "in EPOLLOUT" << std::endl;
 					int	outFd = currFd;
 					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), this->_clients[outFd]->getBufferOut().size(), MSG_DONTWAIT);
 					if (writeN != -1) {
@@ -264,6 +260,11 @@ bool	Server::run() {
 					}
 				}
 			}
+		}
+		while (!this->poolOut.empty()) {
+			int	outFd = this->poolOut.front();
+			setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+			this->poolOut.pop();
 		}
 		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
 			Client	&c = this->getClient(*it);

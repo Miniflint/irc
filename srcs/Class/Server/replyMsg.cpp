@@ -349,10 +349,11 @@ void	Server::handleRplNone(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplAway(Client &c)
+
+void	Server::handleRplAway(Client &c, Client &cAway)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("301", c.getNick()));
+	c.addBufferOut(rplMessage.append(cAway.getNick()).append(" :").append(cAway.getAwayMessage()).append("\r\n"));
 }
 void	Server::handleRplUserhost(Client &c)
 {
@@ -364,15 +365,15 @@ void	Server::handleRplIson(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplUnaway(Client &c)
+void	Server::handleRplUnAway(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("305", c.getNick()));
+	c.addBufferOut(rplMessage.append(":You are no longer marked as being away\r\n"));
 }
-void	Server::handleRplNowaway(Client &c)
+void	Server::handleRplNowAway(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("306", c.getNick()));
+	c.addBufferOut(rplMessage.append(":You have been marked as being away\r\n"));
 }
 void	Server::handleRplWhoisuser(Client &c)
 {
@@ -500,7 +501,6 @@ void	Server::handleRplNoTopic(Client &c, std::string channelName)
 	rplMessage.append(channelName).append(" :No topic is set").append("\r\n");
 	c.addBufferOut(rplMessage);
 }
-//WILL BE USED
 void	Server::handleRplTopic(Client &c, std::string channelName, std::string topic)
 {
 	std::string rplMessage(this->_rplPrefix("332", c.getNick()));
@@ -894,9 +894,11 @@ void	Server::handleErrUnavailresource(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleErrUsernotinchannel(Client &c)
+void	Server::handleErrUsernotinchannel(Client &c, std::string channelName, std::string clientName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("441", c.getNick()));
+	rplMessage.append(channelName).append(1, ' ').append(clientName)
+		.append(" :They aren't on that channel\r\n");
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleErrNotOnChannel(Client &c, std::string channelName)

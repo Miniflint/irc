@@ -18,7 +18,7 @@ static inline Channel	*sendRet(Client &c, Server &serv, Channel *chan) {
 void	Server::delClientToChannel(Client &c, std::list<Channel>::iterator &chan, std::string message) {
 	std::vector<int>	&clients = chan->getClientsFD();
 	for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); ) {
-		this->getClient(*it).addBufferOut(message);
+		this->sendToClient(this->getClient(*it), message);
 		if (*it == c.getFd())
 			it = clients.erase(it);
 		else

@@ -78,11 +78,13 @@ class Server {
 		std::string				_operatorPass;
 		std::string				_adminName;
 		std::string				_operatorName;
+		Trie<std::string>		_helpTrie;
 		// bool					_init();
 		// bool					_clientAdd();
 
 		bool					_validateAccess(Client &c, std::string &command);
 		bool    				_validateCommand(Client &c, cmdFn &func, std::string &command);
+		void					_autoKill(Client &c, std::string message);
 		const std::string		&_getPassword();
 		std::string 			_rplPrefix(std::string code, std::string nick) const;
 		void					_sendAllWelcome(Client &c);
@@ -149,7 +151,7 @@ class Server {
 		uint8_t							runStatus;
 		// c'est horrible
 		bool	handle_admin(Client &c, std::istringstream &rest);
-		bool	handle_away(Client &c, std::istringstream &rest);
+		bool	handleAway(Client &c, std::istringstream &rest);
 		bool	handleCap(Client &c, std::istringstream &iss);
 		bool	handle_cnotice(Client &c, std::istringstream &rest);
 		bool	handle_cprivmsg(Client &c, std::istringstream &rest);
@@ -162,8 +164,8 @@ class Server {
 		bool	handleInvite(Client &c, std::istringstream &rest);
 		bool	handle_ison(Client &c, std::istringstream &rest);
 		bool	handleJoin(Client &c, std::istringstream &rest);
-		bool	handle_kick(Client &c, std::istringstream &rest);
-		bool	handle_kill(Client &c, std::istringstream &rest);
+		bool	handleKick(Client &c, std::istringstream &rest);
+		bool	handleKill(Client &c, std::istringstream &rest);
 		bool	handle_knock(Client &c, std::istringstream &rest);
 		bool	handle_links(Client &c, std::istringstream &rest);
 		bool	handleList(Client &c, std::istringstream &rest);
@@ -257,11 +259,11 @@ class Server {
 		void	handleRplTraceend(Client &c);
 		void	handleRplTryagain(Client &c);
 		void	handleRplNone(Client &c);
-		void	handleRplAway(Client &c);
+		void	handleRplAway(Client &c, Client &cAway);
 		void	handleRplUserhost(Client &c);
 		void	handleRplIson(Client &c);
-		void	handleRplUnaway(Client &c);
-		void	handleRplNowaway(Client &c);
+		void	handleRplUnAway(Client &c);
+		void	handleRplNowAway(Client &c);
 		void	handleRplWhoisuser(Client &c);
 		void	handleRplWhoisserver(Client &c);
 		void	handleRplWhoisoperator(Client &c);
@@ -334,7 +336,7 @@ class Server {
 		void	handleErrNicknameInUse(Client &c, std::string targetNickName);
 		void	handleErrNickCollision(Client &c, std::string targetNickName);
 		void	handleErrUnavailresource(Client &c);
-		void	handleErrUsernotinchannel(Client &c);
+		void	handleErrUsernotinchannel(Client &c, std::string channelName, std::string clientName);
 		void	handleErrNotOnChannel(Client &c, std::string channelName);
 		void	handleErrUseronchannel(Client &c);
 		void	handleErrNologin(Client &c);

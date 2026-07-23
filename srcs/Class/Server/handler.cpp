@@ -34,13 +34,25 @@ bool	Server::handle_admin(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_away(Client &c, std::istringstream &iss) 
+bool	Server::handleAway(Client &c, std::istringstream &iss) 
 {
 	std::string token;
 	iss >> token;
-	this->handleErrUnknowncommand(c, "AWAY");
-	this->poolOut.push(c.getFd());
-	return (true);
+	if (!token.empty()) {
+		if (token[0] == ':')
+			token.erase(0, 1);
+		std::string	tmp;
+		std::getline(iss, tmp);
+		token.append(tmp);
+	}
+	if (token.empty())
+	{
+		c.delStatus(CLIENT_ACCESS_AWAY);
+		return (this->handleRplUnAway(c), this->poolOut.push(c.getFd()), true);
+	}
+	c.setAwayMessage(token);
+	c.addStatus(CLIENT_ACCESS_AWAY);
+	return (this->handleRplNowAway(c), this->poolOut.push(c.getFd()), true);
 }
 bool	Server::handleCap(Client &c, std::istringstream &iss) 
 {
@@ -222,22 +234,103 @@ bool	Server::handleJoin(Client &c, std::istringstream &iss)
 	}
 	return (true);
 }
-bool	Server::handle_kick(Client &c, std::istringstream &iss) 
+bool	Server::handleKick(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "KICK");
+	std::string channel, users, comment;
+	iss >> channel >> users >> comment;
+	if (channel.empty() || users.empty())
+		return (this->handleErrNeedMoreParams(c, "KICK"), this->poolOut.push(c.getFd()), false);
+	if (!this->_channelTrie.isIn(channel))
+		return (this->handleErrNoSuchChannel(c, channel), this->poolOut.push(c.getFd()), false);
+	Trie<std::pair<Channel *, AccessType> > accessOnChannel = c.getChannel();
+	if (accessOnChannel.isIn(channel) && c.getStatus() < CLIENT_ACCESS_OPERATOR)
+		return (this->handleErrNotOnChannel(c, channel), this->poolOut.push(c.getFd()), false);
+	std::pair<Channel *, AccessType> elem = accessOnChannel.getElem();
+	if (elem.second < USER_HALFOP && c.getStatus() < CLIENT_ACCESS_OPERATOR)
+		return (this->handleErrChanOPrivsNeeded(c, channel), this->poolOut.push(c.getFd()), false);
+	std::istringstream			userParse(users);
+	std::vector<std::string>	userList;
+	for (std::string tmp; std::getline(userParse, tmp, ',');) {
+		userList.push_back(tmp);
+	}
+	if (!comment.empty())
+	{
+		if (comment[0] == ':')
+			comment.erase(0, 1);
+		std::string tmp;
+		std::getline(iss, tmp);
+		comment.append(tmp);
+	}
+	if (comment.empty()) {
+		comment = "Kicked without message";
+	}
+	std::vector<std::string>::const_iterator end = userList.end();
+	const std::string rplMessageConst(this->_makeHostMask(c, "KICK"));
+	for (std::vector<std::string>::const_iterator it = userList.begin(); it != end; it++) {
+		Trie<int>	*clientTrie = this->_clientTrie.find(*it);
+		if (!clientTrie)
+		{
+			this->handleErrNoSuchNick(c, *it);
+			continue ;
+		}
+		int			clientFd = clientTrie->getElem();
+		Client		*targetClient = this->_clients[clientFd];
+		Trie<std::pair<Channel *, AccessType> > clientTrieAccess = targetClient->getChannel();
+		if (!clientTrieAccess.isIn(channel))
+		{
+			this->handleErrUsernotinchannel(c, channel, targetClient->getNick());
+			continue ;
+		}
+		if (targetClient->getStatus() >= c.getStatus())
+		{
+			this->handleErrChanOPrivsNeeded(c, channel);
+			continue ;
+		}
+		std::string	suffix(*it);
+		suffix.append(" :").append(comment).append("\r\n");
+		this->delClientToChannel(*(targetClient), *(clientTrieAccess.getElem().first), rplMessageConst + suffix);
+	}
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_kill(Client &c, std::istringstream &iss) 
+
+bool	Server::handleKill(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "KILL");
-	this->poolOut.push(c.getFd());
+	std::string token, message;
+	iss >> token >> message;
+	if (token.empty())
+		return (this->handleErrNeedMoreParams(c, "KILL"), this->poolOut.push(c.getFd()), false);
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR)
+		return (this->handleErrNoPrivileges(c), this->poolOut.push(c.getFd()), false);
+	Trie<int> *client = this->_clientTrie.find(token);
+	if (!client)
+		return (this->handleErrNoSuchNick(c, token), this->poolOut.push(c.getFd()), false);
+	Client &targetClient = *(this->_clients[client->getElem()]);
+	if (targetClient.getStatus() & CLIENT_ACCESS_ADMIN || (targetClient.getStatus() & CLIENT_ACCESS_OPERATOR && !(c.getStatus() & CLIENT_ACCESS_ADMIN)))
+		return (this->handleErrNoPrivileges(c), this->poolOut.push(c.getFd()), false);
+	if (!message.empty()) {
+		if (message[0] == ':')
+			message.erase(0, 1);
+		std::string	tmp;
+		std::getline(iss, tmp);
+		message.append(tmp);
+	}
+	if (message.empty())
+		message = "No message";
+	std::string	killed("Killed (");
+	killed.append(c.getNick()).append(" (").append(message).append("))");
+	std::string	rplError(":");
+	rplError.append(this->_host).append(" ERROR: Closing Link: ").append(targetClient.getNick()).append(1, ' ').append(this->_host).append(" (").append(killed).append(")\r\n");
+	std::string	rplQuit(this->_makeHostMask(targetClient, "QUIT"));
+	rplQuit.append(":Quit: ").append(killed).append("\r\n");
+	std::string	rplKill(this->_makeHostMask(c, "KILL"));
+	rplKill.append(token).append(" :").append(message).append("\r\n");
+	targetClient.addBufferOut(rplKill);
+	targetClient.addBufferOut(rplQuit);
+	this->disconnectClient(targetClient.getFd(), rplError, rplQuit);
 	return (true);
 }
+
 bool	Server::handle_knock(Client &c, std::istringstream &iss) 
 {
 	std::string token;
@@ -450,20 +543,51 @@ bool	Server::handleOper(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handlePart(Client &c, std::istringstream &iss) 
+
+//PART &chan 	      	:je part maintenant
+
+bool	Server::handlePart(Client &c, std::istringstream &iss)
 {
-	std::string token;
-	iss >> token;
-	if (iss.fail() || token.empty())
+	std::string token, reasonLeave;
+	iss >> token >> reasonLeave;
+	if (token.empty())
 		return (this->handleErrNeedMoreParams(c, "PART"), this->poolOut.push(c.getFd()), false);
-	Trie<Channel *>	*channelTrie = this->_channelTrie.find(token);
-	if (!channelTrie)
-		return (this->handleErrNoSuchChannel(c, token), this->poolOut.push(c.getFd()), false);
-	if (!c.getChannel().isIn(token))
-		return (this->handleErrNotOnChannel(c, token), this->poolOut.push(c.getFd()), false);
-	Channel	&channel = *channelTrie->getElem();
-	this->delClientToChannel(c, channel, this->_makeHostMask(c, "PART").append(token).append(" :").append(iss.str()).append("\r\n"));
-	// this->poolOut.push(c.getFd());
+
+	std::istringstream			channelParse(token);
+	std::vector<std::string>	channelList;
+	for (std::string tmp; std::getline(channelParse, tmp, ',');)
+		channelList.push_back(tmp);
+	std::vector<std::string>::iterator end = channelList.end();
+	
+	if (!reasonLeave.empty()) {
+		if (reasonLeave[0] == ':')
+			reasonLeave.erase(0, 1);
+		std::string tmp;
+		std::getline(iss, tmp);
+		reasonLeave.append(tmp);
+	}
+	if (reasonLeave.empty()) {
+		reasonLeave = "Part without message";
+	}
+	const std::string rplMessageConst(this->_makeHostMask(c, "PART"));
+	for (std::vector<std::string>::iterator it = channelList.begin(); it != end; it++) {
+		Trie<Channel *>	*channelTrie = this->_channelTrie.find(*it);
+		if (!channelTrie) {
+			this->handleErrNoSuchChannel(c, *it);
+			this->poolOut.push(c.getFd());
+			continue ;
+		}
+		if (!c.getChannel().isIn(*it))
+		{
+			this->handleErrNotOnChannel(c, *it);
+			this->poolOut.push(c.getFd());
+			continue ;
+		}
+		Channel	&channel = *channelTrie->getElem();
+		std::string	suffix(*it);
+		suffix.append(" :").append(reasonLeave).append("\r\n");
+		this->delClientToChannel(c, channel, rplMessageConst + suffix);
+	}
 	return (true);
 }
 bool	Server::handlePass(Client &c, std::istringstream &iss) 
@@ -542,6 +666,11 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 			targetClient = this->_clientTrie[target];
 		} catch (std::exception &e) {
 			return (this->handleErrNoSuchNick(c, target), this->poolOut.push(c.getFd()), false);
+		}
+		Client	&cAway = *(this->_clients[targetClient]);
+		if (cAway.getStatus() & CLIENT_ACCESS_AWAY) {
+			this->handleRplAway(c, cAway);
+			this->poolOut.push(c.getFd());
 		}
 		clients.push_back(targetClient);
 		clients.push_back(c.getFd());

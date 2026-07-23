@@ -15,10 +15,10 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		"WALLOPS","WATCH","WHO","WHOIS","WHOWAS", "DCC", ":"
 	};
 	const Server::cmdFn func_list[] = {
-		&Server::handle_admin, &Server::handle_away, &Server::handleCap, &Server::handle_cnotice,
+		&Server::handle_admin, &Server::handleAway, &Server::handleCap, &Server::handle_cnotice,
 		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handleDie, &Server::handleRestart, &Server::handle_error,
 		&Server::handle_help, &Server::handleInfo, &Server::handleInvite, &Server::handle_ison,
-		&Server::handleJoin, &Server::handle_kick, &Server::handle_kill, &Server::handle_knock,
+		&Server::handleJoin, &Server::handleKick, &Server::handleKill, &Server::handle_knock,
 		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handleMode,
 		&Server::handle_motd, &Server::handle_names, &Server::handleNick, &Server::handle_notice,
 		&Server::handleOper, &Server::handlePart, &Server::handlePass, &Server::handlePing,
@@ -75,17 +75,31 @@ bool    Server::_validateCommand(Client &c, cmdFn &func, std::string &command)
 
 void	Server::disconnectClient(int fd, std::string error, std::string message) {
 	Client	&c = this->getClient(fd);
+	// std::cout << error << error.empty() << std::endl;
 	if (!error.empty())
-	{
 		this->sendToClient(c, error);
-		c.quitRequest = CLIENT_QUIT_REQUEST;
-	}
-	if (!c.buffer.empty())
+	if (!c.getBufferOut().empty())
 		c.quitRequest = CLIENT_QUIT_REQUEST;
 	else
 		c.quitRequest = CLIENT_QUIT_ACCEPT;
-	this->poolQuit.push_back(fd);
 	c.setBufferQuit(message);
+	this->poolQuit.push_back(fd);
+}
+
+void	Server::_autoKill(Client &c, std::string message)
+{
+	std::string	serverName(":" + this->_host);
+	std::string	killed("Killed (");
+	killed.append("auto-kill (").append(message).append("))");
+	std::string	rplError(serverName);
+	rplError.append(" ERROR: Closing Link: ").append(c.getNick()).append(1, ' ').append(this->_host).append(" (").append(killed).append(")\r\n");
+	std::string	rplQuit(this->_makeHostMask(c, "QUIT"));
+	rplQuit.append(":Quit: ").append(killed).append("\r\n");
+	std::string	rplKill(serverName);
+	rplKill.append(" KILL ").append(c.getNick()).append(" :").append(message).append("\r\n");
+	c.addBufferOut(rplKill);
+	c.addBufferOut(rplQuit);
+	this->disconnectClient(c.getFd(), rplError, rplQuit);
 }
 
 bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
@@ -126,7 +140,7 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 			// kick user
 			#ifndef UNITTEST
 			if (warnings >= WARNING_LIMIT)
-				this->disconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick\r\n");
+				this->_autoKill(*c, "Killed by server, too many bad commands");
 			#endif
 			if (c->getNick().empty())
 				std::cout << fd << ": You get a warning (" << warnings << ")" << std::endl;

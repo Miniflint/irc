@@ -50,6 +50,7 @@ class Client {
 		std::string		_hostName;
 		std::string		_serverName;
 		std::string		_realName;
+		std::string		_awayMessage;
 		std::string		_bufferOut;
 		std::string		_bufferQuit;
 		int				_port;
@@ -69,6 +70,8 @@ class Client {
 		const std::string						&getServerName() const;
 		void									setRealName(std::string realName);
 		const std::string						&getRealName() const;
+		void									setAwayMessage(std::string awayMessage);
+		const std::string						&getAwayMessage() const;
 		void									setBufferOut(std::string bufferOut);
 		void									addBufferOut(std::string bufferOut);
 		std::string								&getBufferOut();

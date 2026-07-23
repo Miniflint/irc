@@ -67,6 +67,16 @@ const std::string	&Client::getRealName() const
 	return (this->_realName);
 }
 
+void	Client::setAwayMessage(std::string awayMessage)
+{
+	this->_awayMessage = awayMessage;
+}
+
+const std::string	&Client::getAwayMessage() const
+{
+	return (this->_awayMessage);
+}
+
 void		Client::setBufferOut(std::string bufferOut)
 {
 	const size_t index = bufferOut.find("\r\n");
