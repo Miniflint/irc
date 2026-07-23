@@ -143,7 +143,7 @@ class Server {
 		Channel							*addClientToChannel(Client &client, std::string channelName, std::string channelPass);
 		Channel							*addClientToChannel(int fd, std::string channelName);
 		Channel							*addClientToChannel(Client &client, std::string channelName);
-		bool							handleModeUser(Client &c, std::string targetName, std::string modeType);
+		bool							handleModeUser(Client &c, std::string targetName, std::string modeType, std::string &message);
 		std::queue<int>					poolOut;
 		std::vector<int>				poolQuit;
 		uint8_t							runStatus;

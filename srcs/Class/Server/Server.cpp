@@ -173,7 +173,7 @@ static int ClientOnServerAccessType(char c, AccessType &flag)
 	return (false);
 }
 
-bool	Server::handleModeUser(Client &c, std::string targetName, std::string modeType)
+bool	Server::handleModeUser(Client &c, std::string targetName, std::string modeType, std::string &message)
 {
 	int clientFd = -1;
 	try {
@@ -191,33 +191,35 @@ bool	Server::handleModeUser(Client &c, std::string targetName, std::string modeT
 			return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
 	bool plusOrMinus = (modeType[0] == '+');
 	unsigned int i = 0;
-	bool checkErrorOnce = false;
+	message.append(1, modeType[i]);
 	while (modeType[++i])
 	{
 		if (modeType[i] == '+' || modeType[i] == '-')
 		{
-			plusOrMinus = (modeType[i] == '+'); continue ;
+			plusOrMinus = (modeType[i] == '+');
+			message.append(1, modeType[i]);
+			continue ;
 		}
 		AccessType flag = 0;
 		if (!ClientOnServerAccessType(modeType[i], flag))
-		{
-			if (!checkErrorOnce)
-				this->handleErrUmodeunknownflag(c);
-			checkErrorOnce = true;
-		}
+			continue ;
     	if (plusOrMinus)
 		{
 			if (!(modeType[i] == 'o' || modeType[i] == 'O' || modeType[i] == 'a' || modeType[i] == 'A')) // peut pas s'add en admin
+			{
     	    	c.addStatus(flag);
+				message.append(1, modeType[i]);
+			}
 		}
     	else
 		{
 			if (!(modeType[i] == 'B')) // peut pas s'enlever de bot
+			{
     	    	c.delStatus(flag);
+				message.append(1, modeType[i]);
+			}
 		}
 	}
-	if (checkErrorOnce)
-		return (this->poolOut.push(c.getFd()), false);
 	return (true);
 }
 

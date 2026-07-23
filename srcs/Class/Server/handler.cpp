@@ -302,13 +302,11 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 	bool	channelOrClient = this->_channelSpecifiers.channelType.find(targetName[0]) == std::string::npos;
 	if (channelOrClient)
 	{
-		if (!handleModeUser(c, targetName, modeType))
-			return (false);
 		std::string	message(this->_makeHostMask(c, "MODE"));
-		if (modeType.empty())
-			message.append(1, ':').append(targetName).append("\r\n");
-		else
-			message.append(1, ':').append(targetName).append(1, ' ').append(modeType).append("\r\n");
+		message.append(1, ':').append(targetName).append(1, ' ');
+		if (!handleModeUser(c, targetName, modeType, message))
+			return (false);
+		message.append("\r\n");
 		this->sendToClient(c, message);
 	}
 	else
