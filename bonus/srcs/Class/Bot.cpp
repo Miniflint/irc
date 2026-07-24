@@ -61,11 +61,11 @@ static std::string	jokes() {
 		"Tu veux une blague pédophile ? C'est un mec il rentre dans un bar...",
 		"Comment mettre une giraffe dans un frigo ?",
 		"On ouvre le frigo, on retire l'éléphant, on mets la giraffe et on ferme le frigo.",
-		"Un peroquet dans un bars répète: \"Je veux du coca, je veux du coca\", le barman lui dis d'arrêter sinon il le cloue au mur. Le perroquet continue: \"Je veux du coca, je veux du coca\", le barman: \"Dernière fois\", \"Je veux du coc...\". Le perroguet se retrouve clouer au mur, il se retourne vers une statue de Jesus et demande \"Toi aussi tu voulais du coca ?\".",
+		"Un peroquet dans un bar répète: \"Je veux du coca, je veux du coca\", le barman lui dis d'arrêter sinon il le cloue au mur. Le perroquet continue: \"Je veux du coca, je veux du coca\", le barman: \"Dernière fois\", \"Je veux du coc...\". Le perroguet se retrouve clouer au mur, il se retourne vers une statue de Jesus et demande \"Toi aussi tu voulais du coca ?\".",
 		"Le lion fais une grande fête ou tout les animaux sont invité, mais il en manque un, lequel ?",
 		"La giraffe! Elle est toujours dans le frigo!",
 		"Un mec rentre dans un café... plouf!",
-		"Il y àaune rivière tout le temps infester de crocodile et tu dois la traversé, comment faire ?",
+		"Il y a une rivière tout le temps infester de crocodile et tu dois la traversé, comment faire ?",
 		"Y aller tranquillement, ils sont tous à la fête du Lion!"
 	};
 	static const size_t	jokesMsgSize = sizeof(jokesMsg) / sizeof(const char *);

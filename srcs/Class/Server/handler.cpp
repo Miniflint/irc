@@ -243,7 +243,8 @@ bool	Server::handleKick(Client &c, std::istringstream &iss)
 	if (!this->_channelTrie.isIn(channel))
 		return (this->handleErrNoSuchChannel(c, channel), this->poolOut.push(c.getFd()), false);
 	Trie<std::pair<Channel *, AccessType> > accessOnChannel = c.getChannel();
-	if (accessOnChannel.isIn(channel) && c.getStatus() < CLIENT_ACCESS_OPERATOR)
+	std::cout << "in kick, channelName (verification in channel): " << channel << std::endl;
+	if (!(accessOnChannel.isIn(channel)) && c.getStatus() < CLIENT_ACCESS_OPERATOR)
 		return (this->handleErrNotOnChannel(c, channel), this->poolOut.push(c.getFd()), false);
 	std::pair<Channel *, AccessType> elem = accessOnChannel.getElem();
 	if (elem.second < USER_HALFOP && c.getStatus() < CLIENT_ACCESS_OPERATOR)
@@ -267,6 +268,9 @@ bool	Server::handleKick(Client &c, std::istringstream &iss)
 	std::vector<std::string>::const_iterator end = userList.end();
 	const std::string rplMessageConst(this->_makeHostMask(c, "KICK"));
 	for (std::vector<std::string>::const_iterator it = userList.begin(); it != end; it++) {
+		std::cout << "in kick, channelName : " << *it << std::endl;
+		if ((*it).empty())
+			continue ;
 		Trie<int>	*clientTrie = this->_clientTrie.find(*it);
 		if (!clientTrie)
 		{

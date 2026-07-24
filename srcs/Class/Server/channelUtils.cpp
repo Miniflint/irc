@@ -37,7 +37,6 @@ void	Server::delClientToChannel(Client &c, Channel &chan, std::string message) {
 	std::vector<int>	&clients = chan.getClientsFD();
 	for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); ) {
 		this->sendToClient(this->getClient(*it), message);
-		// this->poolOut.push(*it);
 		if (*it == c.getFd())
 			it = clients.erase(it);
 		else
