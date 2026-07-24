@@ -53,16 +53,20 @@ Bot		&Bot::operator=(const Bot &copy) {
 
 static std::string	jokes() {
 	static const char	*jokesMsg[] = {
-		"blague 1",
-		"blague 2",
-		"blague 3",
-		"blague 4",
-		"blague 5",
-		"blague 6",
-		"blague 7",
-		"blague 8",
-		"blague 9",
-		"blague 10"
+		"Comment mets t'on un éléphant dans un frigo ?",
+		"On ouvre le frigo, on mets l'éléphant et on ferme le frigo.",
+		"Quel est le meilleur point de vue démocratique ?",
+		"Le string! Il sépare la gauche de la droite, protège le centre et unifie le regard du peuple. Mais attention, il ne faut pas trop tiré sur la ficelle, sinon en l'as dans le cul et on est dans la merde.",
+		"Un aveugle rentre dans un bar, puis dans une table... puis dans une chaise....",
+		"Tu veux une blague pédophile ? C'est un mec il rentre dans un bar...",
+		"Comment mettre une giraffe dans un frigo ?",
+		"On ouvre le frigo, on retire l'éléphant, on mets la giraffe et on ferme le frigo.",
+		"Un peroquet dans un bars répète: \"Je veux du coca, je veux du coca\", le barman lui dis d'arrêter sinon il le cloue au mur. Le perroquet continue: \"Je veux du coca, je veux du coca\", le barman: \"Dernière fois\", \"Je veux du coc...\". Le perroguet se retrouve clouer au mur, il se retourne vers une statue de Jesus et demande \"Toi aussi tu voulais du coca ?\".",
+		"Le lion fais une grande fête ou tout les animaux sont invité, mais il en manque un, lequel ?",
+		"La giraffe! Elle est toujours dans le frigo!",
+		"Un mec rentre dans un café... plouf!",
+		"Il y àaune rivière tout le temps infester de crocodile et tu dois la traversé, comment faire ?",
+		"Y aller tranquillement, ils sont tous à la fête du Lion!"
 	};
 	static const size_t	jokesMsgSize = sizeof(jokesMsg) / sizeof(const char *);
 	static size_t	i = 0;
