@@ -10,7 +10,7 @@
 # include <sstream>
 # include <queue>
 # ifndef DEV
-#  define SERV_HOST_NAME "startrek.synology.com"
+#  define SERV_HOST_NAME "startrek.synology.me"
 # else
 #  define SERV_HOST_NAME "dev.server.com"
 # endif

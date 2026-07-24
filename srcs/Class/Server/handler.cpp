@@ -242,13 +242,9 @@ bool	Server::handleKick(Client &c, std::istringstream &iss)
 		return (this->handleErrNeedMoreParams(c, "KICK"), this->poolOut.push(c.getFd()), false);
 	if (!this->_channelTrie.isIn(channel))
 		return (this->handleErrNoSuchChannel(c, channel), this->poolOut.push(c.getFd()), false);
-	Trie<std::pair<Channel *, AccessType> > accessOnChannel = c.getChannel();
-	std::cout << "in kick, channelName (verification in channel): " << channel << std::endl;
-	if (!(accessOnChannel.isIn(channel)) && c.getStatus() < CLIENT_ACCESS_OPERATOR)
+	Trie<std::pair<Channel *, AccessType> > *accessOnChannel = c.getChannel().find(channel);
+	if (!accessOnChannel)
 		return (this->handleErrNotOnChannel(c, channel), this->poolOut.push(c.getFd()), false);
-	std::pair<Channel *, AccessType> elem = accessOnChannel.getElem();
-	if (elem.second < USER_HALFOP && c.getStatus() < CLIENT_ACCESS_OPERATOR)
-		return (this->handleErrChanOPrivsNeeded(c, channel), this->poolOut.push(c.getFd()), false);
 	std::istringstream			userParse(users);
 	std::vector<std::string>	userList;
 	for (std::string tmp; std::getline(userParse, tmp, ',');) {
@@ -265,10 +261,9 @@ bool	Server::handleKick(Client &c, std::istringstream &iss)
 	if (comment.empty()) {
 		comment = "Kicked without message";
 	}
-	std::vector<std::string>::const_iterator end = userList.end();
 	const std::string rplMessageConst(this->_makeHostMask(c, "KICK"));
+	std::vector<std::string>::const_iterator end = userList.end();
 	for (std::vector<std::string>::const_iterator it = userList.begin(); it != end; it++) {
-		std::cout << "in kick, channelName : " << *it << std::endl;
 		if ((*it).empty())
 			continue ;
 		Trie<int>	*clientTrie = this->_clientTrie.find(*it);
@@ -279,20 +274,24 @@ bool	Server::handleKick(Client &c, std::istringstream &iss)
 		}
 		int			clientFd = clientTrie->getElem();
 		Client		*targetClient = this->_clients[clientFd];
-		Trie<std::pair<Channel *, AccessType> > clientTrieAccess = targetClient->getChannel();
-		if (!clientTrieAccess.isIn(channel))
+		Trie<std::pair<Channel *, AccessType> > *clientTrieAccess = targetClient->getChannel().find(channel);
+		if (!clientTrieAccess)
 		{
 			this->handleErrUsernotinchannel(c, channel, targetClient->getNick());
 			continue ;
 		}
-		if (targetClient->getStatus() >= c.getStatus())
+		if (targetClient->getStatus() > c.getStatus() && c.getStatus() >= CLIENT_ACCESS_OPERATOR)
 		{
 			this->handleErrChanOPrivsNeeded(c, channel);
 			continue ;
 		}
 		std::string	suffix(*it);
 		suffix.append(" :").append(comment).append("\r\n");
-		this->delClientToChannel(*(targetClient), *(clientTrieAccess.getElem().first), rplMessageConst + suffix);
+		std::cout << (targetClient)->getNick() << std::endl;
+		std::cout << clientTrieAccess->getElem().first << std::endl;
+		std::cout << rplMessageConst + suffix << std::endl;
+
+		this->delClientToChannel(*(targetClient), *(clientTrieAccess->getElem().first), rplMessageConst + suffix);
 	}
 	this->poolOut.push(c.getFd());
 	return (true);
