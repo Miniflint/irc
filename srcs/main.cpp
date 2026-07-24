@@ -70,9 +70,9 @@ int	main(int ac, char **argv)
 	do {
 		serv.run();
 		if (serv.runStatus == RUN_SHUTDOWN)
-			std::cout << "\033[31m!!! => [Server: Shutdown]\033[0m" << std::endl;
+			std::cout << "\033[1;31m!!! => [Server: Shutdown]\033[0m" << std::endl;
 		else
-			std::cout << "\033[33m!!! => [Server: Restart]\033[0m" << std::endl;
+			std::cout << "\033[1;33m!!! => [Server: Restart]\033[0m" << std::endl;
 	} while (serv.runStatus != RUN_SHUTDOWN);
 	//serv.setClient(0);
 	//createUserAndRegister(serv, 5, "NICK Xavier", "USER Xav * * :Dup");

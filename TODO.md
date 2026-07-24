@@ -39,7 +39,7 @@
 
 1. [X] ajouter code erreur
 2. [x] Faire QUIT // change messages formaté
-3. [ ] Faire KILL
+3. [x] Faire KILL
 4. [x] Faire PART
 5. [x] faire DIE
 6. [x] faire RESTART
@@ -54,7 +54,7 @@
 1. [x] Terminer WHO
 2. [x] Faire AWAY
 3. [ ] Faire HELP
-4. [ ] Faire NAMES //namesrpl est déjà codé
+4. [x] Faire NAMES //namesrpl est déjà codé
 
 ## OTHERS
 

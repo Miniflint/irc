@@ -12,7 +12,7 @@
 #elif defined(__linux__)
 # include <sys/epoll.h>
 #endif
-# define MAX_EVENTS 10
+# define MAX_EVENTS 40
 
 static volatile sig_atomic_t	sigIntQuit = 0;
 
@@ -41,9 +41,9 @@ static int	initListenSocket(int port) {
 		return (-1);
 	int	opt = 1;
 	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	// #ifdef __APPLE__
+	#ifdef __APPLE__
 		fcntl(listenSock, F_SETFL, O_NONBLOCK);
-	// #endif
+	#endif
 	struct sockaddr_in addr;
 	std::memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
@@ -75,7 +75,7 @@ void Server::delClient(int fd) {
 	}
 	delete c;
 	this->_clients[fd] = NULL;
-	std::cout << nick << ": Deconected" << std::endl;
+	std::cout << "\033[0;1;33m[End connection] => \033[0;36m{ '\033[1m" << nick << "\033[0;36m '}\033[0m" << std::endl;
 }
 
 int Server::newConnection()
@@ -87,7 +87,9 @@ int Server::newConnection()
 		return (-1);
 	std::string host = inet_ntoa(addr.sin_addr);
 	int port = ntohs(addr.sin_port);
-	fcntl(clientSock, F_SETFL, O_NONBLOCK);
+	#ifdef __APPLE__
+		fcntl(clientSock, F_SETFL, O_NONBLOCK);
+	#endif
 	if (static_cast<size_t>(clientSock) >= this->_clients.size())
 		this->_clients.resize(static_cast<size_t>(clientSock) + 1, NULL);
 	if (!this->_clients[clientSock]) {
@@ -95,7 +97,7 @@ int Server::newConnection()
 	} else {
 		return (-1);
 	}
-	std::cout << "New Client connected: IP: " << host << " port: " << port << std::endl;
+	std::cout << "\033[0;1;35m[New connection] => \033[0;36m{ '\033[1m" << "IP: " << host << " port: " << port << "\033[0;36m' }\033[0m" << std::endl;
 	return (clientSock);
 }
 
@@ -244,7 +246,6 @@ bool	Server::run() {
 					this->doCommand(currFd);
 				}
 				if (events[i].events & EPOLLOUT) {
-					std::cout << "in EPOLLOUT" << std::endl;
 					int	outFd = currFd;
 					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), this->_clients[outFd]->getBufferOut().size(), MSG_DONTWAIT);
 					if (writeN != -1) {
@@ -261,11 +262,6 @@ bool	Server::run() {
 				}
 			}
 		}
-		while (!this->poolOut.empty()) {
-			int	outFd = this->poolOut.front();
-			setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
-			this->poolOut.pop();
-		}
 		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
 			Client	&c = this->getClient(*it);
 			if (c.quitRequest == CLIENT_QUIT_ACCEPT) {
@@ -273,6 +269,11 @@ bool	Server::run() {
 				it = this->poolQuit.erase(it);
 			} else
 				++it;
+		}
+		while (!this->poolOut.empty()) {
+			int	outFd = this->poolOut.front();
+			setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+			this->poolOut.pop();
 		}
 		if (sigIntQuit)
 			this->runStatus = RUN_SHUTDOWN;

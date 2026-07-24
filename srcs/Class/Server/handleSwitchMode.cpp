@@ -501,6 +501,5 @@ int		Server::_handleCaseDel(Client &c, std::string modeType, int *i, Channel &ch
 		returnValue += ret;
         (*i)++;
     }
-	std::cout << returnValue << std::endl;
     return (returnValue);
 }

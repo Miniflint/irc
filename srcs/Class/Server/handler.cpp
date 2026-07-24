@@ -461,11 +461,27 @@ bool	Server::handle_motd(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_names(Client &c, std::istringstream &iss) 
+bool	Server::handleNames(Client &c, std::istringstream &iss) 
 {
 	std::string token;
 	iss >> token;
-	this->handleErrUnknowncommand(c, "NAMES");
+	if (token.empty())
+		return (this->handleErrNeedMoreParams(c, "NAMES"), this->poolOut.push(c.getFd()), false);
+	std::istringstream			channelParse(token);
+	std::vector<std::string>	channelList;
+	for (std::string tmp; std::getline(channelParse, tmp, ',');)
+		channelList.push_back(tmp);
+	std::vector<std::string>::iterator end = channelList.end();
+	for (std::vector<std::string>::iterator it = channelList.begin(); it != end; it++) {
+		Trie<Channel *>	*channelTrie = this->_channelTrie.find(*it);
+		if (!channelTrie)
+			continue ;
+		Channel	&channel = *channelTrie->getElem();
+		if (channel.getMode() & CHANNEL_SECRET && c.getStatus() < CLIENT_ACCESS_OPERATOR && !c.getChannel().isIn(*it))
+			continue ;
+		this->handleRplNameReply(c, *it, channel);
+		this->handleRplEndofnames(c, *it);
+	}
 	this->poolOut.push(c.getFd());
 	return (true);
 }
@@ -590,6 +606,7 @@ bool	Server::handlePart(Client &c, std::istringstream &iss)
 	}
 	return (true);
 }
+
 bool	Server::handlePass(Client &c, std::istringstream &iss) 
 {
 	if (c.flagsLogin & FLAG_CLIENT_PASS)
@@ -653,8 +670,8 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
 		AccessType t = c.getChannelAccess(target);
-		std::cout << "client channel access =>" << t << " client status =>" << c.getStatus() << " channel mode =>" << targetChannel->getMode() << std::endl;
-		std::cout << "bool resulet : client channel access =>" << bool(t < USER_VOICE) << "client status =>" << bool(c.getStatus() < CLIENT_ACCESS_OPERATOR) << "channel mode =>" << bool(targetChannel->getMode() & CHANNEL_MODERATED) << std::endl;
+		// std::cout << "client channel access =>" << t << " client status =>" << c.getStatus() << " channel mode =>" << targetChannel->getMode() << std::endl;
+		// std::cout << "bool resulet : client channel access =>" << bool(t < USER_VOICE) << "client status =>" << bool(c.getStatus() < CLIENT_ACCESS_OPERATOR) << "channel mode =>" << bool(targetChannel->getMode() & CHANNEL_MODERATED) << std::endl;
 		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && targetChannel->getMode() & CHANNEL_MODERATED && t < USER_VOICE)
 			return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());

@@ -20,7 +20,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		&Server::handle_help, &Server::handleInfo, &Server::handleInvite, &Server::handle_ison,
 		&Server::handleJoin, &Server::handleKick, &Server::handleKill, &Server::handle_knock,
 		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handleMode,
-		&Server::handle_motd, &Server::handle_names, &Server::handleNick, &Server::handle_notice,
+		&Server::handle_motd, &Server::handleNames, &Server::handleNick, &Server::handle_notice,
 		&Server::handleOper, &Server::handlePart, &Server::handlePass, &Server::handlePing,
 		&Server::handle_pong, &Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote,
 		&Server::handle_rehash, &Server::handle_rules, &Server::handle_server, &Server::handle_squery,
@@ -75,7 +75,6 @@ bool    Server::_validateCommand(Client &c, cmdFn &func, std::string &command)
 
 void	Server::disconnectClient(int fd, std::string error, std::string message) {
 	Client	&c = this->getClient(fd);
-	// std::cout << error << error.empty() << std::endl;
 	if (!error.empty())
 		this->sendToClient(c, error);
 	if (!c.getBufferOut().empty())

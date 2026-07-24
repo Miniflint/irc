@@ -9,7 +9,11 @@
 # include <iostream>
 # include <sstream>
 # include <queue>
-# define SERV_HOST_NAME "startrek.synology.com"
+# ifndef DEV
+#  define SERV_HOST_NAME "startrek.synology.com"
+# else
+#  define SERV_HOST_NAME "dev.server.com"
+# endif
 # define MAX_SOCKET_FD 2048U
 # define ADMIN_ID "2Tri"
 # define ADMIN_PASS "2TriIsBetterThanOne"
@@ -19,7 +23,7 @@
 # define RUN_RESTART 0x1
 # define RUN_SHUTDOWN 0x2
 # define WARNING_LIMIT 5
-# define SERV_VERSION "0.7.3"
+# define SERV_VERSION "0.9.1"
 
 # define INFO_MSG_TAG0 "---------------------------------------------------------------------------\r\n"
 # define INFO_MSG_TAG1 "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc    |\r\n"
@@ -33,9 +37,9 @@
 # define INFO_MSG_TAG9 "---------------------------------------------------------------------------\r\n"
 # define INFO_MSG_DATE "The server repository was created at this date: [2026-06-13 14:16 GMT+2]\r\n"
 # ifdef DEV
-#  define INFO_MSG_VERSION "Actual version 0.8.1 Dev date: [2026-07-17 01:41 GMT+2]\r\n"
+#  define INFO_MSG_VERSION "Actual version 0.9.1 Dev date: [2026-07-17 01:41 GMT+2]\r\n"
 # else
-#  define INFO_MSG_VERSION "Actual version 0.7.1 date: [2026-07-17 01:41 GMT+2]\r\n"
+#  define INFO_MSG_VERSION "Actual version 0.9.0 date: [2026-07-17 01:41 GMT+2]\r\n"
 # endif
 
 typedef struct S_ChannelSpecifiers {
@@ -172,7 +176,7 @@ class Server {
 		bool	handle_lusers(Client &c, std::istringstream &rest);
 		bool	handleMode(Client &c, std::istringstream &rest);
 		bool	handle_motd(Client &c, std::istringstream &rest);
-		bool	handle_names(Client &c, std::istringstream &rest);
+		bool	handleNames(Client &c, std::istringstream &rest);
 		bool	handleNick(Client &c, std::istringstream &rest);
 		bool	handle_notice(Client &c, std::istringstream &rest);
 		bool	handleOper(Client &c, std::istringstream &rest);
