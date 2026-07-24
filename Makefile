@@ -41,6 +41,10 @@ ifeq ($(DEV),yes)
 	FLAGS += -DDEV
 endif
 
+ifeq ($(UNITTEST),yes)
+	FLAGS += -DUNITTEST
+endif
+
 all: $(TARGET)
 
 bonus: $(TARGET)

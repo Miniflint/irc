@@ -12,7 +12,28 @@
 #elif defined(__linux__)
 # include <sys/epoll.h>
 #endif
-# define MAX_EVENTS 10
+# define MAX_EVENTS 40
+
+static volatile sig_atomic_t	sigIntQuit = 0;
+
+static void	handleSig(int signum) {
+	(void)signum;
+	sigIntQuit = 1;
+}
+
+static void	setSignal() {
+	struct sigaction sa;
+	struct sigaction saSigPipe;	
+	sa.sa_handler = handleSig;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGQUIT, &sa, NULL);
+	saSigPipe.sa_handler = SIG_IGN;
+	sigemptyset(&saSigPipe.sa_mask);
+	saSigPipe.sa_flags = 0;
+	sigaction(SIGPIPE, &saSigPipe, NULL);
+}
 
 static int	initListenSocket(int port) {
 	int	listenSock = socket(AF_INET, SOCK_STREAM, 0);
@@ -20,8 +41,9 @@ static int	initListenSocket(int port) {
 		return (-1);
 	int	opt = 1;
 	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	// a changer - trouver alternative linux
-	fcntl(listenSock, F_SETFL, O_NONBLOCK);
+	#ifdef __APPLE__
+		fcntl(listenSock, F_SETFL, O_NONBLOCK);
+	#endif
 	struct sockaddr_in addr;
 	std::memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
@@ -39,6 +61,10 @@ void Server::delClient(int fd) {
 	close(fd);
 	std::string nick = c->getNick();
 	if (!nick.empty()) {
+		if (!(c->quitRequest & (CLIENT_QUIT_ACCEPT | CLIENT_QUIT_REQUEST))) {
+			c->getBufferQuit() = ":";
+			c->getBufferQuit().append(c->getNick()).append(1, '!').append(c->getUserName()).append(1, '@').append(c->getHostName()).append(" QUIT :Quit: Connection lost\r\n");
+		}
 		std::list<Channel>::iterator end = this->_channel.end();
 		for (std::list<Channel>::iterator it = this->_channel.begin(); it != end; )
 			if (c->getChannel().isIn(it->getNick()))
@@ -49,7 +75,7 @@ void Server::delClient(int fd) {
 	}
 	delete c;
 	this->_clients[fd] = NULL;
-	std::cout << nick << ": Deconected" << std::endl;
+	std::cout << "\033[0;1;33m[End connection] => \033[0;36m{ '\033[1m" << nick << "\033[0;36m '}\033[0m" << std::endl;
 }
 
 int Server::newConnection()
@@ -61,7 +87,9 @@ int Server::newConnection()
 		return (-1);
 	std::string host = inet_ntoa(addr.sin_addr);
 	int port = ntohs(addr.sin_port);
-	fcntl(clientSock, F_SETFL, O_NONBLOCK);
+	#ifdef __APPLE__
+		fcntl(clientSock, F_SETFL, O_NONBLOCK);
+	#endif
 	if (static_cast<size_t>(clientSock) >= this->_clients.size())
 		this->_clients.resize(static_cast<size_t>(clientSock) + 1, NULL);
 	if (!this->_clients[clientSock]) {
@@ -69,7 +97,7 @@ int Server::newConnection()
 	} else {
 		return (-1);
 	}
-	std::cout << "New Client connected: IP: " << this->_clients[clientSock]->getHostName() << " IP: " << host << " port: " << port << std::endl;
+	std::cout << "\033[0;1;35m[New connection] => \033[0;36m{ '\033[1m" << "IP: " << host << " port: " << port << "\033[0;36m' }\033[0m" << std::endl;
 	return (clientSock);
 }
 
@@ -87,7 +115,7 @@ void	delKqueueClient(Server &serv, int evfd, int fd) {
 }
 
 bool	Server::run() {
-	signal(SIGPIPE, SIG_IGN);
+	setSignal();
 	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)
 		return (false);
 	int evfd = kqueue();
@@ -97,7 +125,8 @@ bool	Server::run() {
 	}
 	setKqueueMode(evfd, this->_sockServerFD, EVFILT_READ, EV_ADD);
 	struct kevent events[MAX_EVENTS];
-	while (true) {
+	this->runStatus = RUN_ON;
+	while (this->runStatus == RUN_ON) {
 		int nEvents = kevent(evfd, NULL, 0, events, MAX_EVENTS, NULL);
 		for (int i = 0; i < nEvents; ++i) {
 			int currFd = events[i].ident;
@@ -120,11 +149,6 @@ bool	Server::run() {
 					buffer[readN]= '\0';
 					this->_clients[currFd]->buffer += buffer;
 					this->doCommand(currFd);
-					while (!this->poolOut.empty()) {
-						int	outFd = this->poolOut.front();
-						setKqueueMode(evfd, outFd, EVFILT_WRITE, EV_ADD);
-						this->poolOut.pop();
-					}
 				}
 				if (events[i].filter == EVFILT_WRITE) {
 					int	outFd = currFd;
@@ -143,6 +167,11 @@ bool	Server::run() {
 				}
 			}
 		}
+		while (!this->poolOut.empty()) {
+			int	outFd = this->poolOut.front();
+			setKqueueMode(evfd, outFd, EVFILT_WRITE, EV_ADD);
+			this->poolOut.pop();
+		}
 		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
 			Client	&c = this->getClient(*it);
 			if (c.quitRequest == CLIENT_QUIT_ACCEPT) {
@@ -151,7 +180,12 @@ bool	Server::run() {
 			} else
 				++it;
 		}
+		if (sigIntQuit)
+			this->runStatus = RUN_SHUTDOWN;
 	}
+	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+		if (*it)
+			delKqueueClient(*this, evfd, (*it)->getFd());
 	close(evfd);
 	close(this->_sockServerFD);
 	return (true);
@@ -160,7 +194,7 @@ bool	Server::run() {
 
 void	delEpollClient(Server &serv, int epfd, int fd) {
 	struct epoll_event ev;
-	std::memset(&ev, 0, sizeof(ev)); 
+	std::memset(&ev, 0, sizeof(ev));
 	epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
 	serv.delClient(fd);
 }
@@ -174,7 +208,7 @@ static void	setEpollMode(int epfd, int fd, uint16_t mode, uint32_t flag) {
 }
 
 bool	Server::run() {
-	signal(SIGPIPE, SIG_IGN);
+	setSignal();
 	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)
 		return (false);
 	int epfd = epoll_create(1);
@@ -188,7 +222,8 @@ bool	Server::run() {
 	ev.data.fd = this->_sockServerFD;
 	epoll_ctl(epfd, EPOLL_CTL_ADD, this->_sockServerFD, &ev);
 	struct epoll_event events[MAX_EVENTS];
-	while (true) {
+	this->runStatus = RUN_ON;
+	while (this->runStatus == RUN_ON) {
 		int nEvents = epoll_wait(epfd, events, MAX_EVENTS, -1);
 		for (int i = 0; i < nEvents; ++i) {
 			int currFd = events[i].data.fd;
@@ -201,7 +236,7 @@ bool	Server::run() {
 			} else {
 				if (events[i].events & EPOLLIN) {
 					char	buffer[MAX_PACKET_SIZE + 1];
-					ssize_t	readN = recv(currFd, buffer, MAX_PACKET_SIZE, 0);
+					ssize_t	readN = recv(currFd, buffer, MAX_PACKET_SIZE, MSG_DONTWAIT);
 					if (readN < 1) {
 						delEpollClient(*this, epfd, currFd);
 						continue ;
@@ -209,15 +244,10 @@ bool	Server::run() {
 					buffer[readN]= '\0';
 					this->_clients[currFd]->buffer += buffer;
 					this->doCommand(currFd);
-					while (!this->poolOut.empty()) {
-						int	outFd = this->poolOut.front();
-						setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
-						this->poolOut.pop();
-					}
 				}
 				if (events[i].events & EPOLLOUT) {
 					int	outFd = currFd;
-					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), this->_clients[outFd]->getBufferOut().size(), 0);
+					ssize_t	writeN = send(outFd, this->_clients[outFd]->getBufferOut().c_str(), this->_clients[outFd]->getBufferOut().size(), MSG_DONTWAIT);
 					if (writeN != -1) {
 						this->_clients[outFd]->getBufferOut().erase(0, writeN);
 					} else {
@@ -240,7 +270,17 @@ bool	Server::run() {
 			} else
 				++it;
 		}
+		while (!this->poolOut.empty()) {
+			int	outFd = this->poolOut.front();
+			setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+			this->poolOut.pop();
+		}
+		if (sigIntQuit)
+			this->runStatus = RUN_SHUTDOWN;
 	}
+	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+		if (*it)
+			delEpollClient(*this, epfd, (*it)->getFd());
 	close(epfd);
 	close(this->_sockServerFD);
 	return (true);

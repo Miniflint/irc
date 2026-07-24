@@ -28,6 +28,8 @@ void	tag() {
 void	display_help(char *filename)
 {
 	std::cout << filename << " <port> <password>" << std::endl;
+	std::cout << "<port> must be a postive integer > 3" << std::endl;
+	std::cout << "<password> must be at least 2 chars" << std::endl;
 	std::cout << "options: \n\t" << "-h, --help: Display this page" << std::endl;
 	std::cout << "\t" << "-o, --output: set the output file for the graph" << std::endl;
 }
@@ -56,9 +58,22 @@ int	main(int ac, char **argv)
 	unsigned int i = parse_av(ac, argv);
 	if (i >= 1)
 		return (i - 1);
-	Server	serv(atoi(argv[1]), argv[2]);
+	std::istringstream iss(argv[1]);
+	int	port;
+	iss >> port;
+	if (iss.fail())
+		return (std::cerr << "Error parsing the port" << std::endl, 1);
+	if (std::string(argv[2]).length() < 2 || port <= 3)
+		return (display_help(argv[0]), 1);
+	Server	serv(port, argv[2]);
 	tag();
-	serv.run();
+	do {
+		serv.run();
+		if (serv.runStatus == RUN_SHUTDOWN)
+			std::cout << "\033[1;31m!!! => [Server: Shutdown]\033[0m" << std::endl;
+		else
+			std::cout << "\033[1;33m!!! => [Server: Restart]\033[0m" << std::endl;
+	} while (serv.runStatus != RUN_SHUTDOWN);
 	//serv.setClient(0);
 	//createUserAndRegister(serv, 5, "NICK Xavier", "USER Xav * * :Dup");
 	//createUserAndRegister(serv, 0, "NICK amy", "USER am * * :dupdup");

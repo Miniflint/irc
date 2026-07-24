@@ -3,7 +3,7 @@
 
 Client::Client() {}
 
-Client::Client(int socket, std::string host, int port) : _fd(socket), _nick(""), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), _userStatus(CLIENT_ACCESS_NONE), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
+Client::Client(int socket, std::string host, int port) : _fd(socket), _nick("*"), _userName(""), _hostName(host), _serverName(""), _realName(""), _port(port), _avertissements(0), _userStatus(CLIENT_ACCESS_NONE), buffer(""), quitRequest(CLIENT_QUIT_NONE), flagsLogin(FLAG_CLIENT_NONE) {}
 
 Client::~Client() {}
 
@@ -65,6 +65,16 @@ void		Client::setRealName(std::string realName)
 const std::string	&Client::getRealName() const
 {
 	return (this->_realName);
+}
+
+void	Client::setAwayMessage(std::string awayMessage)
+{
+	this->_awayMessage = awayMessage;
+}
+
+const std::string	&Client::getAwayMessage() const
+{
+	return (this->_awayMessage);
 }
 
 void		Client::setBufferOut(std::string bufferOut)

@@ -9,13 +9,21 @@
 # include <iostream>
 # include <sstream>
 # include <queue>
-# define SOCK_DOMAIN AF_LOCAL
-# define SERV_HOST_NAME "ft_irc.42.com"
+# ifndef DEV
+#  define SERV_HOST_NAME "startrek.synology.me"
+# else
+#  define SERV_HOST_NAME "dev.server.com"
+# endif
 # define MAX_SOCKET_FD 2048U
 # define ADMIN_ID "2Tri"
 # define ADMIN_PASS "2TriIsBetterThanOne"
 # define OPERATOR_ID "2x3"
 # define OPERATOR_PASS "0p3r4t0r"
+# define RUN_ON 0x0
+# define RUN_RESTART 0x1
+# define RUN_SHUTDOWN 0x2
+# define WARNING_LIMIT 5
+# define SERV_VERSION "0.9.1"
 
 # define INFO_MSG_TAG0 "---------------------------------------------------------------------------\r\n"
 # define INFO_MSG_TAG1 "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc    |\r\n"
@@ -29,9 +37,9 @@
 # define INFO_MSG_TAG9 "---------------------------------------------------------------------------\r\n"
 # define INFO_MSG_DATE "The server repository was created at this date: [2026-06-13 14:16 GMT+2]\r\n"
 # ifdef DEV
-#  define INFO_MSG_VERSION "Actual version 0.7.1 Dev date: [2026-07-17 01:41 GMT+2]\r\n"
+#  define INFO_MSG_VERSION "Actual version 0.9.1 Dev date: [2026-07-17 01:41 GMT+2]\r\n"
 # else
-#  define INFO_MSG_VERSION "Actual version 0.7.1 date: [2026-07-17 01:41 GMT+2]\r\n"
+#  define INFO_MSG_VERSION "Actual version 0.9.0 date: [2026-07-17 01:41 GMT+2]\r\n"
 # endif
 
 typedef struct S_ChannelSpecifiers {
@@ -39,10 +47,12 @@ typedef struct S_ChannelSpecifiers {
 	std::string	channelMode;
 	uint16_t	channelLen;
 	std::string	channelAuthPrefix;
+	uint16_t	channelModeChanges;
 }	t_ChannelSpecifiers;
 
 typedef struct S_ClientSpecifiers {
-	uint16_t	nickLenMax;
+	AccessType	nickLenMax;
+	std::string	userMode;
 }	t_ClientSpecifiers;
 
 typedef struct S_Motd {
@@ -59,6 +69,7 @@ class Server {
 		int						_sockServerFD;
 		std::string				_password;
 		std::string				_host;
+		std::string				_serverVersion;
 		Trie<Server::cmdFn>		_commands;
 		Trie<int>				_clientTrie;
 		std::vector<Client *>	_clients;
@@ -71,25 +82,27 @@ class Server {
 		std::string				_operatorPass;
 		std::string				_adminName;
 		std::string				_operatorName;
+		Trie<std::string>		_helpTrie;
 		// bool					_init();
 		// bool					_clientAdd();
 
 		bool					_validateAccess(Client &c, std::string &command);
 		bool    				_validateCommand(Client &c, cmdFn &func, std::string &command);
+		void					_autoKill(Client &c, std::string message);
 		const std::string		&_getPassword();
 		std::string 			_rplPrefix(std::string code, std::string nick) const;
 		void					_sendAllWelcome(Client &c);
 		std::string				_makeHostMask(Client &c, std::string functionName);
 		Channel					*_joinChannelSendMsg(Client &c, Channel *chan, std::string &channelName);
-		int						_handleCaseAdd(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
-		int						_handleCaseDel(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss);
+		int						_handleCaseAdd(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss, std::string &message, std::string &usedToken);
+		int						_handleCaseDel(Client &c, std::string modeType, int *i, Channel &channel, std::istringstream &iss, std::string &message, std::string &usedToken);
 
 		/* Channel Access */
-		bool					_bCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_bCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_kCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_kCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_lCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		int						_bCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		int						_bCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_kCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_kCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_lCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
 		bool					_lCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel);
 		bool					_tCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel);
 		bool					_tCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel);
@@ -102,14 +115,14 @@ class Server {
 		bool					_iCaseAdd(Client &c, Channel &channel, AccessType userAccessOnChannel);
 		bool					_iCaseDel(Client &c, Channel &channel, AccessType userAccessOnChannel);
 
-		bool					_aCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_aCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_oCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_oCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_hCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_hCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_vCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
-		bool					_vCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel);
+		bool					_aCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_aCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_oCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_oCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_hCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_hCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_vCaseAdd(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
+		bool					_vCaseDel(Client &c, Channel &channel, std::istringstream &iss, AccessType userAccessOnChannel, std::string &usedToken);
 
 		
 		Server() {};
@@ -130,39 +143,40 @@ class Server {
 		void							setIp(std::string ip);
 		bool							sendToClient(Client &source, std::string message);
 		bool							sendToChannel(Channel &source, std::string message);
-		void							deconnectClient(int fd, std::string error, std::string message);
+		void							disconnectClient(int fd, std::string error, std::string message);
 		Channel							*createNewChannel(std::string name, std::string pass);
 		Channel							*addClientToChannel(int fd, std::string channelName, std::string channelPass);
 		Channel							*addClientToChannel(Client &client, std::string channelName, std::string channelPass);
 		Channel							*addClientToChannel(int fd, std::string channelName);
 		Channel							*addClientToChannel(Client &client, std::string channelName);
-		bool							handleModeUser(Client &c, std::string targetName, std::string modeType);
+		bool							handleModeUser(Client &c, std::string targetName, std::string modeType, std::string &message);
 		std::queue<int>					poolOut;
 		std::vector<int>				poolQuit;
-		// std::vector<int>				poolInt;
+		uint8_t							runStatus;
 		// c'est horrible
 		bool	handle_admin(Client &c, std::istringstream &rest);
-		bool	handle_away(Client &c, std::istringstream &rest);
-		bool	handle_cap(Client &c, std::istringstream &iss);
+		bool	handleAway(Client &c, std::istringstream &rest);
+		bool	handleCap(Client &c, std::istringstream &iss);
 		bool	handle_cnotice(Client &c, std::istringstream &rest);
 		bool	handle_cprivmsg(Client &c, std::istringstream &rest);
 		bool	handle_connect(Client &c, std::istringstream &rest);
-		bool	handle_die(Client &c, std::istringstream &rest);
+		bool	handleDie(Client &c, std::istringstream &rest);
+		bool	handleRestart(Client &c, std::istringstream &rest);
 		bool	handle_error(Client &c, std::istringstream &rest);
 		bool	handle_help(Client &c, std::istringstream &rest);
 		bool	handleInfo(Client &c, std::istringstream &rest);
-		bool	handle_invite(Client &c, std::istringstream &rest);
+		bool	handleInvite(Client &c, std::istringstream &rest);
 		bool	handle_ison(Client &c, std::istringstream &rest);
 		bool	handleJoin(Client &c, std::istringstream &rest);
-		bool	handle_kick(Client &c, std::istringstream &rest);
-		bool	handle_kill(Client &c, std::istringstream &rest);
+		bool	handleKick(Client &c, std::istringstream &rest);
+		bool	handleKill(Client &c, std::istringstream &rest);
 		bool	handle_knock(Client &c, std::istringstream &rest);
 		bool	handle_links(Client &c, std::istringstream &rest);
 		bool	handleList(Client &c, std::istringstream &rest);
 		bool	handle_lusers(Client &c, std::istringstream &rest);
 		bool	handleMode(Client &c, std::istringstream &rest);
 		bool	handle_motd(Client &c, std::istringstream &rest);
-		bool	handle_names(Client &c, std::istringstream &rest);
+		bool	handleNames(Client &c, std::istringstream &rest);
 		bool	handleNick(Client &c, std::istringstream &rest);
 		bool	handle_notice(Client &c, std::istringstream &rest);
 		bool	handleOper(Client &c, std::istringstream &rest);
@@ -183,7 +197,7 @@ class Server {
 		bool	handle_stats(Client &c, std::istringstream &rest);
 		bool	handle_summon(Client &c, std::istringstream &rest);
 		bool	handle_time(Client &c, std::istringstream &rest);
-		bool	handle_topic(Client &c, std::istringstream &rest);
+		bool	handleTopic(Client &c, std::istringstream &rest);
 		bool	handle_trace(Client &c, std::istringstream &rest);
 		bool	handleUser(Client &c, std::istringstream &rest);
 		bool	handle_userhost(Client &c, std::istringstream &rest);
@@ -249,11 +263,11 @@ class Server {
 		void	handleRplTraceend(Client &c);
 		void	handleRplTryagain(Client &c);
 		void	handleRplNone(Client &c);
-		void	handleRplAway(Client &c);
+		void	handleRplAway(Client &c, Client &cAway);
 		void	handleRplUserhost(Client &c);
 		void	handleRplIson(Client &c);
-		void	handleRplUnaway(Client &c);
-		void	handleRplNowaway(Client &c);
+		void	handleRplUnAway(Client &c);
+		void	handleRplNowAway(Client &c);
 		void	handleRplWhoisuser(Client &c);
 		void	handleRplWhoisserver(Client &c);
 		void	handleRplWhoisoperator(Client &c);
@@ -268,9 +282,9 @@ class Server {
 		void	handleRplListEnd(Client &c);
 		void	handleRplChannelModeIs(Client &c, Channel &channel);
 		void	handleRplUniqopis(Client &c);
-		void	handleRplNotopic(Client &c);
+		void	handleRplNoTopic(Client &c, std::string channelName);
 		void	handleRplTopic(Client &c, std::string channelName, std::string topic);
-		void	handleRplInviting(Client &c);
+		void	handleRplInviting(Client &c, std::string &targetNick, std::string channelName, bool isInvited);
 		void	handleRplSummoning(Client &c);
 		void	handleRplInvitelist(Client &c, std::string channelName);
 		void	handleRplEndofinvitelist(Client &c, std::string channelName);
@@ -326,7 +340,7 @@ class Server {
 		void	handleErrNicknameInUse(Client &c, std::string targetNickName);
 		void	handleErrNickCollision(Client &c, std::string targetNickName);
 		void	handleErrUnavailresource(Client &c);
-		void	handleErrUsernotinchannel(Client &c);
+		void	handleErrUsernotinchannel(Client &c, std::string channelName, std::string clientName);
 		void	handleErrNotOnChannel(Client &c, std::string channelName);
 		void	handleErrUseronchannel(Client &c);
 		void	handleErrNologin(Client &c);
@@ -346,9 +360,10 @@ class Server {
 		void	handleErrBannedFromChan(Client &c, std::string channelName);
 		void	handleErrBadChannelKey(Client &c, std::string channelName);
 		void	handleErrBadChanMask(Client &c, std::string channelName);
+		void	handleErrBadChanName(Client &c, std::string channelName);
 		void	handleErrNochanmodes(Client &c, std::string channelName);
 		void	handleErrBanlistfull(Client &c);
-		void	handleErrNoprivileges(Client &c);
+		void	handleErrNoPrivileges(Client &c);
 		void	handleErrChanOPrivsNeeded(Client &c, std::string channelName);
 		void	handleErrCantkillserver(Client &c);
 		void	handleErrRestricted(Client &c);

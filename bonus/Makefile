@@ -6,7 +6,7 @@ OBJ_DIR		:= ./objs
 VPATH	:= $(SRC_DIR):$(CLASS_DIR)
 
 SRCS	:= main.cpp
-CLASS	:= Bot.cpp
+CLASS	:= Bot.cpp RPN.cpp
 
 SRC_FILES := $(addprefix $(SRC_DIR)/, $(SRCS))
 INI_FILES := $(addprefix $(CLASS_DIR)/, $(CLASS))

@@ -1,5 +1,5 @@
 #include "Server.hpp"
-
+#include <algorithm>
 std::string Server::_rplPrefix(std::string code, std::string nickName) const
 {
 	if (nickName.empty())
@@ -40,32 +40,55 @@ void	Server::handleRplCreated(Client &c)
 }
 void	Server::handleRplMyinfo(Client &c)
 {
+	std::string channelModes;
+	channelModes.reserve(this->_channelSpecifiers.channelMode.size());
+	for (size_t i = 0; i < this->_channelSpecifiers.channelMode.size(); i++) {
+		if (this->_channelSpecifiers.channelMode[i] != ',')
+			channelModes += this->_channelSpecifiers.channelMode[i];
+	}
 	std::string rplMessage(this->_rplPrefix("004", c.getNick()));
-	std::string middlePrefix(":Bla bla\r\n");
-	rplMessage.reserve(rplMessage.size() + middlePrefix.size());
-	rplMessage.append(middlePrefix);
+	rplMessage.append(this->_host).append(1, ' ').append(this->_serverVersion).append(1, ' ')
+		.append(this->_clientSpecifiers.userMode).append(1, ' ').append(channelModes).append("\r\n");
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleRplISupport(Client &c)
 {
-	std::ostringstream oss;
 	std::string rplMessage(this->_rplPrefix("005", c.getNick()));
-	std::string chanType("CHANTYPES=");
+	rplMessage.append("DCC=1 TARGMAX=PRIVMSG:1 LINELEN=");
+	{
+		std::ostringstream oss;
+		oss << this->_channelSpecifiers.channelLen;
+		rplMessage += oss.str();
+	}
+	std::string chanType(" CHANTYPES=");
 	chanType.append(this->_channelSpecifiers.channelType);
 	std::string chanLen(" CHANNELLEN=");
-	oss << this->_channelSpecifiers.channelLen;
-	chanLen += oss.str();
-	std::string chanMode(" CHAN=");
+	{
+		std::ostringstream oss;
+		oss << this->_channelSpecifiers.channelLen;
+		chanLen += oss.str();
+	}
+	std::string chanModesChange(" MODES=");
+	{
+		std::ostringstream oss;
+		oss << this->_channelSpecifiers.channelModeChanges;
+		chanModesChange += oss.str();
+	}
+	std::string chanMode(" CHANMODES=");
 	chanMode.append(this->_channelSpecifiers.channelMode);
 	std::string chanPrefix(" PREFIX=");
 	chanPrefix.append(this->_channelSpecifiers.channelAuthPrefix);
 	std::string nickLen(" NICKLEN=");
-	oss.clear();
-	oss << this->_clientSpecifiers.nickLenMax;
-	nickLen += oss.str();
-	std::string endComment(" :are supported by this server");
-	rplMessage.append(chanType).append(chanLen).append(chanMode)
-		.append(chanPrefix).append(nickLen).append(endComment).append("\r\n");
+	{
+		std::ostringstream oss;
+		oss << this->_clientSpecifiers.nickLenMax;
+		nickLen += oss.str();
+	}
+	std::string userMode(" UMODE=");
+	userMode.append(this->_clientSpecifiers.userMode);
+	std::string endComment(" SAFELIST :are supported by this server\r\n");
+	rplMessage.append(chanType).append(chanLen).append(chanModesChange).append(chanMode)
+		.append(chanPrefix).append(nickLen).append(userMode).append(endComment);
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleRplTracelink(Client &c)
@@ -326,10 +349,11 @@ void	Server::handleRplNone(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplAway(Client &c)
+
+void	Server::handleRplAway(Client &c, Client &cAway)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("301", c.getNick()));
+	c.addBufferOut(rplMessage.append(cAway.getNick()).append(" :").append(cAway.getAwayMessage()).append("\r\n"));
 }
 void	Server::handleRplUserhost(Client &c)
 {
@@ -341,15 +365,15 @@ void	Server::handleRplIson(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplUnaway(Client &c)
+void	Server::handleRplUnAway(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("305", c.getNick()));
+	c.addBufferOut(rplMessage.append(":You are no longer marked as being away\r\n"));
 }
-void	Server::handleRplNowaway(Client &c)
+void	Server::handleRplNowAway(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	std::string rplMessage(this->_rplPrefix("306", c.getNick()));
+	c.addBufferOut(rplMessage.append(":You have been marked as being away\r\n"));
 }
 void	Server::handleRplWhoisuser(Client &c)
 {
@@ -408,9 +432,11 @@ void	Server::handleRplList(Client &c)
 	std::list<Channel>::const_iterator end = this->_channel.end();
 	for (std::list<Channel>::const_iterator it = this->_channel.begin(); it != end; it++)
 	{
+		Channel currentChannel = *it;
+		if ((*it).getMode() & CHANNEL_SECRET && c.getStatus() < CLIENT_ACCESS_OPERATOR && !c.getChannel().isIn(currentChannel.getNick()))
+			continue ;
 		std::ostringstream amountUserStr;
 		std::string rplMessage(this->_rplPrefix("322", c.getNick()));
-		const Channel currentChannel = *it;
 		amountUserStr << currentChannel.getClientsFD().size();
 		std::string channelTopic = currentChannel.getTopic().size() > 2 ? currentChannel.getTopic() : "No topic";
 		rplMessage.append(currentChannel.getNick()).append(1, ' ')
@@ -428,7 +454,7 @@ void	Server::handleRplListEnd(Client &c)
 }
 void	Server::handleRplChannelModeIs(Client &c, Channel &channel)
 {
-	std::string rplMessage(this->_rplPrefix("221", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("324", c.getNick()));
 	rplMessage.append(channel.getNick());
 	std::vector<std::string>	args;
 	std::string modes("");
@@ -469,27 +495,30 @@ void	Server::handleRplUniqopis(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplNotopic(Client &c)
+void	Server::handleRplNoTopic(Client &c, std::string channelName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("331", c.getNick()));
+	rplMessage.append(channelName).append(" :No topic is set").append("\r\n");
 	c.addBufferOut(rplMessage);
 }
-//WILL BE USED
 void	Server::handleRplTopic(Client &c, std::string channelName, std::string topic)
 {
 	std::string rplMessage(this->_rplPrefix("332", c.getNick()));
-	rplMessage.append(channelName).append(" :");
-	if (topic.empty())
-		rplMessage.append("No topic");
-	else
-		rplMessage.append(topic);
-	rplMessage.append("\r\n");
+	rplMessage.append(channelName).append(" :").append(topic).append("\r\n");
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleRplInviting(Client &c)
+void	Server::handleRplInviting(Client &c, std::string &targetNick, std::string channelName, bool isInvited)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
-	c.addBufferOut(rplMessage);
+	if (!isInvited)
+	{
+		std::string rplMessage(this->_rplPrefix("341", c.getNick()));
+		rplMessage.append(targetNick).append(1, ' ').append(channelName).append("\r\n");
+		c.addBufferOut(rplMessage);
+	} else {
+		std::string rplMessage(this->_rplPrefix("341", targetNick));
+		rplMessage.append(c.getNick()).append(1, ' ').append(channelName).append("\r\n");
+		c.addBufferOut(rplMessage);
+	}
 }
 void	Server::handleRplSummoning(Client &c)
 {
@@ -567,6 +596,8 @@ void	Server::handleRplNameReply(Client &c, std::string channelName, Channel &cha
 	rplMessage.append(" :");
 	std::string	actualReply(rplMessage);
 	for (std::vector<int>::iterator it = chan.getClientsFD().begin(); it != chan.getClientsFD().end(); ++it) {
+		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && c.getChannelAccess(channelName) < USER_HALFOP && this->_clients[*it]->checkStatus(CLIENT_ACCESS_INVISIBLE))
+			continue ;
 		Client  &itClient = this->getClient(*it);
 		AccessType  access = itClient.getChannelAccess(channelName);
 		std::string	user;
@@ -591,6 +622,7 @@ void	Server::handleRplNameReply(Client &c, std::string channelName, Channel &cha
 	actualReply.resize(actualReply.size() - 1);
 	c.addBufferOut(actualReply.append("\r\n"));
 }
+
 void	Server::handleRplKilldone(Client &c)
 {
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
@@ -862,9 +894,11 @@ void	Server::handleErrUnavailresource(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleErrUsernotinchannel(Client &c)
+void	Server::handleErrUsernotinchannel(Client &c, std::string channelName, std::string clientName)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("441", c.getNick()));
+	rplMessage.append(channelName).append(1, ' ').append(clientName)
+		.append(" :They aren't on that channel\r\n");
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleErrNotOnChannel(Client &c, std::string channelName)
@@ -989,9 +1023,17 @@ void	Server::handleErrBanlistfull(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
-void	Server::handleErrNoprivileges(Client &c)
+void	Server::handleErrNoPrivileges(Client &c)
 {
-	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
+	std::string rplMessage(this->_rplPrefix("481", c.getNick()));
+	rplMessage.append(":Permission Denied- You're not an IRC operator or Administrator\r\n");
+	c.addBufferOut(rplMessage);
+}
+void	Server::handleErrBadChanName(Client &c, std::string channelName)
+{
+	std::string rplMessage(this->_rplPrefix("479", c.getNick()));
+	std::string middlePrefix(" :Illegal channel name\r\n");
+	rplMessage.append(channelName).append(middlePrefix);
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleErrChanOPrivsNeeded(Client &c, std::string channelName)

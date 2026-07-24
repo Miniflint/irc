@@ -2,11 +2,11 @@
 #include <algorithm>
 #include <map>
 
-Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _host(std::string(SERV_HOST_NAME)), _adminPass(ADMIN_PASS), _operatorPass(OPERATOR_PASS), _adminName(ADMIN_ID), _operatorName(OPERATOR_ID)
+Server::Server(uint16_t port, std::string password) : _port(port), _password(password), _host(std::string(SERV_HOST_NAME)), _serverVersion(std::string(SERV_VERSION)), _adminPass(ADMIN_PASS), _operatorPass(OPERATOR_PASS), _adminName(ADMIN_ID), _operatorName(OPERATOR_ID)
 {
 	this->_clients.assign(MAX_SOCKET_FD, NULL);
 	const std::string t[] = {
-		"ADMIN", "AWAY", "CAP", "CNOTICE", "CPRIVMSG", "CONNECT", "DIE", "ERROR",
+		"ADMIN", "AWAY", "CAP", "CNOTICE", "CPRIVMSG", "CONNECT", "DIE", "RESTART", "ERROR",
 		"HELP", "INFO", "INVITE", "ISON", "JOIN", "KICK", "KILL", "KNOCK",
 		"LINKS","LIST","LUSERS","MODE","MOTD","NAMES","NICK","NOTICE","OPER",
 		"PART","PASS","PING","PONG","PRIVMSG","QUIT","QUOTE","REHASH","RULES",
@@ -15,17 +15,17 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 		"WALLOPS","WATCH","WHO","WHOIS","WHOWAS", "DCC", ":"
 	};
 	const Server::cmdFn func_list[] = {
-		&Server::handle_admin, &Server::handle_away, &Server::handle_cap, &Server::handle_cnotice,
-		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handle_die, &Server::handle_error,
-		&Server::handle_help, &Server::handleInfo, &Server::handle_invite, &Server::handle_ison,
-		&Server::handleJoin, &Server::handle_kick, &Server::handle_kill, &Server::handle_knock,
+		&Server::handle_admin, &Server::handleAway, &Server::handleCap, &Server::handle_cnotice,
+		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handleDie, &Server::handleRestart, &Server::handle_error,
+		&Server::handle_help, &Server::handleInfo, &Server::handleInvite, &Server::handle_ison,
+		&Server::handleJoin, &Server::handleKick, &Server::handleKill, &Server::handle_knock,
 		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handleMode,
-		&Server::handle_motd, &Server::handle_names, &Server::handleNick, &Server::handle_notice,
+		&Server::handle_motd, &Server::handleNames, &Server::handleNick, &Server::handle_notice,
 		&Server::handleOper, &Server::handlePart, &Server::handlePass, &Server::handlePing,
 		&Server::handle_pong, &Server::handlePrivMsg, &Server::handleQuit, &Server::handle_quote,
 		&Server::handle_rehash, &Server::handle_rules, &Server::handle_server, &Server::handle_squery,
 		&Server::handle_squit, &Server::handle_setname, &Server::handle_silence, &Server::handle_stats,
-		&Server::handle_summon, &Server::handle_time, &Server::handle_topic, &Server::handle_trace,
+		&Server::handle_summon, &Server::handle_time, &Server::handleTopic, &Server::handle_trace,
 		&Server::handleUser, &Server::handle_userhost, &Server::handle_userip, &Server::handle_users,
 		&Server::handle_version, &Server::handle_wallops, &Server::handle_watch, &Server::handleWho,
 		&Server::handle_whois, &Server::handle_whowas, &Server::handleDcc, &Server::handle_message
@@ -33,15 +33,17 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	for (unsigned int i = 0; i <= END; i++)
 		this->_commands.add(t[i], func_list[i]);
 	this->_commands.createGraph();
-	this->_channelSpecifiers.channelType = "&#";
+	this->_channelSpecifiers.channelType = "#&";
 	this->_channelSpecifiers.channelLen = 32;
 	this->_channelSpecifiers.channelAuthPrefix = "(qaohv)~&@%+";
-	this->_channelSpecifiers.channelMode = ",,,ismntklb";
+	this->_channelSpecifiers.channelMode = "b,k,l,ismnt";
+	this->_channelSpecifiers.channelModeChanges = 5;
 	this->_motd.motd = "This is the current message of the day";
-	this->_motd.announcements.push_back("Today is the day we are working on channels");
-	this->_motd.announcements.push_back("And we hope to be able to live long");
+	this->_motd.announcements.push_back("Today we are working on littles bug fixes");
+	this->_motd.announcements.push_back("And we hope to be able to live long happy lifes");
 	this->_motd.announcements.push_back("Please Respect the rules !");
 	this->_clientSpecifiers.nickLenMax = 12;
+	this->_clientSpecifiers.userMode = "ixdRgBoOaA";
 }
 
 Server::~Server()
@@ -54,11 +56,7 @@ Server::~Server()
 
 bool    Server::_validateAccess(Client &c, std::string &command)
 {
-	// if (command != "PASS" && !(c->flagsLogin & FLAG_CLIENT_PASS))
-	// 	return (false);
-	// if (command == "USER" && (c->flagsLogin & FLAG_CLIENT_USER))
-	// 	return (false);
-	if (command == "PASS" || command == "NICK" || command == "USER" || command == "QUIT" || command=="CAP")
+	if (command=="CAP" || command == "PASS" || command == "NICK" || command == "USER" || command == "QUIT")
 		return (true);
 	if (c.flagsLogin != FLAG_CLIENT_FULL)
 		return (this->handleErrNotregistered(c), this->poolOut.push(c.getFd()), false);
@@ -75,19 +73,32 @@ bool    Server::_validateCommand(Client &c, cmdFn &func, std::string &command)
 	return (true);
 }
 
-void	Server::deconnectClient(int fd, std::string error, std::string message) {
+void	Server::disconnectClient(int fd, std::string error, std::string message) {
 	Client	&c = this->getClient(fd);
 	if (!error.empty())
-	{
 		this->sendToClient(c, error);
-		c.quitRequest = CLIENT_QUIT_REQUEST;
-	}
-	if (!c.buffer.empty())
+	if (!c.getBufferOut().empty())
 		c.quitRequest = CLIENT_QUIT_REQUEST;
 	else
 		c.quitRequest = CLIENT_QUIT_ACCEPT;
-	this->poolQuit.push_back(fd);
 	c.setBufferQuit(message);
+	this->poolQuit.push_back(fd);
+}
+
+void	Server::_autoKill(Client &c, std::string message)
+{
+	std::string	serverName(":" + this->_host);
+	std::string	killed("Killed (");
+	killed.append("auto-kill (").append(message).append("))");
+	std::string	rplError(serverName);
+	rplError.append(" ERROR: Closing Link: ").append(c.getNick()).append(1, ' ').append(this->_host).append(" (").append(killed).append(")\r\n");
+	std::string	rplQuit(this->_makeHostMask(c, "QUIT"));
+	rplQuit.append(":Quit: ").append(killed).append("\r\n");
+	std::string	rplKill(serverName);
+	rplKill.append(" KILL ").append(c.getNick()).append(" :").append(message).append("\r\n");
+	c.addBufferOut(rplKill);
+	c.addBufferOut(rplQuit);
+	this->disconnectClient(c.getFd(), rplError, rplQuit);
 }
 
 bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
@@ -126,9 +137,14 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 			const int warnings = c->getWarning() + 1;
 			c->setWarning(warnings);
 			// kick user
-			if (warnings > 2)
-				this->deconnectClient(c->getFd(), "Tu as été kick batard\r\n", "un batard a été kick\r\n");
-			std::cout << "You get a warning (" << warnings << ")" << std::endl;
+			#ifndef UNITTEST
+			if (warnings >= WARNING_LIMIT)
+				this->_autoKill(*c, "Killed by server, too many bad commands");
+			#endif
+			if (c->getNick().empty())
+				std::cout << fd << ": You get a warning (" << warnings << ")" << std::endl;
+			else
+				std::cout << c->getNick() << ": You get a warning (" << warnings << ")" << std::endl;
 			continue ;
 		}
 		serverReceivesLog(sanitizedClientBuffer);
@@ -170,7 +186,7 @@ static int ClientOnServerAccessType(char c, AccessType &flag)
 	return (false);
 }
 
-bool	Server::handleModeUser(Client &c, std::string targetName, std::string modeType)
+bool	Server::handleModeUser(Client &c, std::string targetName, std::string modeType, std::string &message)
 {
 	int clientFd = -1;
 	try {
@@ -188,33 +204,35 @@ bool	Server::handleModeUser(Client &c, std::string targetName, std::string modeT
 			return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
 	bool plusOrMinus = (modeType[0] == '+');
 	unsigned int i = 0;
-	bool checkErrorOnce = false;
+	message.append(1, modeType[i]);
 	while (modeType[++i])
 	{
 		if (modeType[i] == '+' || modeType[i] == '-')
 		{
-			plusOrMinus = (modeType[i] == '+'); continue ;
+			plusOrMinus = (modeType[i] == '+');
+			message.append(1, modeType[i]);
+			continue ;
 		}
 		AccessType flag = 0;
 		if (!ClientOnServerAccessType(modeType[i], flag))
-		{
-			if (!checkErrorOnce)
-				this->handleErrUmodeunknownflag(c);
-			checkErrorOnce = true;
-		}
+			continue ;
     	if (plusOrMinus)
 		{
 			if (!(modeType[i] == 'o' || modeType[i] == 'O' || modeType[i] == 'a' || modeType[i] == 'A')) // peut pas s'add en admin
+			{
     	    	c.addStatus(flag);
+				message.append(1, modeType[i]);
+			}
 		}
     	else
 		{
 			if (!(modeType[i] == 'B')) // peut pas s'enlever de bot
+			{
     	    	c.delStatus(flag);
+				message.append(1, modeType[i]);
+			}
 		}
 	}
-	if (checkErrorOnce)
-		return (this->poolOut.push(c.getFd()), false);
 	return (true);
 }
 

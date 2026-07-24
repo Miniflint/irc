@@ -34,18 +34,72 @@ bool	Server::handle_admin(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_away(Client &c, std::istringstream &iss) 
+bool	Server::handleAway(Client &c, std::istringstream &iss) 
 {
 	std::string token;
 	iss >> token;
-	this->handleErrUnknowncommand(c, "AWAY");
-	this->poolOut.push(c.getFd());
-	return (true);
+	if (!token.empty()) {
+		if (token[0] == ':')
+			token.erase(0, 1);
+		std::string	tmp;
+		std::getline(iss, tmp);
+		token.append(tmp);
+	}
+	if (token.empty())
+	{
+		c.delStatus(CLIENT_ACCESS_AWAY);
+		return (this->handleRplUnAway(c), this->poolOut.push(c.getFd()), true);
+	}
+	c.setAwayMessage(token);
+	c.addStatus(CLIENT_ACCESS_AWAY);
+	return (this->handleRplNowAway(c), this->poolOut.push(c.getFd()), true);
 }
-bool	Server::handle_cap(Client &c, std::istringstream &iss) 
+bool	Server::handleCap(Client &c, std::istringstream &iss) 
 {
-	(void)c;
-	(void)iss;
+	std::string typeCap;
+
+	if (c.flagsLogin == FLAG_CLIENT_FULL)
+		return (this->handleErrAlreadyRegistered(c), this->poolOut.push(c.getFd()), false);
+	if (!(iss >> typeCap))
+		return (this->handleErrNeedMoreParams(c, "CAP"), this->poolOut.push(c.getFd()), false);
+	if (typeCap == "LS")
+	{
+		int versionCap;
+		if (!(iss >> versionCap) || versionCap > 302)
+			versionCap = 300;
+		if (versionCap == 302)
+			c.flagsLogin |= FLAG_CLIENT_CAPL;
+	}
+	if (typeCap == "REQ" && c.flagsLogin & FLAG_CLIENT_CAPL)
+	{
+		std::string tokenRequested;
+		std::string rplMessage(this->_rplPrefix("CAP", "*"));
+		if (!(iss >> tokenRequested))
+		{
+			rplMessage.append("NAK :\r\n");
+			return (c.addBufferOut(rplMessage), this->poolOut.push(c.getFd()), false);
+		}
+		if (tokenRequested[0] == ':')
+			tokenRequested.erase(0, 1);
+		if (tokenRequested == "echo-message")
+		{
+			c.addStatus(CLIENT_ECHO_MESSAGE);
+			rplMessage.append("ACK ").append(tokenRequested).append("\r\n");
+			return (c.addBufferOut(rplMessage), this->poolOut.push(c.getFd()), false);
+		}
+		else
+		{
+			rplMessage.append("NAK :").append(tokenRequested).append("\r\n");
+			return (c.addBufferOut(rplMessage), this->poolOut.push(c.getFd()), false);
+		}
+	}
+	if (typeCap == "END" && c.flagsLogin & FLAG_CLIENT_CAPL)
+		c.flagsLogin &= ~FLAG_CLIENT_CAPL;
+	if (c.flagsLogin == FLAG_CLIENT_FULL)
+	{
+		this->_clientTrie.add(c.getNick(), c.getFd());
+		this->_sendAllWelcome(c);
+	}
 	return (true);
 }
 bool	Server::handle_cnotice(Client &c, std::istringstream &iss) 
@@ -72,14 +126,24 @@ bool	Server::handle_connect(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_die(Client &c, std::istringstream &iss) 
+bool	Server::handleDie(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "DIE");
-	this->poolOut.push(c.getFd());
+	(void)iss;
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR)
+		return (this->handleErrNoPrivileges(c), this->poolOut.push(c.getFd()), false);
+	this->runStatus = RUN_SHUTDOWN;
 	return (true);
 }
+
+bool	Server::handleRestart(Client &c, std::istringstream &iss) 
+{
+	(void)iss;
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR)
+		return (this->handleErrNoPrivileges(c), this->poolOut.push(c.getFd()), false);
+	this->runStatus = RUN_RESTART;
+	return (true);
+}
+
 bool	Server::handle_error(Client &c, std::istringstream &iss) 
 {
 	std::string token;
@@ -115,13 +179,29 @@ bool	Server::handleInfo(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_invite(Client &c, std::istringstream &iss) 
+bool	Server::handleInvite(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "INVITE");
-	this->poolOut.push(c.getFd());
-	return (true);
+	std::string nickname, channelName;
+	iss >> nickname >> channelName;
+	if (iss.fail() || nickname.empty() || channelName.empty())
+		return (this->handleErrNeedMoreParams(c, "INVITE"), this->poolOut.push(c.getFd()), false);
+	Trie<Channel *>	*channelTrie = this->_channelTrie.find(channelName);
+	if (!channelTrie)
+		return (this->handleErrNoSuchChannel(c, channelName), this->poolOut.push(c.getFd()), false);
+	Trie<int> *clientTrie = this->_clientTrie.find(nickname);
+	if (!clientTrie)
+		return (this->handleErrNoSuchNick(c, channelName), this->poolOut.push(c.getFd()), false);
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && !c.getChannel().isIn(channelName))
+		return (this->handleErrNotOnChannel(c, channelName), this->poolOut.push(c.getFd()), false);
+	Channel *chan = channelTrie->getElem();
+	if (chan->getMode() & CHANNEL_INVITE_ONLY &&
+		(c.getStatus() < CLIENT_ACCESS_OPERATOR) && c.getChannelAccess(channelName) < USER_HALFOP)
+		return (this->handleErrChanOPrivsNeeded(c, channelName), this->poolOut.push(c.getFd()), false);
+	chan->addClientException(clientTrie->getElem(), EXCEPTION_INVITED);
+	Client	&receiver = *(this->_clients[clientTrie->getElem()]);
+	this->sendToClient(receiver, this->_makeHostMask(c, "INVITE").append(receiver.getNick())
+		.append(1, ' ').append(channelName).append("\r\n"));
+	return (this->handleRplInviting(c, nickname, channelName, 0), this->poolOut.push(c.getFd()), true);
 }
 bool	Server::handle_ison(Client &c, std::istringstream &iss) 
 {
@@ -147,40 +227,113 @@ bool	Server::handleJoin(Client &c, std::istringstream &iss)
 	unsigned int i = 0;
 	for (std::vector<std::string>::iterator it = channelList.begin(); it != end; it++) {
 		std::string channelName = *it;
-		if (i < keyList.size()) {
-			this->addClientToChannel(c, channelName, keyList[i]);
-			++i;
-		} else
+		if (i < keyList.size())
+			this->addClientToChannel(c, channelName, keyList[i++]);
+		else
 			this->addClientToChannel(c, channelName, "");
-		// if (!keyList.empty())
-		// {
-		// 	size_t index = i > keyList.size() - 1 ? keyList.size() - 1 : i;
-		// 	if (this->addClientToChannel(c, channelName, keyList[index]) == NULL)
-		// 		this->poolOut.push(c.getFd());
-		// } else {
-		// 	if (this->addClientToChannel(c, channelName, "") == NULL)
-		// 		this->poolOut.push(c.getFd());
-		// }
-		// i++;
 	}
 	return (true);
 }
-bool	Server::handle_kick(Client &c, std::istringstream &iss) 
+bool	Server::handleKick(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "KICK");
+	std::string channel, users, comment;
+	iss >> channel >> users >> comment;
+	if (channel.empty() || users.empty())
+		return (this->handleErrNeedMoreParams(c, "KICK"), this->poolOut.push(c.getFd()), false);
+	if (!this->_channelTrie.isIn(channel))
+		return (this->handleErrNoSuchChannel(c, channel), this->poolOut.push(c.getFd()), false);
+	Trie<std::pair<Channel *, AccessType> > *accessOnChannel = c.getChannel().find(channel);
+	if (!accessOnChannel)
+		return (this->handleErrNotOnChannel(c, channel), this->poolOut.push(c.getFd()), false);
+	std::istringstream			userParse(users);
+	std::vector<std::string>	userList;
+	for (std::string tmp; std::getline(userParse, tmp, ',');) {
+		userList.push_back(tmp);
+	}
+	if (!comment.empty())
+	{
+		if (comment[0] == ':')
+			comment.erase(0, 1);
+		std::string tmp;
+		std::getline(iss, tmp);
+		comment.append(tmp);
+	}
+	if (comment.empty()) {
+		comment = "Kicked without message";
+	}
+	const std::string rplMessageConst(this->_makeHostMask(c, "KICK"));
+	std::vector<std::string>::const_iterator end = userList.end();
+	for (std::vector<std::string>::const_iterator it = userList.begin(); it != end; it++) {
+		if ((*it).empty())
+			continue ;
+		Trie<int>	*clientTrie = this->_clientTrie.find(*it);
+		if (!clientTrie)
+		{
+			this->handleErrNoSuchNick(c, *it);
+			continue ;
+		}
+		int			clientFd = clientTrie->getElem();
+		Client		*targetClient = this->_clients[clientFd];
+		Trie<std::pair<Channel *, AccessType> > *clientTrieAccess = targetClient->getChannel().find(channel);
+		if (!clientTrieAccess)
+		{
+			this->handleErrUsernotinchannel(c, channel, targetClient->getNick());
+			continue ;
+		}
+		if (targetClient->getStatus() > c.getStatus() && c.getStatus() >= CLIENT_ACCESS_OPERATOR)
+		{
+			this->handleErrChanOPrivsNeeded(c, channel);
+			continue ;
+		}
+		std::string	suffix(*it);
+		suffix.append(" :").append(comment).append("\r\n");
+		std::cout << (targetClient)->getNick() << std::endl;
+		std::cout << clientTrieAccess->getElem().first << std::endl;
+		std::cout << rplMessageConst + suffix << std::endl;
+
+		this->delClientToChannel(*(targetClient), *(clientTrieAccess->getElem().first), rplMessageConst + suffix);
+	}
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_kill(Client &c, std::istringstream &iss) 
+
+bool	Server::handleKill(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "KILL");
-	this->poolOut.push(c.getFd());
+	std::string token, message;
+	iss >> token >> message;
+	if (token.empty())
+		return (this->handleErrNeedMoreParams(c, "KILL"), this->poolOut.push(c.getFd()), false);
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR)
+		return (this->handleErrNoPrivileges(c), this->poolOut.push(c.getFd()), false);
+	Trie<int> *client = this->_clientTrie.find(token);
+	if (!client)
+		return (this->handleErrNoSuchNick(c, token), this->poolOut.push(c.getFd()), false);
+	Client &targetClient = *(this->_clients[client->getElem()]);
+	if (targetClient.getStatus() & CLIENT_ACCESS_ADMIN || (targetClient.getStatus() & CLIENT_ACCESS_OPERATOR && !(c.getStatus() & CLIENT_ACCESS_ADMIN)))
+		return (this->handleErrNoPrivileges(c), this->poolOut.push(c.getFd()), false);
+	if (!message.empty()) {
+		if (message[0] == ':')
+			message.erase(0, 1);
+		std::string	tmp;
+		std::getline(iss, tmp);
+		message.append(tmp);
+	}
+	if (message.empty())
+		message = "No message";
+	std::string	killed("Killed (");
+	killed.append(c.getNick()).append(" (").append(message).append("))");
+	std::string	rplError(":");
+	rplError.append(this->_host).append(" ERROR: Closing Link: ").append(targetClient.getNick()).append(1, ' ').append(this->_host).append(" (").append(killed).append(")\r\n");
+	std::string	rplQuit(this->_makeHostMask(targetClient, "QUIT"));
+	rplQuit.append(":Quit: ").append(killed).append("\r\n");
+	std::string	rplKill(this->_makeHostMask(c, "KILL"));
+	rplKill.append(token).append(" :").append(message).append("\r\n");
+	targetClient.addBufferOut(rplKill);
+	targetClient.addBufferOut(rplQuit);
+	this->disconnectClient(targetClient.getFd(), rplError, rplQuit);
 	return (true);
 }
+
 bool	Server::handle_knock(Client &c, std::istringstream &iss) 
 {
 	std::string token;
@@ -245,10 +398,11 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 	bool	channelOrClient = this->_channelSpecifiers.channelType.find(targetName[0]) == std::string::npos;
 	if (channelOrClient)
 	{
-		if (!handleModeUser(c, targetName, modeType))
-			return (false);
 		std::string	message(this->_makeHostMask(c, "MODE"));
-		message.append(1, ':').append(targetName).append(1, ' ').append(modeType).append("\r\n");
+		message.append(1, ':').append(targetName).append(1, ' ');
+		if (!handleModeUser(c, targetName, modeType, message))
+			return (false);
+		message.append("\r\n");
 		this->sendToClient(c, message);
 	}
 	else
@@ -270,22 +424,34 @@ bool	Server::handleMode(Client &c, std::istringstream &iss)
 				return (this->handleErrUmodeunknownflag(c), this->poolOut.push(c.getFd()), false);
 		int i = 0;
 		bool checkErrorOnce = false;
+		std::string fullStr(this->_makeHostMask(c, "MODE"));
+		std::string letters(1, modeType[i]);
+		std::string usedTokens;
 		while (modeType[i])
 		{
 			switch (modeType[i])
 			{
 				case '+':
-					this->_handleCaseAdd(c, modeType, &i, *channel, iss);
+					if (this->_handleCaseAdd(c, modeType, &i, *channel, iss, letters, usedTokens) && modeType[i])
+						letters.append(1, modeType[i]);
 					break ;
 				case '-':
-					this->_handleCaseDel(c, modeType, &i, *channel, iss);
+					if (this->_handleCaseDel(c, modeType, &i, *channel, iss, letters, usedTokens) && modeType[i])
+						letters.append(1, modeType[i]);
 					break ;
 				default:
 					break ;
 			}
 		}
+		size_t index = usedTokens.find_first_not_of(' ');
+		fullStr.append(channel->getNick()).append(1, ' ').append(letters);
+		if (index != std::string::npos)
+			fullStr.append(usedTokens).append("\r\n");
+		else
+			fullStr.append("\r\n");
+		this->sendToChannel(*channel, fullStr);
 		if (checkErrorOnce)
-			return (this->poolOut.push(c.getFd()), false);
+			return (false);
 	}
 	return (true);
 }
@@ -298,11 +464,27 @@ bool	Server::handle_motd(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_names(Client &c, std::istringstream &iss) 
+bool	Server::handleNames(Client &c, std::istringstream &iss) 
 {
 	std::string token;
 	iss >> token;
-	this->handleErrUnknowncommand(c, "NAMES");
+	if (token.empty())
+		return (this->handleErrNeedMoreParams(c, "NAMES"), this->poolOut.push(c.getFd()), false);
+	std::istringstream			channelParse(token);
+	std::vector<std::string>	channelList;
+	for (std::string tmp; std::getline(channelParse, tmp, ',');)
+		channelList.push_back(tmp);
+	std::vector<std::string>::iterator end = channelList.end();
+	for (std::vector<std::string>::iterator it = channelList.begin(); it != end; it++) {
+		Trie<Channel *>	*channelTrie = this->_channelTrie.find(*it);
+		if (!channelTrie)
+			continue ;
+		Channel	&channel = *channelTrie->getElem();
+		if (channel.getMode() & CHANNEL_SECRET && c.getStatus() < CLIENT_ACCESS_OPERATOR && !c.getChannel().isIn(*it))
+			continue ;
+		this->handleRplNameReply(c, *it, channel);
+		this->handleRplEndofnames(c, *it);
+	}
 	this->poolOut.push(c.getFd());
 	return (true);
 }
@@ -335,16 +517,23 @@ bool	Server::handleNick(Client &c, std::istringstream &iss)
 			}
 		}
 		this->_clientTrie.del(oldUserName);
-		// faire message pour changement de nom
 	}
 	c.setNick(token);
-	if (c.flagsLogin & FLAG_CLIENT_USER)
-	{
-		this->_clientTrie.add(token, c.getFd());
-		if (!(c.flagsLogin & FLAG_CLIENT_NICK))
+	if (!(c.flagsLogin & FLAG_CLIENT_NICK)) {
+		c.flagsLogin |= FLAG_CLIENT_NICK;
+		if (c.flagsLogin == (FLAG_CLIENT_FULL | FLAG_CLIENT_CAPL))
+		{
+			std::string rplMessage(this->_rplPrefix("CAP", "* LS"));
+			rplMessage.append(":echo-message\r\n");
+			c.addBufferOut(rplMessage);
+			this->poolOut.push(c.getFd());
+		}
+		else if (c.flagsLogin == FLAG_CLIENT_FULL)
+		{
 			this->_sendAllWelcome(c);
+			this->_clientTrie.add(token, c.getFd());
+		}
 	}
-	c.flagsLogin |= FLAG_CLIENT_NICK;
 	return (true);
 }
 bool	Server::handle_notice(Client &c, std::istringstream &iss) 
@@ -373,22 +562,54 @@ bool	Server::handleOper(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handlePart(Client &c, std::istringstream &iss) 
+
+//PART &chan 	      	:je part maintenant
+
+bool	Server::handlePart(Client &c, std::istringstream &iss)
 {
-	std::string token;
-	iss >> token;
-	if (iss.fail() || token.empty())
+	std::string token, reasonLeave;
+	iss >> token >> reasonLeave;
+	if (token.empty())
 		return (this->handleErrNeedMoreParams(c, "PART"), this->poolOut.push(c.getFd()), false);
-	Trie<Channel *>	*channelTrie = this->_channelTrie.find(token);
-	if (!channelTrie)
-		return (this->handleErrNoSuchChannel(c, token), this->poolOut.push(c.getFd()), false);
-	if (!c.getChannel().isIn(token))
-		return (this->handleErrNotOnChannel(c, token), this->poolOut.push(c.getFd()), false);
-	Channel	&channel = *channelTrie->getElem();
-	this->delClientToChannel(c, channel, this->_makeHostMask(c, "PART").append(token).append(" :").append(iss.str()).append("\r\n"));
-	// this->poolOut.push(c.getFd());
+
+	std::istringstream			channelParse(token);
+	std::vector<std::string>	channelList;
+	for (std::string tmp; std::getline(channelParse, tmp, ',');)
+		channelList.push_back(tmp);
+	std::vector<std::string>::iterator end = channelList.end();
+	
+	if (!reasonLeave.empty()) {
+		if (reasonLeave[0] == ':')
+			reasonLeave.erase(0, 1);
+		std::string tmp;
+		std::getline(iss, tmp);
+		reasonLeave.append(tmp);
+	}
+	if (reasonLeave.empty()) {
+		reasonLeave = "Part without message";
+	}
+	const std::string rplMessageConst(this->_makeHostMask(c, "PART"));
+	for (std::vector<std::string>::iterator it = channelList.begin(); it != end; it++) {
+		Trie<Channel *>	*channelTrie = this->_channelTrie.find(*it);
+		if (!channelTrie) {
+			this->handleErrNoSuchChannel(c, *it);
+			this->poolOut.push(c.getFd());
+			continue ;
+		}
+		if (!c.getChannel().isIn(*it))
+		{
+			this->handleErrNotOnChannel(c, *it);
+			this->poolOut.push(c.getFd());
+			continue ;
+		}
+		Channel	&channel = *channelTrie->getElem();
+		std::string	suffix(*it);
+		suffix.append(" :").append(reasonLeave).append("\r\n");
+		this->delClientToChannel(c, channel, rplMessageConst + suffix);
+	}
 	return (true);
 }
+
 bool	Server::handlePass(Client &c, std::istringstream &iss) 
 {
 	if (c.flagsLogin & FLAG_CLIENT_PASS)
@@ -448,12 +669,14 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 			} catch (std::exception &e) {
 				return (this->handleErrNoSuchChannel(c, target), this->poolOut.push(c.getFd()), false);
 			}
-			if (!targetChannel->checkMode(CHANNEL_NOT_EXTERNAL))
+			if (c.getStatus() < CLIENT_ACCESS_OPERATOR && targetChannel->getMode() & CHANNEL_NOT_EXTERNAL)
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
-		AccessType t = c.getChannelAccess(targetChannel->getNick());
-		if (targetChannel->checkMode(CHANNEL_MODERATED) && t == NO_ACCESS)
-				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
+		AccessType t = c.getChannelAccess(target);
+		// std::cout << "client channel access =>" << t << " client status =>" << c.getStatus() << " channel mode =>" << targetChannel->getMode() << std::endl;
+		// std::cout << "bool resulet : client channel access =>" << bool(t < USER_VOICE) << "client status =>" << bool(c.getStatus() < CLIENT_ACCESS_OPERATOR) << "channel mode =>" << bool(targetChannel->getMode() & CHANNEL_MODERATED) << std::endl;
+		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && targetChannel->getMode() & CHANNEL_MODERATED && t < USER_VOICE)
+			return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
 	}
 	else
@@ -464,6 +687,11 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		} catch (std::exception &e) {
 			return (this->handleErrNoSuchNick(c, target), this->poolOut.push(c.getFd()), false);
 		}
+		Client	&cAway = *(this->_clients[targetClient]);
+		if (cAway.getStatus() & CLIENT_ACCESS_AWAY) {
+			this->handleRplAway(c, cAway);
+			this->poolOut.push(c.getFd());
+		}
 		clients.push_back(targetClient);
 		clients.push_back(c.getFd());
 	}
@@ -473,7 +701,7 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 	std::vector<size_t>::const_iterator end = clients.end();
 	for (std::vector<size_t>::const_iterator it = clients.begin(); it != end; it++) {
 		Client *curr = this->_clients[*it];
-		if (!curr)
+		if (!curr || (!(curr->getStatus() & CLIENT_ECHO_MESSAGE) && curr->getFd() == c.getFd()))
 			continue ;
 		this->sendToClient(*curr, full);
 	}
@@ -487,11 +715,16 @@ bool	Server::handleQuit(Client &c, std::istringstream &iss)
 	std::string message(":");
 	message.append(c.getNick()).append(1, '!').append(c.getUserName()).append(1, '@').append(c.getHostName()).append(" QUIT :");
 	if (token.empty())
-		token += "Left without a message";
+		token = "Left without a message";
 	if (token[0] == ':')
 		token.erase(0, 1);
 	token.append("\r\n");
-	this->deconnectClient(c.getFd(), message + "Thanks for being with us\r\n", message + token);
+	std::string rplSelfMessage(message);
+	rplSelfMessage.append("Quit: Thanks for being with us\r\n");
+	std::string rplChannelsMessages(message);
+	rplChannelsMessages.append("Quit: ");
+	rplChannelsMessages.append(token);
+	this->disconnectClient(c.getFd(), rplSelfMessage, rplChannelsMessages);
 	return (true);
 }
 bool	Server::handle_quote(Client &c, std::istringstream &iss) 
@@ -582,12 +815,39 @@ bool	Server::handle_time(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_topic(Client &c, std::istringstream &iss) 
+
+
+bool	Server::handleTopic(Client &c, std::istringstream &iss) 
 {
 	std::string token;
 	iss >> token;
-	this->handleErrUnknowncommand(c, "TOPIC");
-	this->poolOut.push(c.getFd());
+	if (iss.fail() || token.empty())
+		return (this->handleErrNeedMoreParams(c, "TOPIC"), this->poolOut.push(c.getFd()), false);
+	if (!this->_channelTrie.isIn(token))
+		return (this->handleErrNoSuchChannel(c, token), this->poolOut.push(c.getFd()), false);
+	Trie<std::pair<Channel *, AccessType> >	*channelTrieElem = c.getChannel().find(token);
+	if (c.getStatus() < CLIENT_ACCESS_OPERATOR && !channelTrieElem)
+		return (this->handleErrNotOnChannel(c, token), this->poolOut.push(c.getFd()), false);
+	std::string	newTopic;
+	iss >> newTopic;
+	Channel	&chan = *(channelTrieElem->getElem().first);
+	std::string	&chanTopic = chan.getTopic();
+	if (newTopic.empty()) {
+		if (chanTopic.empty())
+			return (this->handleRplNoTopic(c, token), this->poolOut.push(c.getFd()), true);
+		else
+			return (this->handleRplTopic(c, token, chanTopic), this->poolOut.push(c.getFd()), true);
+	}
+	if (chan.checkMode(CHANNEL_TOPIC_PROTECTION) && c.getStatus() < CLIENT_ACCESS_OPERATOR && channelTrieElem->getElem().second < USER_HALFOP)
+		return (this->handleErrChanOPrivsNeeded(c, token), this->poolOut.push(c.getFd()), false);
+	if (newTopic[0] == ':') {
+		newTopic.erase(0, 1);
+		std::string	rest;
+		std::getline(iss, rest);
+		newTopic.append(rest);
+	}
+	chanTopic = newTopic;
+	this->sendToChannel(chan, this->_makeHostMask(c, "TOPIC").append(token).append(" :").append(chanTopic).append("\r\n"));
 	return (true);
 }
 bool	Server::handle_trace(Client &c, std::istringstream &iss) 
@@ -616,19 +876,28 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 	size_t indexTrim = realName.find_first_not_of(' ');
 	if (indexTrim == std::string::npos)
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
-	realName.erase(0, indexTrim + 1);
-	if (userName.length() < 1 || hostName.length() < 1 || serverName.length() < 1 || realName.length() < 1)
+	realName.erase(0, indexTrim);
+	if (!realName.empty() && realName[0] == ':')
+		realName.erase(0, 1);
+	if (/*userName.empty() || hostName.empty() || serverName.empty() || */realName.empty())
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	c.setUserName(userName);
 	// c.setHostName(hostName);
 	c.setServerName(serverName);
 	c.setRealName(realName);
-	if (c.flagsLogin & FLAG_CLIENT_NICK)
+	c.flagsLogin |= FLAG_CLIENT_USER;
+	if (c.flagsLogin == FLAG_CLIENT_FULL)
 	{
 		this->_clientTrie.add(c.getNick(), c.getFd());
 		this->_sendAllWelcome(c);
 	}
-	c.flagsLogin |= FLAG_CLIENT_USER;
+	else if (c.flagsLogin == (FLAG_CLIENT_FULL | FLAG_CLIENT_CAPL))
+	{
+		std::string rplMessage(this->_rplPrefix("CAP", "* LS"));
+		rplMessage.append(":echo-message\r\n");
+		c.addBufferOut(rplMessage);
+		this->poolOut.push(c.getFd());
+	}
 	return (true);
 }
 bool	Server::handle_userhost(Client &c, std::istringstream &iss) 
@@ -684,12 +953,29 @@ bool	Server::handleWho(Client &c, std::istringstream &iss)
 	std::string token;
 	iss >> token;
 	if (token.empty())
-		return (false);
-	try {
-		Channel	*chan = c.getChannel()[token].first;
-		for (std::vector<int>::iterator it = chan->getClientsFD().begin(); it != chan->getClientsFD().end(); ++it)
-			this->handleRplWhoReply(c, this->getClient(*it), *chan);
-	} catch (std::exception &e) { (void)e; }
+		return (this->handleErrNeedMoreParams(c, "WHO"), this->poolOut.push(c.getFd()), false);
+	if (this->_channelSpecifiers.channelType.find(token[0]) != std::string::npos)
+	{
+		Trie<Channel *> *trieClientChan = this->_channelTrie.find(token);
+		if (trieClientChan) {
+			Channel	&chan = *(trieClientChan->getElem());
+			// if (c.getStatus() < CLIENT_ACCESS_OPERATOR && !c.getChannel().isIn(token))
+			// 	return (this->handleErrNotOnChannel(c, token), this->poolOut.push(c.getFd()), false);
+			for (std::vector<int>::iterator it = chan.getClientsFD().begin(); it != chan.getClientsFD().end(); ++it) {
+				if (c.getStatus() < CLIENT_ACCESS_OPERATOR && c.getChannelAccess(token) < USER_HALFOP && this->_clients[*it]->checkStatus(CLIENT_ACCESS_INVISIBLE))
+					continue ;
+				this->handleRplWhoReply(c, this->getClient(*it), chan);
+			}
+		}/* else
+			return (this->handleErrNoSuchChannel(c, token), this->poolOut.push(c.getFd()), false); */
+	}/* else {
+		Trie<int> *trieClient = this->_clientTrie.find(token);
+		if (trieClient) {
+			Client	&whoClient = *(this->_clients[trieClient->getElem()]);
+			if (!(c.getStatus() < CLIENT_ACCESS_OPERATOR && whoClient.checkStatus(CLIENT_ACCESS_INVISIBLE)))
+				this->handleRplWhoReply(c, whoClient, chan);
+		}
+	} */
 	this->handleRplEndOfWho(c, token);
 	this->poolOut.push(c.getFd());
 	return (true);
