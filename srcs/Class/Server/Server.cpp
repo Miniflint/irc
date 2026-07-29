@@ -110,28 +110,28 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 	{
 		if (c->buffer.size() <= 2)
 			return (false);
-		size_t index = c->buffer.find("\r\n");
-		if (index == std::string::npos && c->buffer.length() < MAX_PACKET_SIZE)
-			return (false);
-		else if (index == std::string::npos && c->buffer.length() >= MAX_PACKET_SIZE) {
+		size_t index = c->buffer.find("\r\n");									//index signifiant la fin de commande
+		if (index == std::string::npos && c->buffer.length() < MAX_PACKET_SIZE)	//si la commande n'est pas encore recu entierement
+			return (false);														//on reviendra quand le buffer sera completer
+		else if (index == std::string::npos && c->buffer.length() >= MAX_PACKET_SIZE) {	// la commande n'est PAS terminée (pas de \r\n) et dépasse déjà les 512o sans terminateur
 			c->setWarning(c->getWarning() + 1);
 			serverReceivesLogError(c->buffer, "too long and unfinished");
-			c->buffer.clear();
+			c->buffer.clear();													//on efface et on oublie --> mais si le reste est recu apres et contient un \r\n ??? peu de chance que le reste qui vient contienne comme premier mot un keyword commande mais attention nn?
 			return (false);
-		} else if (index + 2 >= MAX_PACKET_SIZE ) {
+		} else if (index + 2 >= MAX_PACKET_SIZE ) {								// commande complète mais trop longue ; le reste du buffer peut contenir la suite
 			c->setWarning(c->getWarning() + 1);
 			serverReceivesLogError(c->buffer.substr(0, index), "too long");
 			c->buffer.erase(0, index + 2);
 			continue;
 		}
 		std::string			sanitizedClientBuffer(c->buffer.begin(), (c->buffer.begin() + index));
-		c->buffer.erase(0, index + 2);
+		c->buffer.erase(0, index + 2);											//on enleve du buffer la partie qui est la commande traite ce tour de boucle
 		std::istringstream	iss(sanitizedClientBuffer);
 		std::string			cmd;
 		cmdFn				func;
-		iss >> cmd;
+		iss >> cmd;																//on extrait la keyword command
 		// std::cout << sanitizedClientBuffer << std::endl; 
-		if (!this->_validateAccess(*c, cmd) || !this->_validateCommand(*c, func, cmd))
+		if (!this->_validateAccess(*c, cmd) || !this->_validateCommand(*c, func, cmd))	//validateCommand atribu le pointeur sur fct adapte a la commande
 		{
 			serverReceivesLogError(c->buffer.substr(0, index), "not valid");
 			const int warnings = c->getWarning() + 1;

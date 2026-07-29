@@ -24,12 +24,12 @@ static void	handleSig(int signum) {
 static void	setSignal() {
 	struct sigaction sa;
 	struct sigaction saSigPipe;	
-	sa.sa_handler = handleSig;
-	sigemptyset(&sa.sa_mask);
+	sa.sa_handler = handleSig;								//fct appeler (qui met sigIntQuit a 1) en cas de ctrl+c ou ctrl+"\"
+	sigemptyset(&sa.sa_mask);								//aucun autre signal a bloquer lors de handleSig
 	sa.sa_flags = 0;
-	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGINT, &sa, NULL);							//enrengestrement de la config sa pour SIGINT
 	sigaction(SIGQUIT, &sa, NULL);
-	saSigPipe.sa_handler = SIG_IGN;
+	saSigPipe.sa_handler = SIG_IGN;							//SIGPIPE sera simplement ignore (en cas d'echec de write() et send())
 	sigemptyset(&saSigPipe.sa_mask);
 	saSigPipe.sa_flags = 0;
 	sigaction(SIGPIPE, &saSigPipe, NULL);
@@ -208,7 +208,7 @@ static void	setEpollMode(int epfd, int fd, uint16_t mode, uint32_t flag) {
 }
 
 bool	Server::run() {
-	setSignal();
+	setSignal();													//configuration des signaux (SIGINT, SIGQUIT, SIGPIPE)
 	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)
 		return (false);
 	int epfd = epoll_create(1);
