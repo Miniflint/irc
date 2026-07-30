@@ -36,21 +36,25 @@ static void	setSignal() {
 }
 
 static int	initListenSocket(int port) {
-	int	listenSock = socket(AF_INET, SOCK_STREAM, 0);
+	int	listenSock = socket(AF_INET, SOCK_STREAM, 0);		//int socket(int domain, int type, int protocol); AF_INET=IPv4, SOCK_STREAM=TCP
 	if (listenSock == -1)
 		return (-1);
 	int	opt = 1;
-	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));	//int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
+																			//permet reprendre le meme port pendant TIME_WAIT
 	#ifdef __APPLE__
 		fcntl(listenSock, F_SETFL, O_NONBLOCK);
 	#endif
-	struct sockaddr_in addr;
+	struct sockaddr_in addr;								//structure specifique a IPv4
 	std::memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = INADDR_ANY;
-	bind(listenSock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
-	listen(listenSock, SOMAXCONN);
+	addr.sin_addr.s_addr = INADDR_ANY;						//dommaine d'ip ecoute = toutes
+	bind(listenSock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));	//int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+																				//dire a l'os ce socket ecoute tel port sur tel domaine d'ip
+																				//le reinterprete cast pour que sockaddr_in soit accepte
+	listen(listenSock, SOMAXCONN);							//int listen(int sockfd, int backlog);
+															//SOMAXCONN -> taille de la file d'attente maximal autorise par l'os
 	return (listenSock);
 }
 
@@ -196,7 +200,7 @@ void	delEpollClient(Server &serv, int epfd, int fd) {
 	struct epoll_event ev;
 	std::memset(&ev, 0, sizeof(ev));
 	epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
-	serv.delClient(fd);
+	serv.delClient(fd);									//61
 }
 
 static void	setEpollMode(int epfd, int fd, uint16_t mode, uint32_t flag) {
@@ -209,9 +213,9 @@ static void	setEpollMode(int epfd, int fd, uint16_t mode, uint32_t flag) {
 
 bool	Server::run() {
 	setSignal();													//configuration des signaux (SIGINT, SIGQUIT, SIGPIPE)
-	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)
+	if ((this->_sockServerFD = initListenSocket(this->_port)) == -1)//creation du socket server
 		return (false);
-	int epfd = epoll_create(1);
+	int epfd = epoll_create(1);										//creation de l'instance epoll
 	if (epfd == -1) {
 		close(this->_sockServerFD);
 		return (false);
@@ -220,19 +224,19 @@ bool	Server::run() {
 	std::memset(&ev, 0, sizeof(ev));
 	ev.events = EPOLLIN;
 	ev.data.fd = this->_sockServerFD;
-	epoll_ctl(epfd, EPOLL_CTL_ADD, this->_sockServerFD, &ev);
-	struct epoll_event events[MAX_EVENTS];
+	epoll_ctl(epfd, EPOLL_CTL_ADD, this->_sockServerFD, &ev);		//ajout du socket serveur a la liste d'ecoute de epoll
+	struct epoll_event events[MAX_EVENTS];							//tableau pour recuperer les informations sur les socket constituant un evenement qui aurons lieu lors de la boucle d'evenement
 	this->runStatus = RUN_ON;
 	while (this->runStatus == RUN_ON) {
-		int nEvents = epoll_wait(epfd, events, MAX_EVENTS, -1);
-		for (int i = 0; i < nEvents; ++i) {
+		int nEvents = epoll_wait(epfd, events, MAX_EVENTS, -1);		//mise en attente d'evenement
+		for (int i = 0; i < nEvents; ++i) {							//traitement des evenements mis dans events par epool
 			int currFd = events[i].data.fd;
-			if (currFd == this->_sockServerFD) {
+			if (currFd == this->_sockServerFD) {					//cas d'une nouvelle connection
 				int	newClientFd = this->newConnection();
 				if (newClientFd != -1)
 					setEpollMode(epfd, newClientFd, EPOLL_CTL_ADD, EPOLLIN);
-			} else if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-				delEpollClient(*this, epfd, currFd);
+			} else if (events[i].events & (EPOLLHUP | EPOLLERR)) {	//cas ou le client est en erreur ou autre et doit etre supprime
+				delEpollClient(*this, epfd, currFd);				//199
 			} else {
 				if (events[i].events & EPOLLIN) {
 					char	buffer[MAX_PACKET_SIZE + 1];

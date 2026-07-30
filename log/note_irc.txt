@@ -4,4 +4,4 @@
 [2026-06-17 18:54:09] 4 : voir le reste des fonction autoriser
 [2026-06-17 18:55:06] 5 : se plonger dans la comprehension du rfc irc
 [2026-06-17 18:56:00] !!! regulierement jeter un oeil au sujet !!!
-
+//int socket(int domain, int type, int protocol); AF_INET=IPv4, SOCK_STREAM=TCP
