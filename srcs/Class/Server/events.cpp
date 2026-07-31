@@ -27,7 +27,7 @@ static void	setSignal() {
 	sa.sa_handler = handleSig;								//fct appeler (qui met sigIntQuit a 1) en cas de ctrl+c ou ctrl+"\"
 	sigemptyset(&sa.sa_mask);								//aucun autre signal a bloquer lors de handleSig
 	sa.sa_flags = 0;
-	sigaction(SIGINT, &sa, NULL);							//enrengestrement de la config sa pour SIGINT
+	sigaction(SIGINT, &sa, NULL);							//enrengistrement de la config sa pour SIGINT
 	sigaction(SIGQUIT, &sa, NULL);
 	saSigPipe.sa_handler = SIG_IGN;							//SIGPIPE sera simplement ignore (en cas d'echec de write() et send())
 	sigemptyset(&saSigPipe.sa_mask);
@@ -49,12 +49,13 @@ static int	initListenSocket(int port) {
 	std::memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = INADDR_ANY;						//dommaine d'ip ecoute = toutes
+	addr.sin_addr.s_addr = INADDR_ANY;						//domaine d'ip ecoute = toutes
 	bind(listenSock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));	//int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 																				//dire a l'os ce socket ecoute tel port sur tel domaine d'ip
 																				//le reinterprete cast pour que sockaddr_in soit accepte
 	listen(listenSock, SOMAXCONN);							//int listen(int sockfd, int backlog);
 															//SOMAXCONN -> taille de la file d'attente maximal autorise par l'os
+															//met ce socket en mode ecoute passive, il ne sert qu'a recevoir de nouveau client
 	return (listenSock);
 }
 
@@ -86,11 +87,13 @@ int Server::newConnection()
 {
 	struct sockaddr_in	addr;
 	socklen_t			addrLen = sizeof(addr);
-	int	clientSock = accept(this->_sockServerFD, reinterpret_cast<struct sockaddr *>(&addr), &addrLen);
+	int	clientSock = accept(this->_sockServerFD, reinterpret_cast<struct sockaddr *>(&addr), &addrLen);		//epoll a signalé une connexion en attente sur le socket d'écoute (listen)
+																											//accept() la dépile et retourne un nouveau socket dédié à ce client
+																											//addr est rempli avec l'IP et le port du client
 	if (clientSock == -1)
 		return (-1);
-	std::string host = inet_ntoa(addr.sin_addr);
-	int port = ntohs(addr.sin_port);
+	std::string host = inet_ntoa(addr.sin_addr);															//renvoie l'addresse binaire sous forme lisible (ex: "127.0.0.1")
+	int port = ntohs(addr.sin_port);																		//revoie le n de port en int
 	#ifdef __APPLE__
 		fcntl(clientSock, F_SETFL, O_NONBLOCK);
 	#endif
@@ -199,7 +202,7 @@ bool	Server::run() {
 void	delEpollClient(Server &serv, int epfd, int fd) {
 	struct epoll_event ev;
 	std::memset(&ev, 0, sizeof(ev));
-	epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
+	epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);			//supprime le socket de la liste des fd observe par epoll
 	serv.delClient(fd);									//61
 }
 
@@ -225,14 +228,14 @@ bool	Server::run() {
 	ev.events = EPOLLIN;
 	ev.data.fd = this->_sockServerFD;
 	epoll_ctl(epfd, EPOLL_CTL_ADD, this->_sockServerFD, &ev);		//ajout du socket serveur a la liste d'ecoute de epoll
-	struct epoll_event events[MAX_EVENTS];							//tableau pour recuperer les informations sur les socket constituant un evenement qui aurons lieu lors de la boucle d'evenement
+	struct epoll_event events[MAX_EVENTS];							//tableau rempli par epoll_wait, contient les fd et le type d'evenement de chacun
 	this->runStatus = RUN_ON;
 	while (this->runStatus == RUN_ON) {
-		int nEvents = epoll_wait(epfd, events, MAX_EVENTS, -1);		//mise en attente d'evenement
+		int nEvents = epoll_wait(epfd, events, MAX_EVENTS, -1);		//seul appel bloquant de la boucle : attend qu'au moins un evenement survienne
 		for (int i = 0; i < nEvents; ++i) {							//traitement des evenements mis dans events par epool
 			int currFd = events[i].data.fd;
 			if (currFd == this->_sockServerFD) {					//cas d'une nouvelle connection
-				int	newClientFd = this->newConnection();
+				int	newClientFd = this->newConnection();			//86
 				if (newClientFd != -1)
 					setEpollMode(epfd, newClientFd, EPOLL_CTL_ADD, EPOLLIN);
 			} else if (events[i].events & (EPOLLHUP | EPOLLERR)) {	//cas ou le client est en erreur ou autre et doit etre supprime
