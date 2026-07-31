@@ -65,7 +65,7 @@ void Server::delClient(int fd) {
 		return ;
 	close(fd);
 	std::string nick = c->getNick();
-	if (!nick.empty()) {
+	if (!nick.empty()) {									//un client qui n'a pas de nick n'est pas empty, il a "*", donc ca ne s'execute jamais ???!!!
 		if (!(c->quitRequest & (CLIENT_QUIT_ACCEPT | CLIENT_QUIT_REQUEST))) {
 			c->getBufferQuit() = ":";
 			c->getBufferQuit().append(c->getNick()).append(1, '!').append(c->getUserName()).append(1, '@').append(c->getHostName()).append(" QUIT :Quit: Connection lost\r\n");
@@ -93,14 +93,15 @@ int Server::newConnection()
 	if (clientSock == -1)
 		return (-1);
 	std::string host = inet_ntoa(addr.sin_addr);															//renvoie l'addresse binaire sous forme lisible (ex: "127.0.0.1")
-	int port = ntohs(addr.sin_port);																		//revoie le n de port en int
+	int port = ntohs(addr.sin_port);																		//convertit le port de l'ordre reseau vers l'ordre machine, renvoie un int
+																											//ntohs = Network To Host //htons = Network To Host Short
 	#ifdef __APPLE__
 		fcntl(clientSock, F_SETFL, O_NONBLOCK);
 	#endif
 	if (static_cast<size_t>(clientSock) >= this->_clients.size())
-		this->_clients.resize(static_cast<size_t>(clientSock) + 1, NULL);
-	if (!this->_clients[clientSock]) {
-		this->_clients[clientSock] = new Client(clientSock, host, port);
+		this->_clients.resize(static_cast<size_t>(clientSock) + 1, NULL);									//allocation d'un espace dans le trie 
+	if (!this->_clients[clientSock]) {																		//vérifie qu'aucun client n'existe déjà à cet index
+		this->_clients[clientSock] = new Client(clientSock, host, port);									//crée le nouveau Client
 	} else {
 		return (-1);
 	}
