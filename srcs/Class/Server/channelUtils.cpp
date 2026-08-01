@@ -16,7 +16,7 @@ static inline Channel	*sendRet(Client &c, Server &serv, Channel *chan) {
 }
 
 void	Server::delClientToChannel(Client &c, std::list<Channel>::iterator &chan, std::string message) {
-	std::vector<int>	&clients = chan->getClientsFD();
+	std::vector<int>	&clients = chan->getClientsFD();							//vecteur des fd des client membre du chanel
 	for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); ) {
 		this->sendToClient(this->getClient(*it), message);
 		// this->poolOut.push(*it);

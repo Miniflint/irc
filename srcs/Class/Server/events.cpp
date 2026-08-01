@@ -278,7 +278,7 @@ bool	Server::run() {
 			} else
 				++it;
 		}
-		while (!this->poolOut.empty()) {
+		while (!this->poolOut.empty()) {							//activation epollout
 			int	outFd = this->poolOut.front();
 			setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
 			this->poolOut.pop();
