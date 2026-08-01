@@ -94,14 +94,14 @@ int Server::newConnection()
 		return (-1);
 	std::string host = inet_ntoa(addr.sin_addr);															//renvoie l'addresse binaire sous forme lisible (ex: "127.0.0.1")
 	int port = ntohs(addr.sin_port);																		//convertit le port de l'ordre reseau vers l'ordre machine, renvoie un int
-																											//ntohs = Network To Host //htons = Network To Host Short
+																											//ntohs = Network To Host Short //htons = Host To Network Short
 	#ifdef __APPLE__
 		fcntl(clientSock, F_SETFL, O_NONBLOCK);
 	#endif
 	if (static_cast<size_t>(clientSock) >= this->_clients.size())
 		this->_clients.resize(static_cast<size_t>(clientSock) + 1, NULL);									//allocation d'un espace dans le trie 
 	if (!this->_clients[clientSock]) {																		//vérifie qu'aucun client n'existe déjà à cet index
-		this->_clients[clientSock] = new Client(clientSock, host, port);									//crée le nouveau Client
+		this->_clients[clientSock] = new Client(clientSock, host, port);									//crée le nouveau Client, mais attention sont nick est "*" et n'est pas dans le client trie
 	} else {
 		return (-1);
 	}

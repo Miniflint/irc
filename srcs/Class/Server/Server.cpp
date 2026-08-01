@@ -133,7 +133,7 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 		// std::cout << sanitizedClientBuffer << std::endl; 
 		if (!this->_validateAccess(*c, cmd) || !this->_validateCommand(*c, func, cmd))	//validateCommand atribu le pointeur sur fct adapte a la commande
 		{
-			serverReceivesLogError(c->buffer.substr(0, index), "not valid");
+			serverReceivesLogError(c->buffer.substr(0, index), "not valid");	//affichage du log de l'erreur, sur le terminal serveur
 			const int warnings = c->getWarning() + 1;
 			c->setWarning(warnings);
 			// kick user

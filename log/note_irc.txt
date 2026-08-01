@@ -5,3 +5,8 @@
 [2026-06-17 18:55:06] 5 : se plonger dans la comprehension du rfc irc
 [2026-06-17 18:56:00] !!! regulierement jeter un oeil au sujet !!!
 //int socket(int domain, int type, int protocol); AF_INET=IPv4, SOCK_STREAM=TCP
+//setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+//addr.sin_addr.s_addr = INADDR_ANY;
+//listen(listenSock, SOMAXCONN);
+//!!doCommand : cas ou le buffer contient pas de "\r\n" et est > 512o : risque d'exec une commande pas correct
+//!!getNick().empty() : cas ou le client n'a pas de nick : mais le client sans nick a "*" comme nick enfait"
