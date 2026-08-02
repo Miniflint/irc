@@ -529,11 +529,10 @@ bool	Server::handleNick(Client &c, std::istringstream &iss)
 			this->poolOut.push(c.getFd());
 		}
 		else if (c.flagsLogin == FLAG_CLIENT_FULL)
-		{
 			this->_sendAllWelcome(c);
-			this->_clientTrie.add(token, c.getFd());
-		}
 	}
+	if (c.flagsLogin == FLAG_CLIENT_FULL)
+		this->_clientTrie.add(token, c.getFd());
 	return (true);
 }
 bool	Server::handle_notice(Client &c, std::istringstream &iss) 

@@ -23,7 +23,7 @@
 # define RUN_RESTART 0x1
 # define RUN_SHUTDOWN 0x2
 # define WARNING_LIMIT 5
-# define SERV_VERSION "0.9.1"
+# define SERV_VERSION "1.0.0"
 
 # define INFO_MSG_TAG0 "---------------------------------------------------------------------------\r\n"
 # define INFO_MSG_TAG1 "|  /$$   /$$  /$$$$$$  /$$$$$$ /$$$$$$$   /$$$$$$  | 42 Project ft_irc    |\r\n"
@@ -37,9 +37,9 @@
 # define INFO_MSG_TAG9 "---------------------------------------------------------------------------\r\n"
 # define INFO_MSG_DATE "The server repository was created at this date: [2026-06-13 14:16 GMT+2]\r\n"
 # ifdef DEV
-#  define INFO_MSG_VERSION "Actual version 0.9.1 Dev date: [2026-07-17 01:41 GMT+2]\r\n"
+#  define INFO_MSG_VERSION "Actual version 1.0.2 Dev date: [2026-08-03 22:10 GMT+2]\r\n"
 # else
-#  define INFO_MSG_VERSION "Actual version 0.9.0 date: [2026-07-17 01:41 GMT+2]\r\n"
+#  define INFO_MSG_VERSION "Actual version 1.0.0 date: [2026-08-02 23:27 GMT+2]\r\n"
 # endif
 
 typedef struct S_ChannelSpecifiers {
