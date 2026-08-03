@@ -41,6 +41,23 @@ Key implementation constraints (imposed by the subject):
 | `TOPIC` | Operator: view/change a channel topic |
 | `MODE` | Channel modes `+i`, `+t`, `+k`, `+o`, `+l` (see [Channel modes](#channel-modes)) |
 
+### Bonus
+
+| Feature | Purpose |
+|---|---|
+| Bot | Capable of executing the commands listed in [Bot commands](#bot-commands) |
+| File transfer | Allows clients to send and receive files directly through the server |
+
+#### Bot commands
+
+| Trigger | Purpose |
+|---|---|
+| `$ping` | Replies "Pong !" |
+| `$joke` | Replies with a random joke from a static list |
+| `$lightspeed` | Replies with the speed of light |
+| `$second` | Replies with the physical definition of a second (Cesium 133) |
+| `$rpn <expression>` | Evaluates a Reverse Polish Notation expression (`+ - * /`) and replies with the result |
+
 ### Additional (not required, not bonus, implemented anyway)
 
 | Command | Purpose |
@@ -61,6 +78,41 @@ Key implementation constraints (imposed by the subject):
 | `MODE` (user) | User modes `i`,`x`,`d`,`R`,`g`,`B`,`o`/`O`,`a`/`A` (see [User modes](#user-modes)) |
 | `MODE` (channel, extra) | `+m`, `+n`, `+s`, `+b`, plus operator hierarchy `+v`/`+h`/`+o`/`+a`/`+q` |
 
+## Channel modes
+
+| Mode | Name | Effect |
+|---|---|---|
+| `i` | Invite-only | Only invited clients can join |
+| `s` | Secret | Hidden from `LIST` and user profiles |
+| `m` | Moderated | Only voiced (`+v`) or operator (`+o`+) members can talk |
+| `n` | No external messages | Clients outside the channel cannot `PRIVMSG` it |
+| `t` | Topic protection | Only channel operators can change the topic |
+| `k` | Key | Sets/removes a channel password |
+| `l` | User limit | Caps the number of members |
+| `b` | Ban | Banned clients cannot join |
+
+## Channel-level user privileges (per-channel, hierarchical)
+
+| Symbol | Name | Role |
+|---|---|---|
+| `+v` | Voice | Can talk in a moderated (`+m`) channel without being operator |
+| `+h` | Half-operator | Partial operator rights |
+| `+o` | Operator | Full channel rights: `KICK`, `TOPIC`, `MODE`, `INVITE` |
+| `+a` | Protected | Cannot be kicked by a plain operator |
+| `+q` | Founder | Channel creator, highest privilege level
+
+## User modes
+
+| Mode | Name | Effect |
+|---|---|---|
+| `i` | Invisible | Hidden from generic `WHO` results |
+| `x` | Hidden host | Masks the real IP/host |
+| `d` | Deaf | Blocks reception of channel messages |
+| `R` | Registered only | Rejects private messages from unregistered clients |
+| `g` | Caller-ID | Rejects private messages except from clients already messaged |
+| `B` | Bot | Marks the client as a bot |
+| `o`/`O` | Server operator | Granted only via `OPER`, not settable through `MODE` |
+| `a`/`A` | Server admin | Granted only via `OPER`, not settable through `MODE` |
 ## Instructions
 
 ### Requirements
