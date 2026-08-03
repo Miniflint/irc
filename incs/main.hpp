@@ -247,6 +247,7 @@ enum E_codes {
 
 void	serverReceivesLog(std::string msg);
 void	serverReceivesLogError(std::string msg, std::string error);
+void	serverLogError(std::string nick, std::string error);
 void	serverSendsLog(std::string msg);
 
 #endif
