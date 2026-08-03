@@ -13,8 +13,9 @@ through an IRC client, authenticate, choose a nickname, join channels, exchange 
 and private messages, and manage channels through operator privileges.
 
 The server does **not** implement server-to-server communication and does not include an
-IRC client: it only implements the server side of the protocol, and is meant to be used
-with an existing, unmodified IRC client (see [Reference client](#reference-client)).
+IRC client: it only implements the server side of the protocol. It is specifically built
+and tested to work with [Halloy](https://halloy.chat/), an existing, unmodified IRC client
+used as the reference client for this project (see [Reference client](#reference-client)).
 
 Key implementation constraints (imposed by the subject):
 - C++98 standard only, no external/Boost libraries.
@@ -113,6 +114,7 @@ Key implementation constraints (imposed by the subject):
 | `B` | Bot | Marks the client as a bot |
 | `o`/`O` | Server operator | Granted only via `OPER`, not settable through `MODE` |
 | `a`/`A` | Server admin | Granted only via `OPER`, not settable through `MODE` |
+
 ## Instructions
 
 ### Requirements
@@ -177,23 +179,19 @@ JOIN #test
 
 ## Technical choices
 
-- **Event loop**: a single call to `epoll_wait` (Linux) or `kevent` (macOS) handles the
-  listening socket plus every connected client's read/write readiness, as required by
-  the subject. Write interest on a socket is only enabled while that client's output
-  buffer is non-empty, to avoid needless wake-ups.
-- **Trie**: a compressed trie (each node stores a key *fragment*, not a single character)
-  is used for command dispatch, nickname → fd lookup, channel name → `Channel*` lookup,
-  and per-client channel membership/rights lookup.
-- **Buffering**: every client keeps a raw input buffer that is only flushed a command at
-  a time once a full `\r\n` has been received, and an output buffer that is drained
-  progressively as the socket becomes writable, respecting `MAX_PACKET_SIZE` (512 bytes)
-  as per the RFC.
+- **Event loop**: `epoll` is used on Linux and `kqueue` on macOS — two different OS-specific
+  APIs, chosen because macOS does not support `epoll` — but both are wired to behave the
+  same way in this project: a single blocking call per loop iteration multiplexes the
+  listening socket and every client's read/write readiness (whether a socket has data to
+  read or room to write without blocking), as required by the subject.
+- **Trie**: a custom compressed trie — a tree where each node stores a key *fragment*
+  rather than a single character, branching only where keys actually diverge
+  — used as an optimized lookup structure for command dispatch.
+- **Buffering**: client requests are limited to `MAX_PACKET_SIZE` (512 bytes), as required
+  by RFC 2812.
 
 ## Resources
 
-- [RFC 1459 – Internet Relay Chat Protocol](https://datatracker.ietf.org/doc/html/rfc1459)
-- [RFC 2812 – Internet Relay Chat: Client Protocol](https://datatracker.ietf.org/doc/html/rfc2812)
-- [RFC 2813 – Internet Relay Chat: Server Protocol](https://datatracker.ietf.org/doc/html/rfc2813)
 - [modern IRC documentation](https://modern.ircdocs.horse/)
 - Linux `man` pages: `epoll(7)`, `epoll_ctl(2)`, `epoll_wait(2)`
 - macOS `man` pages: `kqueue(2)`, `kevent(2)`
@@ -201,12 +199,7 @@ JOIN #test
 
 ### AI usage
 
-AI assistance (Claude) was used during this project for:
-- Understanding parts of the existing codebase (event loop, Trie data structure,
-  channel-mode handling) in preparation for the peer-evaluation, by walking through the
-  code file by file and asking targeted questions about the more complex sections.
-- Drafting and structuring this `README.md` file based on the actual source code and the
-  project subject.
+AI assistance was used during this project for:
+- Understanding parts of the existing codebase (srenaud)
+- structuring this `README.md`
 
-All AI-assisted explanations were cross-checked against the code and the RFCs listed
-above before being relied upon.
