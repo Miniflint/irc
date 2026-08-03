@@ -282,7 +282,7 @@ bool	Server::run() {
 				continue;
 			}
 			if (c->quitRequest == CLIENT_QUIT_ACCEPT) {
-				serverLogError(this->_clients[currFd]->getNick(), "Properly disconnected");
+				serverLogError(this->_clients[*it]->getNick(), "Properly disconnected");
 				delEpollClient(*this, epfd, *it);
 				it = this->poolQuit.erase(it);
 			} else
