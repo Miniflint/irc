@@ -75,7 +75,7 @@ void Server::delClient(int fd) {
 	}
 	delete c;
 	this->_clients[fd] = NULL;
-	std::cout << "\033[0;1;33m[End connection] => \033[0;36m{ '\033[1m" << nick << "\033[0;36m '}\033[0m" << std::endl;
+	std::cout << "\033[0;1;33m[End connection] => \033[0;36m{ '\033[1m" << nick << "\033[0;36m'}\033[0m" << std::endl;
 }
 
 int Server::newConnection()
@@ -131,6 +131,7 @@ bool	Server::run() {
 		for (int i = 0; i < nEvents; ++i) {
 			int currFd = events[i].ident;
 			if (events[i].flags & EV_ERROR) {
+				serverLogError(this->_clients[currFd]->getNick(), "Connection error: EV_ERROR");
 				delKqueueClient(*this, evfd, currFd);
 				continue;
 			}
@@ -143,6 +144,7 @@ bool	Server::run() {
 					char	buffer[MAX_PACKET_SIZE + 1];
 					ssize_t	readN = recv(currFd, buffer, MAX_PACKET_SIZE, 0);
 					if (readN < 1) {
+						serverLogError(this->_clients[currFd]->getNick(), "Connection error: recv");
 						delKqueueClient(*this, evfd, currFd);
 						continue ;
 					}
@@ -156,6 +158,7 @@ bool	Server::run() {
 					if (writeN != -1) {
 						this->_clients[outFd]->getBufferOut().erase(0, writeN);
 					} else {
+						serverLogError(this->_clients[currFd]->getNick(), "Connection error: send");
 						delKqueueClient(*this, evfd, currFd);
 						continue;
 					}
@@ -175,6 +178,7 @@ bool	Server::run() {
 		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
 			Client	&c = this->getClient(*it);
 			if (c.quitRequest == CLIENT_QUIT_ACCEPT) {
+				serverLogError(c.getNick(), "Server shutdown or restart");
 				delKqueueClient(*this, evfd, *it);
 				it = this->poolQuit.erase(it);
 			} else
@@ -184,8 +188,10 @@ bool	Server::run() {
 			this->runStatus = RUN_SHUTDOWN;
 	}
 	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
-		if (*it)
+		if (*it) {
+			serverLogError((*it)->getNick(), "Server shutdown or restart");
 			delKqueueClient(*this, evfd, (*it)->getFd());
+		}
 	close(evfd);
 	close(this->_sockServerFD);
 	return (true);
@@ -232,12 +238,14 @@ bool	Server::run() {
 				if (newClientFd != -1)
 					setEpollMode(epfd, newClientFd, EPOLL_CTL_ADD, EPOLLIN);
 			} else if (events[i].events & (EPOLLHUP | EPOLLERR)) {
+				serverLogError(this->_clients[currFd]->getNick(), "Connection error EPOLLHUP | EPOLLERR");
 				delEpollClient(*this, epfd, currFd);
 			} else {
 				if (events[i].events & EPOLLIN) {
 					char	buffer[MAX_PACKET_SIZE + 1];
 					ssize_t	readN = recv(currFd, buffer, MAX_PACKET_SIZE, MSG_DONTWAIT);
 					if (readN < 1) {
+						serverLogError(this->_clients[currFd]->getNick(), "Connection error: recv");
 						delEpollClient(*this, epfd, currFd);
 						continue ;
 					}
@@ -251,6 +259,7 @@ bool	Server::run() {
 					if (writeN != -1) {
 						this->_clients[outFd]->getBufferOut().erase(0, writeN);
 					} else {
+						serverLogError(this->_clients[currFd]->getNick(), "Connection error: send");
 						delEpollClient(*this, epfd, currFd);
 						continue;
 					}
@@ -265,6 +274,7 @@ bool	Server::run() {
 		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
 			Client	&c = this->getClient(*it);
 			if (c.quitRequest == CLIENT_QUIT_ACCEPT) {
+				serverLogError(this->_clients[currFd]->getNick(), "Properly disconnected");
 				delEpollClient(*this, epfd, *it);
 				it = this->poolQuit.erase(it);
 			} else
@@ -279,8 +289,10 @@ bool	Server::run() {
 			this->runStatus = RUN_SHUTDOWN;
 	}
 	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
-		if (*it)
+		if (*it) {
 			delEpollClient(*this, epfd, (*it)->getFd());
+			serverLogError((*it)->getNick(), "Server shutdown or restart");
+		}
 	close(epfd);
 	close(this->_sockServerFD);
 	return (true);
