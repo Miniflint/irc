@@ -176,9 +176,13 @@ bool	Server::run() {
 			this->poolOut.pop();
 		}
 		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
-			Client	&c = this->getClient(*it);
-			if (c.quitRequest == CLIENT_QUIT_ACCEPT) {
-				serverLogError(c.getNick(), "Server shutdown or restart");
+			Client	*c = this->_clients[*it];
+			if (!c) {
+				it = this->poolQuit.erase(it);
+				continue;
+			}
+			if (c->quitRequest == CLIENT_QUIT_ACCEPT) {
+				serverLogError(c->getNick(), "Server shutdown or restart");
 				delKqueueClient(*this, evfd, *it);
 				it = this->poolQuit.erase(it);
 			} else
@@ -272,8 +276,12 @@ bool	Server::run() {
 			}
 		}
 		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
-			Client	&c = this->getClient(*it);
-			if (c.quitRequest == CLIENT_QUIT_ACCEPT) {
+			Client	*c = this->_clients[*it];
+			if (!c) {
+				it = this->poolQuit.erase(it);
+				continue;
+			}
+			if (c->quitRequest == CLIENT_QUIT_ACCEPT) {
 				serverLogError(this->_clients[currFd]->getNick(), "Properly disconnected");
 				delEpollClient(*this, epfd, *it);
 				it = this->poolQuit.erase(it);
