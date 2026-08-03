@@ -27,24 +27,39 @@ Key implementation constraints (imposed by the subject):
 
 ## Features
 
-- Client registration flow: `PASS` → `NICK` → `USER`, with proper welcome sequence
-  (`RPL_WELCOME`, `RPL_YOURHOST`, MOTD, auto-join of a default channel, etc.).
-- Channel management: `JOIN`, `PART`, `TOPIC`, `NAMES`, `LIST`, `KICK`, `INVITE`.
-- Channel modes: `+i` (invite-only), `+t` (topic protection), `+k` (channel key/password),
-  `+l` (user limit), `+m` (moderated), `+n` (no external messages), `+s` (secret),
-  `+b` (ban list), plus the operator-hierarchy modes `+o`/`+h`/`+v`/`+a`/`+q`
-  (operator / half-op / voice / protected / founder).
-- Private messaging (`PRIVMSG`) to a user or to a channel, with away-message handling.
-- Server operator support (`OPER`), including a `KILL` command reserved to operators.
-- Graceful and forceful disconnection handling (`QUIT`, `KILL`, connection loss), with
-  proper `QUIT` broadcast to every shared channel.
-- Partial/aggregated TCP packet handling: commands are only processed once a full
-  `\r\n`-terminated line has been received, even if it was sent in several `send()`/`recv()`
-  chunks (see the `nc -C` example from the subject).
-- Internally, command dispatch, nickname lookup and channel lookup are all backed by a
-  custom **Trie** (compressed/radix trie) data structure instead of `std::map`, giving
-  lookup/insertion costs proportional to the length of the key rather than the number of
-  entries.
+### Mandatory
+
+| Command | Purpose |
+|---|---|
+| `PASS` | Server connection password |
+| `NICK` | Set/change nickname |
+| `USER` | Set username, complete registration |
+| `JOIN` | Join one or more channels |
+| `PRIVMSG` | Send a message to a user or a channel |
+| `KICK` | Operator: eject a client from a channel |
+| `INVITE` | Operator: invite a client to a channel |
+| `TOPIC` | Operator: view/change a channel topic |
+| `MODE` | Channel modes `+i`, `+t`, `+k`, `+o`, `+l` (see [Channel modes](#channel-modes)) |
+
+### Additional (not required, not bonus, implemented anyway)
+
+| Command | Purpose |
+|---|---|
+| `QUIT` | Voluntary disconnection |
+| `PART` | Leave a channel |
+| `PING` | Keep-alive, server replies `PONG` |
+| `CAP` | Capability negotiation (required by some modern clients) |
+| `OPER` | Elevate to server operator/admin |
+| `KILL` | Operator: force-disconnect a client |
+| `DIE` | Operator: shut down the server |
+| `RESTART` | Operator: restart the server — dead code, never reachable (dispatch table off-by-one, see [Known issues](#known-issues)) |
+| `INFO` | Server banner and version info |
+| `WHO` | List users of a channel |
+| `AWAY` | Set/clear an away message |
+| `NAMES` | List members of a channel |
+| `LIST` | List existing channels |
+| `MODE` (user) | User modes `i`,`x`,`d`,`R`,`g`,`B`,`o`/`O`,`a`/`A` (see [User modes](#user-modes)) |
+| `MODE` (channel, extra) | `+m`, `+n`, `+s`, `+b`, plus operator hierarchy `+v`/`+h`/`+o`/`+a`/`+q` |
 
 ## Instructions
 

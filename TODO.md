@@ -1,5 +1,6 @@
 
 ## TOP SUBJECT PRIORITY
+1. [ ] Verifier segfault ctrl c
 1. [x] Faire KICK
 2. [x] Assurer MODE
 3. [x] Assurer PRIVMSG //No external //no away
