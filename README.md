@@ -192,6 +192,8 @@ JOIN #test
 
 ## Resources
 
+- [RFC 1459 – Internet Relay Chat Protocol](https://datatracker.ietf.org/doc/html/rfc1459)
+- [RFC 2812 – Internet Relay Chat: Client Protocol](https://datatracker.ietf.org/doc/html/rfc2812)
 - [modern IRC documentation](https://modern.ircdocs.horse/)
 - Linux `man` pages: `epoll(7)`, `epoll_ctl(2)`, `epoll_wait(2)`
 - macOS `man` pages: `kqueue(2)`, `kevent(2)`
