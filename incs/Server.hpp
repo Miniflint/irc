@@ -42,6 +42,11 @@
 #  define INFO_MSG_VERSION "Actual version 1.0.0 date: [2026-08-02 23:27 GMT+2]\r\n"
 # endif
 
+# define HELP_GENERIC_TAG0 "** Help System **\r\n"
+# define HELP_GENERIC_TAG1 "Try /HELP <command> for specific help\r\n"
+# define HELP_GENERIC_TAG2 "Command enable : PASS, NICK, USER
+ 
+
 typedef struct S_ChannelSpecifiers {
 	std::string	channelType;
 	std::string	channelMode;

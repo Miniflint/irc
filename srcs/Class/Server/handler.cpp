@@ -154,6 +154,18 @@ bool	Server::handle_error(Client &c, std::istringstream &iss)
 }
 bool	Server::handle_help(Client &c, std::istringstream &iss) 
 {
+	std::string	cmd;
+
+	iss >> cmd;
+	if (cmd.empty())
+	{
+		this->handleRplHelpstart(c, HELP_GENERIC_TAG0);
+		this->handleRplHelptxt(c, "\r\n");
+		this->handleRplHelptxt(c, HELP_GENERIC_TAG1);
+		this->
+
+	this->poolOut.push(c.getFd());
+	return (true);
 /*	std::string token;
 	iss >> token;
 	this->handleErrUnknowncommand(c, "HELP");
