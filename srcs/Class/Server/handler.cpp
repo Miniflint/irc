@@ -160,9 +160,9 @@ bool	Server::handle_help(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handleInfo(Client &c, std::istringstream &iss) 
-{
-	(void)iss;
+bool	Server::handleInfo(Client &c, std::istringstream &iss)	//fct appelle par doComm
+{																//c = le client qui fait la cmd
+	(void)iss;													//iss = reste la requet mais inutil ici
 	this->handleRplInfo(c, INFO_MSG_TAG0);
 	this->handleRplInfo(c, INFO_MSG_TAG1);
 	this->handleRplInfo(c, INFO_MSG_TAG2);
@@ -176,7 +176,7 @@ bool	Server::handleInfo(Client &c, std::istringstream &iss)
 	this->handleRplInfo(c, INFO_MSG_DATE);
 	this->handleRplInfo(c, INFO_MSG_VERSION);
 	this->handleRplEndofinfo(c);
-	this->poolOut.push(c.getFd());
+	this->poolOut.push(c.getFd());								//mettre sur la liste des fd a mettre sur epollout
 	return (true);
 }
 bool	Server::handleInvite(Client &c, std::istringstream &iss) 
