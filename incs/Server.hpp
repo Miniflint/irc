@@ -302,6 +302,10 @@ class Server {
 		void	handleRplBanList(Client &c, Channel &channel);
 		void	handleRplEndofbanlist(Client &c, std::string channelName);
 		void	handleRplEndofwhowas(Client &c);
+		void	handleRplHelpstart(Client &c, std::string message);
+		void	handleRplHelptxt(Client &c, std::string message);
+		void	handleRplEndofhelp(Client &c, std::string message);
+		void	handleRplHelpUnknowncommand(Client &c, std::string message);
 		void	handleRplInfo(Client &c, std::string message);
 		void	handleRplMotd(Client &c);
 		void	handleRplInfostart(Client &c);

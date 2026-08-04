@@ -679,6 +679,26 @@ void	Server::handleRplEndofwhowas(Client &c)
 	std::string rplMessage(this->_rplPrefix("000", c.getNick()));
 	c.addBufferOut(rplMessage);
 }
+void	Server::handleRplHelpstart(Client &c, std::string message)
+{
+	std::string rplMessage(this->_rplPrefix("704", c.getNick()));
+	c.addBufferOut(rplMessage.append(1, ':').append(message));
+}
+void	Server::handleRplHelptxt(Client &c, std::string message)
+{
+	std::string rplMessage(this->_rplPrefix("705", c.getNick()));
+	c.addBufferOut(rplMessage.append(1, ':').append(message));
+}
+void	Server::handleRplEndofhelp(Client &c, std::string message)
+{
+	std::string rplMessage(this->_rplPrefix("706", c.getNick()));
+	c.addBufferOut(rplMessage.append(1, ':').append(message));
+}
+void	Server::handleRplHelpUnknowncommand(Client &c, std::string message)
+{
+	std::string rplMessage(this->_rplPrefix("524", c.getNick()));
+	c.addBufferOut(rplMessage.append(1, ':').append(message));
+}
 void	Server::handleRplInfo(Client &c, std::string message)
 {
 	std::string rplMessage(this->_rplPrefix("371", c.getNick()));
