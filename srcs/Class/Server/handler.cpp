@@ -154,11 +154,11 @@ bool	Server::handle_error(Client &c, std::istringstream &iss)
 }
 bool	Server::handle_help(Client &c, std::istringstream &iss) 
 {
-	std::string token;
+/*	std::string token;
 	iss >> token;
 	this->handleErrUnknowncommand(c, "HELP");
 	this->poolOut.push(c.getFd());
-	return (true);
+	return (true);*/
 }
 bool	Server::handleInfo(Client &c, std::istringstream &iss) 
 {
