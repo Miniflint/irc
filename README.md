@@ -21,6 +21,7 @@ Key implementation constraints (imposed by the subject):
 - C++98 standard only, no external/Boost libraries.
 - The server must never crash, whatever happens (bad input, disconnections, memory
   pressure, etc.).
+//memory pressure on s'en fou
 - All I/O is non-blocking, and a **single** event-notification call
   (`epoll` on Linux / `kqueue` on macOS) multiplexes every socket (listening socket, all
   client reads and writes).

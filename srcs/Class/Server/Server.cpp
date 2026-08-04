@@ -48,6 +48,12 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 
 Server::~Server()
 {
+	Trie<std::vector<std::string> >	helpMessage;
+	std::vector<std::string> vec;
+	vec.push_back("NICK => is a function");
+	vec.push_back()
+	this->helpMessage.add("NICK", vec);
+	this->helpMessage[cmd]
 	const std::vector<Client *>::const_iterator end = this->_clients.end();
 	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != end; it++)
 		if (*it) { delete *it; *it = NULL; }
