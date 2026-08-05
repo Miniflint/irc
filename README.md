@@ -4,27 +4,22 @@
 
 ## Description
 
-`ft_irc` is a custom implementation of an IRC (Internet Relay Chat) server, written from
-scratch in C++98 as part of the 42 curriculum.
+`ft_irc` is a implementation of an IRC (Internet Relay Chat) server, written in C++98.
 
-The goal of the project is to understand and implement one of the fundamental protocols
-of the Internet: a text-based, real-time messaging protocol that allows users to connect
-through an IRC client, authenticate, choose a nickname, join channels, exchange public
-and private messages, and manage channels through operator privileges.
+IRC is a real-time messaging protocol that allow users to connect through an IRC client,
+authenticate, choose a nickname, join channels, exchange public and private messages,
+and manage channels through operator privileges.
 
-The server does **not** implement server-to-server communication and does not include an
-IRC client: it only implements the server side of the protocol. It is specifically built
-and tested to work with [Halloy](https://halloy.chat/), an existing, unmodified IRC client
+The server does **not** does not include an IRC client: it only implements the server
+side of the protocol. It is specifically built and tested to work with
+[Halloy](https://halloy.chat/), an existing, unmodified IRC client
 used as the reference client for this project (see [Reference client](#reference-client)).
 
 Key implementation constraints (imposed by the subject):
 - C++98 standard only, no external/Boost libraries.
-- The server must never crash, whatever happens (bad input, disconnections, memory
-  pressure, etc.).
-//memory pressure on s'en fou
+- The server must never crash, whatever happens (bad input, disconnections, etc.).
 - All I/O is non-blocking, and a **single** event-notification call
-  (`epoll` on Linux / `kqueue` on macOS) multiplexes every socket (listening socket, all
-  client reads and writes).
+  (for exemple : `epoll` on Linux / `kqueue` on macOS)
 - Forking is forbidden.
 
 ## Features
@@ -181,13 +176,10 @@ JOIN #test
 ## Technical choices
 
 - **Event loop**: `epoll` is used on Linux and `kqueue` on macOS — two different OS-specific
-  APIs, chosen because macOS does not support `epoll` — but both are wired to behave the
-  same way in this project: a single blocking call per loop iteration multiplexes the
-  listening socket and every client's read/write readiness (whether a socket has data to
-  read or room to write without blocking), as required by the subject.
+  APIs, chosen because macOS does not support `epoll` — but in this project, both have the same behavior
 - **Trie**: a custom compressed trie — a tree where each node stores a key *fragment*
   rather than a single character, branching only where keys actually diverge
-  — used as an optimized lookup structure for command dispatch.
+  It's a fast way to find and execute commands.
 - **Buffering**: client requests are limited to `MAX_PACKET_SIZE` (512 bytes), as required
   by RFC 2812.
 

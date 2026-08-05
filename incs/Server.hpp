@@ -168,7 +168,7 @@ class Server {
 		bool	handleDie(Client &c, std::istringstream &rest);
 		bool	handleRestart(Client &c, std::istringstream &rest);
 		bool	handle_error(Client &c, std::istringstream &rest);
-		bool	handle_help(Client &c, std::istringstream &rest);
+		bool	handleHelp(Client &c, std::istringstream &rest);
 		bool	handleInfo(Client &c, std::istringstream &rest);
 		bool	handleInvite(Client &c, std::istringstream &rest);
 		bool	handle_ison(Client &c, std::istringstream &rest);
