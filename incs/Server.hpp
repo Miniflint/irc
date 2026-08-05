@@ -44,7 +44,7 @@
 
 # define HELP_GENERIC_TAG0 "** Help System **\r\n"
 # define HELP_GENERIC_TAG1 "Try /HELP <command> for specific help\r\n"
-# define HELP_GENERIC_TAG2 "Command enable : PASS, NICK, USER
+# define HELP_GENERIC_TAG2 "Command enable : PASS, NICK, USER"
  
 
 typedef struct S_ChannelSpecifiers {
@@ -87,10 +87,11 @@ class Server {
 		std::string				_operatorPass;
 		std::string				_adminName;
 		std::string				_operatorName;
-		Trie<std::vector<string>>		_helpTrie;
+		Trie<std::vector<std::string> >		_helpTrie;
 		// bool					_init();
 		// bool					_clientAdd();
 
+		std::vector<std::string>	helpNick(void);
 		bool					_validateAccess(Client &c, std::string &command);
 		bool    				_validateCommand(Client &c, cmdFn &func, std::string &command);
 		void					_autoKill(Client &c, std::string message);

@@ -4,8 +4,8 @@ static std::vector<std::string>	HelpTextVectorMaker(const char *lines[], size_t 
 	return std::vector<std::string>(lines, lines + n);
 }
 
-std::vector<std::string>	Server::HelpNick(void) {
+std::vector<std::string>	Server::helpNick(void) {
 	const char	*lines[] = {"NICK <nickname>", "The NICK command is used to give the client a nickname or change the previous one.", "Numeric Replies: 431, 433, 436"};
-		return (HelpTextVectorMaker(lines, 3);
+		return (HelpTextVectorMaker(lines, 3));
 }
 

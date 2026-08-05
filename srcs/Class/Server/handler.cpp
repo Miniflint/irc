@@ -152,7 +152,8 @@ bool	Server::handle_error(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_help(Client &c, std::istringstream &iss) 
+
+bool	Server::handleHelp(Client &c, std::istringstream &iss) 
 {
 	std::string	cmd;
 
@@ -162,11 +163,15 @@ bool	Server::handle_help(Client &c, std::istringstream &iss)
 		this->handleRplHelpstart(c, HELP_GENERIC_TAG0);
 		this->handleRplHelptxt(c, "\r\n");
 		this->handleRplHelptxt(c, HELP_GENERIC_TAG1);
-		this->
+		this->handleRplEndofhelp(c, HELP_GENERIC_TAG2);
+	}
 
 	this->poolOut.push(c.getFd());
 	return (true);
-/*	std::string token;
+
+
+/*
+	std::string token;
 	iss >> token;
 	this->handleErrUnknowncommand(c, "HELP");
 	this->poolOut.push(c.getFd());

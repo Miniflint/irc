@@ -17,7 +17,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	const Server::cmdFn func_list[] = {
 		&Server::handle_admin, &Server::handleAway, &Server::handleCap, &Server::handle_cnotice,
 		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handleDie, &Server::handleRestart, &Server::handle_error,
-		&Server::handle_help, &Server::handleInfo, &Server::handleInvite, &Server::handle_ison,
+		&Server::handleHelp, &Server::handleInfo, &Server::handleInvite, &Server::handle_ison,
 		&Server::handleJoin, &Server::handleKick, &Server::handleKill, &Server::handle_knock,
 		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handleMode,
 		&Server::handle_motd, &Server::handleNames, &Server::handleNick, &Server::handle_notice,
@@ -32,6 +32,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	};
 	for (unsigned int i = 0; i <= END; i++)
 		this->_commands.add(t[i], func_list[i]);
+	this->_helpTrie.add("NICK", this->helpNick());
 	this->_commands.createGraph();
 	this->_channelSpecifiers.channelType = "#&";
 	this->_channelSpecifiers.channelLen = 32;
@@ -48,6 +49,14 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 
 Server::~Server()
 {
+	const std::vector<Client *>::const_iterator end = this->_clients.end();
+	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != end; it++)
+		if (*it) { delete *it; *it = NULL; }
+	this->_clients.clear();
+}
+
+/*Server::~Server()
+{
 	Trie<std::vector<std::string> >	helpMessage;
 	std::vector<std::string> vec;
 	vec.push_back("NICK => is a function");
@@ -58,7 +67,7 @@ Server::~Server()
 	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != end; it++)
 		if (*it) { delete *it; *it = NULL; }
 	this->_clients.clear();
-}
+}*/
 
 bool    Server::_validateAccess(Client &c, std::string &command)
 {
