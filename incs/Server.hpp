@@ -87,7 +87,7 @@ class Server {
 		std::string				_operatorPass;
 		std::string				_adminName;
 		std::string				_operatorName;
-		Trie<std::string>		_helpTrie;
+		Trie<std::vector<string>>		_helpTrie;
 		// bool					_init();
 		// bool					_clientAdd();
 
