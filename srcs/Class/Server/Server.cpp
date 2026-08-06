@@ -45,6 +45,8 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_clientSpecifiers.nickLenMax = 12;
 	this->_clientSpecifiers.userMode = "ixdRgBoOaA";
 	this->_helpTrie.add("NICK", this->helpNick());
+	this->_helpTrie.add("PASS", this->helpPass());
+	this->_helpTrie.add("USER", this->helpUser());
 }
 
 Server::~Server()

@@ -44,7 +44,7 @@
 
 # define HELP_GENERIC_TAG0 "** Help System **"
 # define HELP_GENERIC_TAG1 "Try /HELP <command> for specific help"
-# define HELP_GENERIC_TAG2 "Command enable : PASS, NICK, USER"
+# define HELP_GENERIC_TAG2 "Command enable : NICK, PASS, USER"
  
 # define HELP_NOTFOUND_TAG "I do not know anything about this"
 
@@ -93,6 +93,8 @@ class Server {
 		// bool					_clientAdd();
 
 		std::vector<std::string>	helpNick(void);
+		std::vector<std::string>	helpPass(void);
+		std::vector<std::string>	helpUser(void);
 		bool					_validateAccess(Client &c, std::string &command);
 		bool    				_validateCommand(Client &c, cmdFn &func, std::string &command);
 		void					_autoKill(Client &c, std::string message);
