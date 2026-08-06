@@ -698,7 +698,7 @@ void	Server::handleRplEndofhelp(Client &c, std::string message)
 	c.addBufferOut(rplMessage.append(1, ':').append(message));
 }
 
-void	Server::handleRplHelpUnknowncommand(Client &c, std::string message)
+void	Server::handleRplHelpNotFind(Client &c, std::string message)
 {
 	std::string rplMessage(this->_rplPrefix("524", c.getNick()));
 	c.addBufferOut(rplMessage.append(1, ':').append(message));

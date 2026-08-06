@@ -32,7 +32,6 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	};
 	for (unsigned int i = 0; i <= END; i++)
 		this->_commands.add(t[i], func_list[i]);
-	this->_helpTrie.add("NICK", this->helpNick());
 	this->_commands.createGraph();
 	this->_channelSpecifiers.channelType = "#&";
 	this->_channelSpecifiers.channelLen = 32;
@@ -45,6 +44,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_motd.announcements.push_back("Please Respect the rules !");
 	this->_clientSpecifiers.nickLenMax = 12;
 	this->_clientSpecifiers.userMode = "ixdRgBoOaA";
+	this->_helpTrie.add("NICK", this->helpNick());
 }
 
 Server::~Server()

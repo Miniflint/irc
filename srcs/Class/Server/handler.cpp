@@ -158,13 +158,18 @@ bool	Server::handleHelp(Client &c, std::istringstream &iss)
 	std::string	cmd;
 
 	iss >> cmd;
-	if (cmd.empty())
-	{
+	if (cmd.empty()) {
 		this->handleRplHelpstart(c, HELP_GENERIC_TAG0);
 		this->handleRplHelptxt(c, "\r\n");
 		this->handleRplHelptxt(c, HELP_GENERIC_TAG1);
 		this->handleRplEndofhelp(c, HELP_GENERIC_TAG2);
 	}
+	trie<std::vector<std::string> >		*node = this->_helpTrie.find(cmd);
+	if (!node)
+		this->handleRplHelpNotFind(c, HELP_NOTFOUND_TAG0);
+		this->(c, HELP_GENERIC_TAG0);
+		this->handleRplHelptxt(c, "\r\n");
+
 
 	this->poolOut.push(c.getFd());
 	return (true);
