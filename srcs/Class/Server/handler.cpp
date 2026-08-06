@@ -153,6 +153,17 @@ bool	Server::handle_error(Client &c, std::istringstream &iss)
 	return (true);
 }
 
+static void		handleHelpCmd(Server *server, Client &c, std::string &cmd, std::vector<std::string> &lines) {
+	std::string	banner = "** Help " + cmd + "command **";
+
+	server->handleRplHelpstart(c, banner);
+	server->handleRplHelptxt(c, "");
+	for(unsigned int i = 0; i < lines.size() -1; i++) {
+		server->handleRplHelptxt(c, lines[i]);
+	}
+	server->handleRplEndofhelp(c, lines[lines.size() -1]);
+}
+
 bool	Server::handleHelp(Client &c, std::istringstream &iss) 
 {
 	std::string	cmd;
@@ -160,28 +171,26 @@ bool	Server::handleHelp(Client &c, std::istringstream &iss)
 	iss >> cmd;
 	if (cmd.empty()) {
 		this->handleRplHelpstart(c, HELP_GENERIC_TAG0);
-		this->handleRplHelptxt(c, "\r\n");
+		this->handleRplHelptxt(c, "");
 		this->handleRplHelptxt(c, HELP_GENERIC_TAG1);
 		this->handleRplEndofhelp(c, HELP_GENERIC_TAG2);
+		this->poolOut.push(c.getFd());
+		return (true);
 	}
-	trie<std::vector<std::string> >		*node = this->_helpTrie.find(cmd);
-	if (!node)
+
+	cmd.toUpper();
+	Trie<std::vector<std::string> >		*node = this->_helpTrie.find(cmd);
+	if (!node) {
 		this->handleRplHelpNotFind(c, HELP_NOTFOUND_TAG0);
-		this->(c, HELP_GENERIC_TAG0);
-		this->handleRplHelptxt(c, "\r\n");
-
-
+		this->handleRplEndofhelp(c, HELP_GENERIC_TAG2);
+	}
+	else {
+		handleHelpCmd(this, c, cmd, node->getElem());
+	}
 	this->poolOut.push(c.getFd());
 	return (true);
-
-
-/*
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "HELP");
-	this->poolOut.push(c.getFd());
-	return (true);*/
 }
+
 bool	Server::handleInfo(Client &c, std::istringstream &iss) 
 {
 	(void)iss;
