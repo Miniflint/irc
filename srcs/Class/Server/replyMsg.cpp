@@ -680,22 +680,22 @@ void	Server::handleRplEndofwhowas(Client &c)
 	c.addBufferOut(rplMessage);
 }
 
-void	Server::handleRplHelpstart(Client &c, std::string message)
+void	Server::handleRplHelpstart(Client &c, std::string subject, std::string message)
 {
 	std::string rplMessage(this->_rplPrefix("704", c.getNick()));
-	c.addBufferOut(rplMessage.append(1, ':').append(message).append("\r\n"));
+	c.addBufferOut(rplMessage.append(subject).append(1, ' ').append(1, ':').append(message).append("\r\n"));
 }
 
-void	Server::handleRplHelptxt(Client &c, std::string message)
+void	Server::handleRplHelptxt(Client &c, std::string subject, std::string message)
 {
 	std::string rplMessage(this->_rplPrefix("705", c.getNick()));
-	c.addBufferOut(rplMessage.append(1, ':').append(message).append("\r\n"));
+	c.addBufferOut(rplMessage.append(subject).append(1, ' ').append(1, ':').append(message).append("\r\n"));
 }
 
-void	Server::handleRplEndofhelp(Client &c, std::string message)
+void	Server::handleRplEndofhelp(Client &c, std::string subject, std::string message)
 {
 	std::string rplMessage(this->_rplPrefix("706", c.getNick()));
-	c.addBufferOut(rplMessage.append(1, ':').append(message).append("\r\n"));
+	c.addBufferOut(rplMessage.append(subject).append(1, ' ').append(1, ':').append(message).append("\r\n"));
 }
 
 void	Server::handleRplHelpNotFind(Client &c, std::string message)

@@ -6,7 +6,7 @@
 /*   By: srenaud <marvin@42.fr>                        +#+                    */
 /*                                                    +#+                     */
 /*   Created: 2026/08/07 15:20:55 by srenaud        #+#    #+#                */
-/*   Updated: 2026/08/07 15:25:16 by srenaud        ########   odam.nl        */
+/*   Updated: 2026/08/07 19:32:46 by srenaud        ########   odam.nl        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,39 +165,39 @@ bool	Server::handle_error(Client &c, std::istringstream &iss)
 	return (true);
 }
 
-static void		handleHelpCmd(Server *server, Client &c, std::string &cmd, std::vector<std::string> &lines) {
-	std::string	banner = "** Help " + cmd + "command **";
+static void		handleHelpCmd(Server *server, Client &c, std::string &subject, std::vector<std::string> &lines) {
+	std::string	banner = "** Help " + subject + " command **";
 
-	server->handleRplHelpstart(c, banner);
-	server->handleRplHelptxt(c, "");
+	server->handleRplHelpstart(c, subject, banner);
+	server->handleRplHelptxt(c, subject, "");
 	for(unsigned int i = 0; i < lines.size() -1; i++) {
-		server->handleRplHelptxt(c, lines[i]);
+		server->handleRplHelptxt(c, subject, lines[i]);
 	}
-	server->handleRplEndofhelp(c, lines[lines.size() -1]);
+	server->handleRplEndofhelp(c, subject, lines[lines.size() -1]);
 }
 
 bool	Server::handleHelp(Client &c, std::istringstream &iss) 
 {
-	std::string	cmd;
+	std::string	subject;
 
-	iss >> cmd;
-	if (cmd.empty()) {
-		this->handleRplHelpstart(c, HELP_GENERIC_TAG0);
-		this->handleRplHelptxt(c, "");
-		this->handleRplHelptxt(c, HELP_GENERIC_TAG1);
-		this->handleRplEndofhelp(c, HELP_GENERIC_TAG2);
+	iss >> subject;
+	if (subject.empty()) {
+		this->handleRplHelpstart(c, "*", HELP_GENERIC_TAG0);
+		this->handleRplHelptxt(c, "*", "");
+		this->handleRplHelptxt(c, "*", HELP_GENERIC_TAG1);
+		this->handleRplEndofhelp(c, "*", HELP_GENERIC_TAG2);
 		this->poolOut.push(c.getFd());
 		return (true);
 	}
 
-	std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
-	Trie<std::vector<std::string> >		*node = this->_helpTrie.find(cmd);
+	std::transform(subject.begin(), subject.end(), subject.begin(), ::toupper);
+	Trie<std::vector<std::string> >		*node = this->_helpTrie.find(subject);
 	if (!node) {
 		this->handleRplHelpNotFind(c, HELP_NOTFOUND_TAG);
-		this->handleRplEndofhelp(c, HELP_GENERIC_TAG2);
+		this->handleRplEndofhelp(c, subject, HELP_GENERIC_TAG2);
 	}
 	else {
-		handleHelpCmd(this, c, cmd, node->getElem());
+		handleHelpCmd(this, c, subject, node->getElem());
 	}
 	this->poolOut.push(c.getFd());
 	return (true);
