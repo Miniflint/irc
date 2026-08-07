@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                         ::::::::           */
+/*   handler.cpp                                         :+:    :+:           */
+/*                                                      +:+                   */
+/*   By: srenaud <marvin@42.fr>                        +#+                    */
+/*                                                    +#+                     */
+/*   Created: 2026/08/07 15:20:55 by srenaud        #+#    #+#                */
+/*   Updated: 2026/08/07 15:25:16 by srenaud        ########   odam.nl        */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Server.hpp"
 #include <cstring>
 #include <algorithm>
@@ -178,10 +190,10 @@ bool	Server::handleHelp(Client &c, std::istringstream &iss)
 		return (true);
 	}
 
-	cmd.toUpper();
+	std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 	Trie<std::vector<std::string> >		*node = this->_helpTrie.find(cmd);
 	if (!node) {
-		this->handleRplHelpNotFind(c, HELP_NOTFOUND_TAG0);
+		this->handleRplHelpNotFind(c, HELP_NOTFOUND_TAG);
 		this->handleRplEndofhelp(c, HELP_GENERIC_TAG2);
 	}
 	else {
