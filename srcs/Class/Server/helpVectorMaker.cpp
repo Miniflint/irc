@@ -6,9 +6,13 @@ static std::vector<std::string>	HelpTextVectorMaker(const char *lines[], size_t 
 
 std::vector<std::string>	Server::helpNick(void) {
 	const char	*lines[] = {"NICK <nickname>",
-	"The NICK command is used to give the client a nickname or change the previous one.",
-	"Numeric Replies: 431, 433, 436"};
-		return (HelpTextVectorMaker(lines, 3));
+"The NICK command is used to give the client a nickname or change the previous one.",
+"431 ERR_NONICKNAMEGIVEN : sent when no nickname parameter is given",
+"432 ERR_ERRONEUSNICKNAME : sent when the nickname contains invalid characters",
+"433 ERR_NICKNAMEINUSE : sent when the requested nickname is already in use",
+"436 ERR_NICKCOLLISION : sent when a nickname collision is detected during registration",
+"Numeric Replies: 431, 432, 433, 436"};
+		return (HelpTextVectorMaker(lines, 7));
 }
 
 std::vector<std::string>	Server::helpPass(void) {
