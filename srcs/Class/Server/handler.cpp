@@ -6,7 +6,7 @@
 /*   By: srenaud <marvin@42.fr>                        +#+                    */
 /*                                                    +#+                     */
 /*   Created: 2026/08/07 15:20:55 by srenaud        #+#    #+#                */
-/*   Updated: 2026/08/07 19:32:46 by srenaud        ########   odam.nl        */
+/*   Updated: 2026/08/08 16:19:58 by srenaud        ########   odam.nl        */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -193,8 +193,7 @@ bool	Server::handleHelp(Client &c, std::istringstream &iss)
 	std::transform(subject.begin(), subject.end(), subject.begin(), ::toupper);
 	Trie<std::vector<std::string> >		*node = this->_helpTrie.find(subject);
 	if (!node) {
-		this->handleRplHelpNotFind(c, HELP_NOTFOUND_TAG);
-		this->handleRplEndofhelp(c, subject, HELP_GENERIC_TAG2);
+		this->handleRplHelpNotFind(c, subject, HELP_NOTFOUND_TAG);
 	}
 	else {
 		handleHelpCmd(this, c, subject, node->getElem());

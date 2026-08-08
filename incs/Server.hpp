@@ -314,7 +314,7 @@ class Server {
 		void	handleRplHelpstart(Client &c, std::string subject, std::string message);
 		void	handleRplHelptxt(Client &c, std::string subject, std::string message);
 		void	handleRplEndofhelp(Client &c, std::string subject, std::string message);
-		void	handleRplHelpNotFind(Client &c, std::string message);
+		void	handleRplHelpNotFind(Client &c, std::string subject, std::string message);
 		void	handleRplInfo(Client &c, std::string message);
 		void	handleRplMotd(Client &c);
 		void	handleRplInfostart(Client &c);
