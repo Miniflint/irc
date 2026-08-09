@@ -32,7 +32,7 @@ std::vector<std::string>	Server::helpUser(void) {
 "The realname parameter starts with a colon, meaning everything after it, including spaces, is treated as a single parameter.",
 "This command must be sent as part of the registration process, along with NICK.",
 "461 ERR_NEEDMOREPARAMS : sent when the number of parameters given is less than 4",
-"462 ERR_ALREADYREGISTRED : sent when the client sends USER after registration is already complete",};
+"462 ERR_ALREADYREGISTRED : sent when the client sends USER after registration is already complete"};
 		return (HelpTextVectorMaker(lines, 8));
 }
 
