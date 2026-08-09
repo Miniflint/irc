@@ -47,6 +47,9 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_helpTrie.add("NICK", this->helpNick());
 	this->_helpTrie.add("PASS", this->helpPass());
 	this->_helpTrie.add("USER", this->helpUser());
+	this->_helpTrie.add("JOIN", this->helpJoin());
+	this->_helpTrie.add("INVITE", this->helpInvite());
+	this->_helpTrie.add("PRIVMSG", this->helpPrivmsg());
 }
 
 Server::~Server()
