@@ -77,6 +77,22 @@ std::vector<std::string>	Server::helpPrivmsg(void) {
 		return (HelpTextVectorMaker(lines, 8));
 }
 
+std::vector<std::string>	Server::helpMode(void) {
+	const char	*lines[] = {"MODE <channel> <modes> [<mode parameters>]",
+"The MODE command is used to change or view the modes of a channel.",
+"Supported channel modes are i (invite-only), t (topic restricted to operators), k (channel key), o (operator privilege), and l (user limit).",
+"Modes can be combined and are prefixed with + to add or - to remove.",
+"401 ERR_NOSUCHNICK : sent when a target nickname given as a mode parameter does not exist",
+"403 ERR_NOSUCHCHANNEL : sent when the channel does not exist",
+"442 ERR_NOTONCHANNEL : sent when the client is not on the channel",
+"461 ERR_NEEDMOREPARAMS : sent when a mode requiring a parameter is given without one",
+"467 ERR_KEYSET : sent when trying to set a key on a channel that already has one",
+"472 ERR_UNKNOWNMODE : sent when an unsupported mode character is given",
+"482 ERR_CHANOPRIVSNEEDED : sent when the client is not a channel operator",
+"324 RPL_CHANNELMODEIS : sent to reply with the current modes of the channel"};
+		return (HelpTextVectorMaker(lines, 12));
+}
+
 
 
 /*
