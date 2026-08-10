@@ -99,6 +99,9 @@ class Server {
 		std::vector<std::string>	helpInvite(void);
 		std::vector<std::string>	helpPrivmsg(void);
 		std::vector<std::string>	helpMode(void);
+		std::vector<std::string>	helpTopic(void);
+		std::vector<std::string>	helpKick(void);
+
 		bool					_validateAccess(Client &c, std::string &command);
 		bool    				_validateCommand(Client &c, cmdFn &func, std::string &command);
 		void					_autoKill(Client &c, std::string message);

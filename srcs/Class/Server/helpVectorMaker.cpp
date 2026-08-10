@@ -78,21 +78,66 @@ std::vector<std::string>	Server::helpPrivmsg(void) {
 }
 
 std::vector<std::string>	Server::helpMode(void) {
-	const char	*lines[] = {"MODE <channel> <modes> [<mode parameters>]",
-"The MODE command is used to change or view the modes of a channel.",
-"Supported channel modes are i (invite-only), t (topic restricted to operators), k (channel key), o (operator privilege), and l (user limit).",
-"Modes can be combined and are prefixed with + to add or - to remove.",
+	const char	*lines[] = {"MODE <target> <modes> [<mode parameters>]",
+"The MODE command is used to change or view the modes of a channel, or the modes of a user.",
+"For channels, the following modes are supported:",
+"i (Invite-only) : only invited clients can join the channel",
+"s (Secret) : hides the channel from LIST/NAMES results for non-members",
+"m (Moderated) : only members with +v or higher can speak",
+"n (No external messages) : a client outside the channel cannot send it a message",
+"t (Topic protection) : only members with +h or higher can change the topic",
+"k (Key) : sets a password required to join the channel",
+"l (User limit) : sets the maximum number of members allowed",
+"b (Ban) : prevents a banned client from joining the channel",
+"The following privilege modes can be set on a channel member (MODE #channel +/-x <nick>):",
+"v (Voice) : allows the user to speak in a moderated (+m) channel",
+"h (Half-operator) : minimum level required to change a protected topic and see invisible users via WHO",
+"o (Operator) : full access to KICK, TOPIC, MODE and INVITE on the channel",
+"The following modes can be set on a user (MODE <nick> +/-x):",
+"i (Invisible) : hides the client from generic WHO results",
+"o/O (Server operator) : grants KICK/MODE/TOPIC/INVITE/WHO access and bypasses channel restrictions",
+"a/A (Server admin) : protects the user from being KILLed by a simple operator",
 "401 ERR_NOSUCHNICK : sent when a target nickname given as a mode parameter does not exist",
 "403 ERR_NOSUCHCHANNEL : sent when the channel does not exist",
 "442 ERR_NOTONCHANNEL : sent when the client is not on the channel",
 "461 ERR_NEEDMOREPARAMS : sent when a mode requiring a parameter is given without one",
 "467 ERR_KEYSET : sent when trying to set a key on a channel that already has one",
 "472 ERR_UNKNOWNMODE : sent when an unsupported mode character is given",
+"477 ERR_NOCHANMODES : sent when the channel does not support modes",
 "482 ERR_CHANOPRIVSNEEDED : sent when the client is not a channel operator",
-"324 RPL_CHANNELMODEIS : sent to reply with the current modes of the channel"};
-		return (HelpTextVectorMaker(lines, 12));
+"501 ERR_UMODEUNKNOWNFLAG : sent when an unsupported user mode character is given",
+"502 ERR_USERSDONTMATCH : sent when a client tries to change the mode of another user",
+"324 RPL_CHANNELMODEIS : sent to reply with the current modes of a channel",
+"221 RPL_UMODEIS : sent to reply with the current modes of a user"};
+		return (HelpTextVectorMaker(lines, 31));
 }
 
+std::vector<std::string>	Server::helpTopic(void) {
+	const char	*lines[] = {"TOPIC <channel> [<topic>]",
+"The TOPIC command is used to view or change the topic of a channel.",
+"If no topic parameter is given, the current topic is returned.",
+"If the channel has topic protection (+t) set, only a channel operator or higher can change the topic.",
+"331 RPL_NOTOPIC : sent when the channel has no topic set",
+"332 RPL_TOPIC : sent with the current topic when it is requested",
+"403 ERR_NOSUCHCHANNEL : sent when the channel does not exist",
+"442 ERR_NOTONCHANNEL : sent when the client is not on the channel",
+"461 ERR_NEEDMOREPARAMS : sent when no channel parameter is given",
+"482 ERR_CHANOPRIVSNEEDED : sent when the client tries to change the topic without the required privilege"};
+		return (HelpTextVectorMaker(lines, 10));
+}
+
+std::vector<std::string>	Server::helpKick(void) {
+	const char	*lines[] = {"KICK <channel> <nickname> [<comment>]",
+"The KICK command is used to remove a client from a channel.",
+"Only a channel operator or higher can kick a member from the channel.",
+"401 ERR_NOSUCHNICK : sent when the target nickname does not exist",
+"403 ERR_NOSUCHCHANNEL : sent when the channel does not exist",
+"441 ERR_USERNOTINCHANNEL : sent when the target user is not on the channel",
+"442 ERR_NOTONCHANNEL : sent when the client sending the command is not on the channel",
+"461 ERR_NEEDMOREPARAMS : sent when the number of parameters given is less than 2",
+"482 ERR_CHANOPRIVSNEEDED : sent when the client is not a channel operator"};
+		return (HelpTextVectorMaker(lines, 9));
+}
 
 
 /*
