@@ -139,6 +139,15 @@ std::vector<std::string>	Server::helpKick(void) {
 		return (HelpTextVectorMaker(lines, 9));
 }
 
+std::vector<std::string>	Server::helpQuit(void) {
+	const char	*lines[] = {"QUIT [<message>]",
+"The QUIT command is used to terminate the client's connection to the server.",
+"If a message is given, it is sent to other users as the reason for leaving.",
+"The server closes the connection after processing this command.",
+"Numeric Replies: none"};
+		return (HelpTextVectorMaker(lines, 5));
+}
+
 
 /*
 
