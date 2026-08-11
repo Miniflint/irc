@@ -148,11 +148,87 @@ std::vector<std::string>	Server::helpQuit(void) {
 		return (HelpTextVectorMaker(lines, 5));
 }
 
+std::vector<std::string>	Server::helpPart(void) {
+	const char	*lines[] = {"PART <channel>{,<channel>} [<message>]",
+"The PART command is used to leave one or more channels.",
+"If a message is given, it is sent to other channel members as the reason for leaving.",
+"403 ERR_NOSUCHCHANNEL : sent when the channel does not exist",
+"442 ERR_NOTONCHANNEL : sent when the client is not on the channel",
+"461 ERR_NEEDMOREPARAMS : sent when no channel parameter is given"};
+		return (HelpTextVectorMaker(lines, 6));
+}
+
+std::vector<std::string>	Server::helpPing(void) {
+	const char	*lines[] = {"PING <server1> [<server2>]",
+"The PING command is used to test the presence of an active connection.",
+"The recipient must reply with a PONG command echoing the same parameter.",
+"409 ERR_NOORIGIN : sent when no origin parameter is given"};
+		return (HelpTextVectorMaker(lines, 4));
+}
+
+std::vector<std::string>	Server::helpKill(void) {
+	const char	*lines[] = {"KILL <nickname> <comment>",
+"The KILL command is used to forcibly disconnect a client from the server.",
+"Only a server operator can use this command.",
+"401 ERR_NOSUCHNICK : sent when the target nickname does not exist",
+"461 ERR_NEEDMOREPARAMS : sent when the number of parameters given is less than 2",
+"481 ERR_NOPRIVILEGES : sent when the client is not a server operator",
+"483 ERR_CANTKILLSERVER : sent when the client tries to kill a server connection"};
+		return (HelpTextVectorMaker(lines, 7));
+}
+
+std::vector<std::string>	Server::helpDie(void) {
+	const char	*lines[] = {"DIE",
+"The DIE command is used to shut down the server.",
+"Only a server operator can use this command.",
+"481 ERR_NOPRIVILEGES : sent when the client is not a server operator"};
+		return (HelpTextVectorMaker(lines, 4));
+}
+
+std::vector<std::string>	Server::helpRestart(void) {
+	const char	*lines[] = {"RESTART",
+"The RESTART command is used to restart the server.",
+"Only a server operator can use this command.",
+"481 ERR_NOPRIVILEGES : sent when the client is not a server operator"};
+		return (HelpTextVectorMaker(lines, 5));
+}
+
+std::vector<std::string>	Server::helpInfo(void) {
+	const char	*lines[] = {"INFO [<target>]",
+"The INFO command is used to return information describing the server.",
+"If a target is given, the request is forwarded to the specified server.",
+"371 RPL_INFO : sent for each line of information about the server",
+"374 RPL_ENDOFINFO : sent to indicate the end of the INFO reply",
+"402 ERR_NOSUCHSERVER : sent when the target server does not exist"};
+		return (HelpTextVectorMaker(lines, 6));
+}
+
+std::vector<std::string>	Server::helpWho(void) {
+	const char	*lines[] = {"WHO [<mask>] [<o>]",
+"The WHO command is used to return a list of users matching a mask.",
+"If the o parameter is given, only server operators are returned.",
+"If no mask is given, all visible users are returned.",
+"352 RPL_WHOREPLY : sent for each user matching the request",
+"315 RPL_ENDOFWHO : sent to indicate the end of the WHO reply"};
+		return (HelpTextVectorMaker(lines, 6));
+}
+
+std::vector<std::string>	Server::helpAway(void) {
+	const char	*lines[] = {"AWAY [<message>]",
+"The AWAY command sets or clears your away status.",
+"With a message: you are marked as away, and that message is shown",
+"automatically to anyone who sends you a PRIVMSG while you're away.",
+"Without a message: your away status is cleared.",
+"305 RPL_UNAWAY : you are no longer marked as away",
+"306 RPL_NOWAWAY : you are now marked as away",
+"301 RPL_AWAY : sent to a client attempting to message you, showing your away message"};
+		return (HelpTextVectorMaker(lines, 8));
+}
 
 /*
 
 std::vector<std::string>	Server::help(void) {
 	const char	*lines[] = {};
-		return (HelpTextVectorMaker(lines, 12));
+		return (HelpTextVectorMaker(lines, ));
 }
 */

@@ -53,6 +53,15 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_helpTrie.add("MODE", this->helpMode());
 	this->_helpTrie.add("TOPIC", this->helpTopic());
 	this->_helpTrie.add("KICK", this->helpKick());
+	this->_helpTrie.add("QUIT", this->helpQuit());
+	this->_helpTrie.add("PART", this->helpPart());
+	this->_helpTrie.add("PING", this->helpPing());
+	this->_helpTrie.add("KILL", this->helpKill());
+	this->_helpTrie.add("DIE", this->helpDie());
+	this->_helpTrie.add("RESTART", this->helpRestart());
+	this->_helpTrie.add("INFO", this->helpInfo());
+	this->_helpTrie.add("WHO", this->helpWho());
+	this->_helpTrie.add("AWAY", this->helpAway());
 }
 
 Server::~Server()

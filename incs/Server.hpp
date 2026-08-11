@@ -101,6 +101,15 @@ class Server {
 		std::vector<std::string>	helpMode(void);
 		std::vector<std::string>	helpTopic(void);
 		std::vector<std::string>	helpKick(void);
+		std::vector<std::string>	helpQuit(void);
+		std::vector<std::string>	helpPart(void);
+		std::vector<std::string>	helpPing(void);
+		std::vector<std::string>	helpKill(void);
+		std::vector<std::string>	helpDie(void);
+		std::vector<std::string>	helpRestart(void);
+		std::vector<std::string>	helpInfo(void);
+		std::vector<std::string>	helpWho(void);
+		std::vector<std::string>	helpAway(void);
 
 		bool					_validateAccess(Client &c, std::string &command);
 		bool    				_validateCommand(Client &c, cmdFn &func, std::string &command);
