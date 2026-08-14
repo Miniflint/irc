@@ -190,7 +190,7 @@ std::vector<std::string>	Server::helpRestart(void) {
 "The RESTART command is used to restart the server.",
 "Only a server operator can use this command.",
 "481 ERR_NOPRIVILEGES : sent when the client is not a server operator"};
-		return (HelpTextVectorMaker(lines, 5));
+		return (HelpTextVectorMaker(lines, 4));
 }
 
 std::vector<std::string>	Server::helpInfo(void) {
