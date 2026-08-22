@@ -298,8 +298,8 @@ bool	Server::run() {
 	}
 	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 		if (*it) {
-			delEpollClient(*this, epfd, (*it)->getFd());
 			serverLogError((*it)->getNick(), "Server shutdown or restart");
+			delEpollClient(*this, epfd, (*it)->getFd());
 		}
 	close(epfd);
 	close(this->_sockServerFD);
