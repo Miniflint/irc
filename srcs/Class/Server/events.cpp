@@ -293,7 +293,7 @@ bool	Server::run() {
 		}
 		while (!this->poolOut.empty()) {
 			int	outFd = this->poolOut.front();
-			if (!this->_clients[outFd])
+			if (this->_clients[outFd])
 				setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
 			this->poolOut.pop();
 		}
