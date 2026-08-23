@@ -182,7 +182,7 @@ bool	Server::run() {
 				continue;
 			}
 			if (c->quitRequest == CLIENT_QUIT_ACCEPT) {
-				serverLogError(c->getNick(), "Server shutdown or restart");
+				serverLogError(c->getNick(), "Properly disconnected");
 				delKqueueClient(*this, evfd, *it);
 				it = this->poolQuit.erase(it);
 			} else
