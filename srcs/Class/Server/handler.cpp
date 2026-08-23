@@ -706,7 +706,13 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		// std::cout << "bool resulet : client channel access =>" << bool(t < USER_VOICE) << "client status =>" << bool(c.getStatus() < CLIENT_ACCESS_OPERATOR) << "channel mode =>" << bool(targetChannel->getMode() & CHANNEL_MODERATED) << std::endl;
 		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && targetChannel->getMode() & CHANNEL_MODERATED && t < USER_VOICE)
 			return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
-		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
+		std::vector<int>::const_iterator end = targetChannel->getClientsFD().end();
+		for (std::vector<int>::const_iterator it = targetChannel->getClientsFD().begin(); it != end; it++) {
+			Client *curr = this->_clients[*it];
+			if (!curr || curr->getStatus() & CLIENT_ACCESS_DEAF)
+				continue ;
+			clients.push_back(*it);
+		}
 	}
 	else
 	{
@@ -721,8 +727,11 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 			this->handleRplAway(c, cAway);
 			this->poolOut.push(c.getFd());
 		}
-		clients.push_back(targetClient);
-		clients.push_back(c.getFd());
+		if (!(cAway.getStatus() & CLIENT_ACCESS_REGISTERED))
+		{
+			clients.push_back(targetClient);
+			clients.push_back(c.getFd());
+		}
 	}
 	std::string		full(_makeHostMask(c, "PRIVMSG"));
 	// message.erase(0, 1);
