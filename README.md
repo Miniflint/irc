@@ -28,15 +28,15 @@ Key implementation constraints (imposed by the subject):
 
 | Command | Purpose |
 |---|---|
-| `PASS` | Server connection password |
-| `NICK` | Set/change nickname |
-| `USER` | Set username, complete registration |
-| `JOIN` | Join one or more channels |
-| `PRIVMSG` | Send a message to a user or a channel |
-| `KICK` | Operator: eject a client from a channel |
 | `INVITE` | Operator: invite a client to a channel |
-| `TOPIC` | Operator: view/change a channel topic |
+| `JOIN` | Join one or more channels |
+| `KICK` | Operator: eject a client from a channel |
 | `MODE` | Channel modes `+i`, `+t`, `+k`, `+o`, `+l` (see [Channel modes](#channel-modes)) |
+| `NICK` | Set/change nickname |
+| `PASS` | Server connection password |
+| `PRIVMSG` | Send a message to a user or a channel |
+| `TOPIC` | Operator: view/change a channel topic |
+| `USER` | Set username, complete registration |
 
 ### Bonus
 
@@ -59,21 +59,21 @@ Key implementation constraints (imposed by the subject):
 
 | Command | Purpose |
 |---|---|
-| `QUIT` | Voluntary disconnection |
-| `PART` | Leave a channel |
-| `PING` | Keep-alive, server replies `PONG` |
+| `AWAY` | Set/clear an away message |
 | `CAP` | Capability negotiation (required by some modern clients) |
-| `OPER` | Elevate to server operator/admin |
-| `KILL` | Operator: force-disconnect a client |
 | `DIE` | Operator: shut down the server |
 | `RESTART` | Operator: restart the server — dead code, never reachable (dispatch table off-by-one, see [Known issues](#known-issues)) |
 | `INFO` | Server banner and version info |
-| `WHO` | List users of a channel |
-| `AWAY` | Set/clear an away message |
-| `NAMES` | List members of a channel |
+| `KILL` | Operator: force-disconnect a client |
 | `LIST` | List existing channels |
 | `MODE` (user) | User modes `i`,`x`,`d`,`R`,`g`,`B`,`o`/`O`,`a`/`A` (see [User modes](#user-modes)) |
 | `MODE` (channel, extra) | `+m`, `+n`, `+s`, `+b`, plus operator hierarchy `+v`/`+h`/`+o`/`+a`/`+q` |
+| `NAMES` | List members of a channel |
+| `OPER` | Elevate to server operator/admin |
+| `PART` | Leave a channel |
+| `PING` | Keep-alive, server replies `PONG` |
+| `QUIT` | Voluntary disconnection |
+| `WHO` | List users of a channel |
 
 ## Channel modes
 
@@ -196,5 +196,6 @@ JOIN #test
 
 AI assistance was used during this project for:
 - Understanding parts of the existing codebase (srenaud)
-- structuring this `README.md`
+- structuring this `README.md` (srenaud)
+- helping with writing the help command (srenaud) 
 
