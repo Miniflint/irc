@@ -40,32 +40,19 @@ std::vector<std::string>	Server::helpJoin(void) {
 "The JOIN command is used to make a client join specific channel(s).",
 "If the channel does not exist, it is created and the client automatically becomes a founder and an operator.",
 "If the channel has a key set, the client must provide the matching key to join.",
-<<<<<<< HEAD
 "On success, the JOIN message itself is echoed back to the client, with the channel as its first parameter",
 "332 RPL_TOPIC : sent after a successful join if the channel has a topic set",
 "331 RPL_NOTOPIC : sent after a successful join if the channel has no topic set",
 "353 RPL_NAMREPLY : sent one or more times after a successful join, listing the channel members",
 "366 RPL_ENDOFNAMES : sent once after all RPL_NAMREPLY lines, to indicate the end of the list",
-=======
-"332 RPL_TOPIC : Sent to inform the current topic of the channel",
-"353 RPL_NAMREPLY : Sent to lists the clients that have joined and their status in the channel.",
-"366 RPL_ENDOFNAMES : Sent to specify end of the RPL_NAMREPLY.",
-"403 ERR_NOSUCHCHANNEL : sent when the channel name is invalid",
-"405 ERR_TOOMANYCHANNELS : sent when the client has already joined the maximum allowed number of channels",
->>>>>>> 748c9e9a303e7e03962aebe3628f105523cf4e05
 "461 ERR_NEEDMOREPARAMS : sent when no channel parameter is given",
 "471 ERR_CHANNELISFULL : sent when the channel has reached its user limit",
 "473 ERR_INVITEONLYCHAN : sent when the channel is invite-only and the client has not been invited",
 "474 ERR_BANNEDFROMCHAN : sent when the client is banned from the channel",
 "475 ERR_BADCHANNELKEY : sent when the key provided does not match the channel key",
-<<<<<<< HEAD
 "476 ERR_BADCHANMASK : sent when the channel name does not start with a valid channel prefix",
 "479 ERR_BADCHANNAME : sent when the channel name exceeds the maximum allowed length"};
-		return (HelpTextVectorMaker(lines, 16));
-=======
-"476 ERR_BADCHANMASK : sent when the channel name does not respect the expected format"};
-	return (HelpTextVectorMaker(lines, 15));
->>>>>>> 748c9e9a303e7e03962aebe3628f105523cf4e05
+	return (HelpTextVectorMaker(lines, 16));
 }
 
 std::vector<std::string>	Server::helpInvite(void) {
