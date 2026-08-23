@@ -4,26 +4,22 @@
 
 ## Description
 
-`ft_irc` is a custom implementation of an IRC (Internet Relay Chat) server, written from
-scratch in C++98 as part of the 42 curriculum.
+`ft_irc` is a implementation of an IRC (Internet Relay Chat) server, written in C++98.
 
-The goal of the project is to understand and implement one of the fundamental protocols
-of the Internet: a text-based, real-time messaging protocol that allows users to connect
-through an IRC client, authenticate, choose a nickname, join channels, exchange public
-and private messages, and manage channels through operator privileges.
+IRC is a real-time messaging protocol that allow users to connect through an IRC client,
+authenticate, choose a nickname, join channels, exchange public and private messages,
+and manage channels through operator privileges.
 
-The server does **not** implement server-to-server communication and does not include an
-IRC client: it only implements the server side of the protocol. It is specifically built
-and tested to work with [Halloy](https://halloy.chat/), an existing, unmodified IRC client
+The server does **not** does not include an IRC client: it only implements the server
+side of the protocol. It is specifically built and tested to work with
+[Halloy](https://halloy.chat/), an existing, unmodified IRC client
 used as the reference client for this project (see [Reference client](#reference-client)).
 
 Key implementation constraints (imposed by the subject):
 - C++98 standard only, no external/Boost libraries.
-- The server must never crash, whatever happens (bad input, disconnections, memory
-  pressure, etc.).
+- The server must never crash, whatever happens (bad input, disconnections, etc.).
 - All I/O is non-blocking, and a **single** event-notification call
-  (`epoll` on Linux / `kqueue` on macOS) multiplexes every socket (listening socket, all
-  client reads and writes).
+  (for exemple : `epoll` on Linux / `kqueue` on macOS)
 - Forking is forbidden.
 
 ## Features
@@ -32,15 +28,15 @@ Key implementation constraints (imposed by the subject):
 
 | Command | Purpose |
 |---|---|
-| `PASS` | Server connection password |
-| `NICK` | Set/change nickname |
-| `USER` | Set username, complete registration |
-| `JOIN` | Join one or more channels |
-| `PRIVMSG` | Send a message to a user or a channel |
-| `KICK` | Operator: eject a client from a channel |
 | `INVITE` | Operator: invite a client to a channel |
-| `TOPIC` | Operator: view/change a channel topic |
+| `JOIN` | Join one or more channels |
+| `KICK` | Operator: eject a client from a channel |
 | `MODE` | Channel modes `+i`, `+t`, `+k`, `+o`, `+l` (see [Channel modes](#channel-modes)) |
+| `NICK` | Set/change nickname |
+| `PASS` | Server connection password |
+| `PRIVMSG` | Send a message to a user or a channel |
+| `TOPIC` | Operator: view/change a channel topic |
+| `USER` | Set username, complete registration |
 
 ### Bonus
 
@@ -63,21 +59,21 @@ Key implementation constraints (imposed by the subject):
 
 | Command | Purpose |
 |---|---|
-| `QUIT` | Voluntary disconnection |
-| `PART` | Leave a channel |
-| `PING` | Keep-alive, server replies `PONG` |
+| `AWAY` | Set/clear an away message |
 | `CAP` | Capability negotiation (required by some modern clients) |
-| `OPER` | Elevate to server operator/admin |
-| `KILL` | Operator: force-disconnect a client |
 | `DIE` | Operator: shut down the server |
 | `RESTART` | Operator: restart the server — dead code, never reachable (dispatch table off-by-one, see [Known issues](#known-issues)) |
 | `INFO` | Server banner and version info |
-| `WHO` | List users of a channel |
-| `AWAY` | Set/clear an away message |
-| `NAMES` | List members of a channel |
+| `KILL` | Operator: force-disconnect a client |
 | `LIST` | List existing channels |
 | `MODE` (user) | User modes `i`,`x`,`d`,`R`,`g`,`B`,`o`/`O`,`a`/`A` (see [User modes](#user-modes)) |
 | `MODE` (channel, extra) | `+m`, `+n`, `+s`, `+b`, plus operator hierarchy `+v`/`+h`/`+o`/`+a`/`+q` |
+| `NAMES` | List members of a channel |
+| `OPER` | Elevate to server operator/admin |
+| `PART` | Leave a channel |
+| `PING` | Keep-alive, server replies `PONG` |
+| `QUIT` | Voluntary disconnection |
+| `WHO` | List users of a channel |
 
 ## Channel modes
 
@@ -180,13 +176,10 @@ JOIN #test
 ## Technical choices
 
 - **Event loop**: `epoll` is used on Linux and `kqueue` on macOS — two different OS-specific
-  APIs, chosen because macOS does not support `epoll` — but both are wired to behave the
-  same way in this project: a single blocking call per loop iteration multiplexes the
-  listening socket and every client's read/write readiness (whether a socket has data to
-  read or room to write without blocking), as required by the subject.
+  APIs, chosen because macOS does not support `epoll` — but in this project, both have the same behavior
 - **Trie**: a custom compressed trie — a tree where each node stores a key *fragment*
   rather than a single character, branching only where keys actually diverge
-  — used as an optimized lookup structure for command dispatch.
+  It's a fast way to find and execute commands.
 - **Buffering**: client requests are limited to `MAX_PACKET_SIZE` (512 bytes), as required
   by RFC 2812.
 
@@ -203,5 +196,6 @@ JOIN #test
 
 AI assistance was used during this project for:
 - Understanding parts of the existing codebase (srenaud)
-- structuring this `README.md`
+- structuring this `README.md` (srenaud)
+- helping with writing the help command (srenaud) 
 

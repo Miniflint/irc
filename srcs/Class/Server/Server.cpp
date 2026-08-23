@@ -17,7 +17,7 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	const Server::cmdFn func_list[] = {
 		&Server::handle_admin, &Server::handleAway, &Server::handleCap, &Server::handle_cnotice,
 		&Server::handle_cprivmsg, &Server::handle_connect, &Server::handleDie, &Server::handleRestart, &Server::handle_error,
-		&Server::handle_help, &Server::handleInfo, &Server::handleInvite, &Server::handle_ison,
+		&Server::handleHelp, &Server::handleInfo, &Server::handleInvite, &Server::handle_ison,
 		&Server::handleJoin, &Server::handleKick, &Server::handleKill, &Server::handle_knock,
 		&Server::handle_links, &Server::handleList, &Server::handle_lusers, &Server::handleMode,
 		&Server::handle_motd, &Server::handleNames, &Server::handleNick, &Server::handle_notice,
@@ -44,6 +44,28 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_motd.announcements.push_back("Please Respect the rules !");
 	this->_clientSpecifiers.nickLenMax = 12;
 	this->_clientSpecifiers.userMode = "ixdRgBoOaA";
+	this->_helpTrie.add("AWAY", this->helpAway());
+	this->_helpTrie.add("CAP", this->helpCap());
+	this->_helpTrie.add("DIE", this->helpDie());
+	this->_helpTrie.add("RESTART", this->helpRestart());
+	this->_helpTrie.add("INFO", this->helpInfo());
+	this->_helpTrie.add("INVITE", this->helpInvite());
+	this->_helpTrie.add("JOIN", this->helpJoin());
+	this->_helpTrie.add("KICK", this->helpKick());
+	this->_helpTrie.add("KILL", this->helpKill());
+	this->_helpTrie.add("LIST", this->helpList());
+	this->_helpTrie.add("MODE", this->helpMode());
+	this->_helpTrie.add("NAMES", this->helpNames());
+	this->_helpTrie.add("NICK", this->helpNick());
+	this->_helpTrie.add("OPER", this->helpOper());
+	this->_helpTrie.add("PART", this->helpPart());
+	this->_helpTrie.add("PASS", this->helpPass());
+	this->_helpTrie.add("PING", this->helpPing());
+	this->_helpTrie.add("PRIVMSG", this->helpPrivmsg());
+	this->_helpTrie.add("QUIT", this->helpQuit());
+	this->_helpTrie.add("TOPIC", this->helpTopic());
+	this->_helpTrie.add("USER", this->helpUser());
+	this->_helpTrie.add("WHO", this->helpWho());
 }
 
 Server::~Server()
@@ -53,6 +75,20 @@ Server::~Server()
 		if (*it) { delete *it; *it = NULL; }
 	this->_clients.clear();
 }
+
+/*Server::~Server()
+{
+	Trie<std::vector<std::string> >	helpMessage;
+	std::vector<std::string> vec;
+	vec.push_back("NICK => is a function");
+	vec.push_back()
+	this->helpMessage.add("NICK", vec);
+	this->helpMessage[cmd]
+	const std::vector<Client *>::const_iterator end = this->_clients.end();
+	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != end; it++)
+		if (*it) { delete *it; *it = NULL; }
+	this->_clients.clear();
+}*/
 
 bool    Server::_validateAccess(Client &c, std::string &command)
 {

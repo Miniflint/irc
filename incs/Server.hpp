@@ -42,6 +42,12 @@
 #  define INFO_MSG_VERSION "Actual version 1.0.0 date: [2026-08-02 23:27 GMT+2]\r\n"
 # endif
 
+# define HELP_GENERIC_TAG0 "HELP command"
+# define HELP_GENERIC_TAG1 "Try /HELP <command> for specific help"
+# define HELP_GENERIC_TAG2 "End of Help Command"
+ 
+# define HELP_NOTFOUND_TAG "No help available on this topic"
+
 typedef struct S_ChannelSpecifiers {
 	std::string	channelType;
 	std::string	channelMode;
@@ -82,10 +88,9 @@ class Server {
 		std::string				_operatorPass;
 		std::string				_adminName;
 		std::string				_operatorName;
-		Trie<std::string>		_helpTrie;
+		Trie<std::vector<std::string> >		_helpTrie;
 		// bool					_init();
 		// bool					_clientAdd();
-
 		bool					_validateAccess(Client &c, std::string &command);
 		bool    				_validateCommand(Client &c, cmdFn &func, std::string &command);
 		void					_autoKill(Client &c, std::string message);
@@ -153,6 +158,29 @@ class Server {
 		std::queue<int>					poolOut;
 		std::vector<int>				poolQuit;
 		uint8_t							runStatus;
+
+		std::vector<std::string>	helpNick(void);
+		std::vector<std::string>	helpPass(void);
+		std::vector<std::string>	helpUser(void);
+		std::vector<std::string>	helpJoin(void);
+		std::vector<std::string>	helpInvite(void);
+		std::vector<std::string>	helpPrivmsg(void);
+		std::vector<std::string>	helpMode(void);
+		std::vector<std::string>	helpTopic(void);
+		std::vector<std::string>	helpKick(void);
+		std::vector<std::string>	helpQuit(void);
+		std::vector<std::string>	helpPart(void);
+		std::vector<std::string>	helpPing(void);
+		std::vector<std::string>	helpKill(void);
+		std::vector<std::string>	helpDie(void);
+		std::vector<std::string>	helpRestart(void);
+		std::vector<std::string>	helpInfo(void);
+		std::vector<std::string>	helpWho(void);
+		std::vector<std::string>	helpAway(void);
+		std::vector<std::string>	helpOper(void);
+		std::vector<std::string>	helpCap(void);
+		std::vector<std::string>	helpList(void);
+		std::vector<std::string>	helpNames(void);
 		// c'est horrible
 		bool	handle_admin(Client &c, std::istringstream &rest);
 		bool	handleAway(Client &c, std::istringstream &rest);
@@ -163,7 +191,7 @@ class Server {
 		bool	handleDie(Client &c, std::istringstream &rest);
 		bool	handleRestart(Client &c, std::istringstream &rest);
 		bool	handle_error(Client &c, std::istringstream &rest);
-		bool	handle_help(Client &c, std::istringstream &rest);
+		bool	handleHelp(Client &c, std::istringstream &rest);
 		bool	handleInfo(Client &c, std::istringstream &rest);
 		bool	handleInvite(Client &c, std::istringstream &rest);
 		bool	handle_ison(Client &c, std::istringstream &rest);
@@ -302,6 +330,10 @@ class Server {
 		void	handleRplBanList(Client &c, Channel &channel);
 		void	handleRplEndofbanlist(Client &c, std::string channelName);
 		void	handleRplEndofwhowas(Client &c);
+		void	handleRplHelpstart(Client &c, std::string subject, std::string message);
+		void	handleRplHelptxt(Client &c, std::string subject, std::string message);
+		void	handleRplEndofhelp(Client &c, std::string subject, std::string message);
+		void	handleRplHelpNotFind(Client &c, std::string subject, std::string message);
 		void	handleRplInfo(Client &c, std::string message);
 		void	handleRplMotd(Client &c);
 		void	handleRplInfostart(Client &c);

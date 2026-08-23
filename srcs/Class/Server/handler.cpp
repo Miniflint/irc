@@ -152,14 +152,42 @@ bool	Server::handle_error(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-bool	Server::handle_help(Client &c, std::istringstream &iss) 
+
+static void		handleHelpCmd(Server *server, Client &c, std::string &subject, std::vector<std::string> &lines) {
+	std::string	banner = "Help '" + subject + "' command";
+
+	server->handleRplHelpstart(c, subject, banner);
+	for(unsigned int i = 0; i < lines.size() -1; i++) {
+		server->handleRplHelptxt(c, subject, lines[i]);
+	}
+	server->handleRplEndofhelp(c, subject, lines[lines.size() -1]);
+}
+
+bool	Server::handleHelp(Client &c, std::istringstream &iss) 
 {
-	std::string token;
-	iss >> token;
-	this->handleErrUnknowncommand(c, "HELP");
+	std::string	subject;
+
+	iss >> subject;
+	if (subject.empty()) {
+		this->handleRplHelpstart(c, "*", HELP_GENERIC_TAG0);
+		this->handleRplHelptxt(c, "*", HELP_GENERIC_TAG1);
+		this->handleRplEndofhelp(c, "*", HELP_GENERIC_TAG2);
+		this->poolOut.push(c.getFd());
+		return (true);
+	}
+
+	std::transform(subject.begin(), subject.end(), subject.begin(), ::toupper);
+	Trie<std::vector<std::string> >		*node = this->_helpTrie.find(subject);
+	if (!node) {
+		this->handleRplHelpNotFind(c, subject, HELP_NOTFOUND_TAG);
+	}
+	else {
+		handleHelpCmd(this, c, subject, node->getElem());
+	}
 	this->poolOut.push(c.getFd());
 	return (true);
 }
+
 bool	Server::handleInfo(Client &c, std::istringstream &iss) 
 {
 	(void)iss;
@@ -676,7 +704,13 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		// std::cout << "bool resulet : client channel access =>" << bool(t < USER_VOICE) << "client status =>" << bool(c.getStatus() < CLIENT_ACCESS_OPERATOR) << "channel mode =>" << bool(targetChannel->getMode() & CHANNEL_MODERATED) << std::endl;
 		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && targetChannel->getMode() & CHANNEL_MODERATED && t < USER_VOICE)
 			return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
-		clients.assign(targetChannel->getClientsFD().begin(), targetChannel->getClientsFD().end());
+		std::vector<int>::const_iterator end = targetChannel->getClientsFD().end();
+		for (std::vector<int>::const_iterator it = targetChannel->getClientsFD().begin(); it != end; it++) {
+			Client *curr = this->_clients[*it];
+			if (!curr || curr->getStatus() & CLIENT_ACCESS_DEAF)
+				continue ;
+			clients.push_back(*it);
+		}
 	}
 	else
 	{
@@ -691,8 +725,11 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 			this->handleRplAway(c, cAway);
 			this->poolOut.push(c.getFd());
 		}
-		clients.push_back(targetClient);
-		clients.push_back(c.getFd());
+		if (!(cAway.getStatus() & CLIENT_ACCESS_REGISTERED))
+		{
+			clients.push_back(targetClient);
+			clients.push_back(c.getFd());
+		}
 	}
 	std::string		full(_makeHostMask(c, "PRIVMSG"));
 	// message.erase(0, 1);
