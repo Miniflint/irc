@@ -91,26 +91,6 @@ class Server {
 		Trie<std::vector<std::string> >		_helpTrie;
 		// bool					_init();
 		// bool					_clientAdd();
-
-		std::vector<std::string>	helpNick(void);
-		std::vector<std::string>	helpPass(void);
-		std::vector<std::string>	helpUser(void);
-		std::vector<std::string>	helpJoin(void);
-		std::vector<std::string>	helpInvite(void);
-		std::vector<std::string>	helpPrivmsg(void);
-		std::vector<std::string>	helpMode(void);
-		std::vector<std::string>	helpTopic(void);
-		std::vector<std::string>	helpKick(void);
-		std::vector<std::string>	helpQuit(void);
-		std::vector<std::string>	helpPart(void);
-		std::vector<std::string>	helpPing(void);
-		std::vector<std::string>	helpKill(void);
-		std::vector<std::string>	helpDie(void);
-		std::vector<std::string>	helpRestart(void);
-		std::vector<std::string>	helpInfo(void);
-		std::vector<std::string>	helpWho(void);
-		std::vector<std::string>	helpAway(void);
-
 		bool					_validateAccess(Client &c, std::string &command);
 		bool    				_validateCommand(Client &c, cmdFn &func, std::string &command);
 		void					_autoKill(Client &c, std::string message);
@@ -178,6 +158,27 @@ class Server {
 		std::queue<int>					poolOut;
 		std::vector<int>				poolQuit;
 		uint8_t							runStatus;
+
+		std::vector<std::string>	helpNick(void);
+		std::vector<std::string>	helpPass(void);
+		std::vector<std::string>	helpUser(void);
+		std::vector<std::string>	helpJoin(void);
+		std::vector<std::string>	helpInvite(void);
+		std::vector<std::string>	helpPrivmsg(void);
+		std::vector<std::string>	helpMode(void);
+		std::vector<std::string>	helpTopic(void);
+		std::vector<std::string>	helpKick(void);
+		std::vector<std::string>	helpQuit(void);
+		std::vector<std::string>	helpPart(void);
+		std::vector<std::string>	helpPing(void);
+		std::vector<std::string>	helpKill(void);
+		std::vector<std::string>	helpDie(void);
+		std::vector<std::string>	helpRestart(void);
+		std::vector<std::string>	helpInfo(void);
+		std::vector<std::string>	helpWho(void);
+		std::vector<std::string>	helpAway(void);
+		std::vector<std::string>	helpOper(void);
+		std::vector<std::string>	helpCap(void);
 		// c'est horrible
 		bool	handle_admin(Client &c, std::istringstream &rest);
 		bool	handleAway(Client &c, std::istringstream &rest);
