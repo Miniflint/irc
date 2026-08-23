@@ -171,7 +171,7 @@ std::vector<std::string>	Server::helpPart(void) {
 }
 
 std::vector<std::string>	Server::helpPing(void) {
-	const char	*lines[] = {"PING <server1> [<server2>]",
+	const char	*lines[] = {"PING",
 "The PING command is used to test the presence of an active connection.",
 "The recipient must reply with a PONG command echoing the same parameter.",
 "409 ERR_NOORIGIN : sent when no origin parameter is given"};
@@ -206,13 +206,11 @@ std::vector<std::string>	Server::helpRestart(void) {
 }
 
 std::vector<std::string>	Server::helpInfo(void) {
-	const char	*lines[] = {"INFO [<target>]",
+	const char	*lines[] = {"INFO",
 "The INFO command is used to return information describing the server.",
-"If a target is given, the request is forwarded to the specified server.",
 "371 RPL_INFO : sent for each line of information about the server",
-"374 RPL_ENDOFINFO : sent to indicate the end of the INFO reply",
-"402 ERR_NOSUCHSERVER : sent when the target server does not exist"};
-	return (HelpTextVectorMaker(lines, 6));
+"374 RPL_ENDOFINFO : sent to indicate the end of the INFO reply"};
+	return (HelpTextVectorMaker(lines, 4));
 }
 
 std::vector<std::string>	Server::helpWho(void) {
