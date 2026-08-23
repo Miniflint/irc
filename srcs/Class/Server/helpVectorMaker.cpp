@@ -259,6 +259,24 @@ std::vector<std::string>	Server::helpCap(void) {
 	return (HelpTextVectorMaker(lines, 9));
 }
 
+std::vector<std::string>	Server::helpNames(void) {
+	const char	*lines[] = {"NAMES <channel>{,<channel>}",
+"the NAMES command is used to list all visible using in said <channel>",
+"The <channel> are evaluated 1 by 1",
+"353 RPL_NAMREPLY : sent one or more times after a successful join, listing the channel members",
+"366 RPL_ENDOFNAMES : sent once after all RPL_NAMREPLY lines, to indicate the end of the list",
+"461 ERR_NEEDMOREPARAMS : sent when the number of params is less than 1."};
+	return (HelpTextVectorMaker(lines, 6));
+}
+
+std::vector<std::string>	Server::helpList(void) {
+	const char	*lines[] = {"LIST",
+"The list command is used to get a list of channel and the amount of user in each of them.",
+"321 RPL_LISTSTART : sent in reply as the list command, marks the start of the channel list",
+"322 RPL_LIST : sent for each <channel> along with informations about <client count> and <topic>",
+"323 RPL_LISTEND : sent to mark the end of the channel list"};
+	return (HelpTextVectorMaker(lines, 5));
+}
 /*
 
 std::vector<std::string>	Server::help(void) {

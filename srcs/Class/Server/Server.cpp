@@ -64,6 +64,8 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_helpTrie.add("AWAY", this->helpAway());
 	this->_helpTrie.add("CAP", this->helpCap());
 	this->_helpTrie.add("OPER", this->helpOper());
+	this->_helpTrie.add("LIST", this->helpList());
+	this->_helpTrie.add("NAMES", this->helpNames());
 }
 
 Server::~Server()

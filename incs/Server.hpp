@@ -42,11 +42,11 @@
 #  define INFO_MSG_VERSION "Actual version 1.0.0 date: [2026-08-02 23:27 GMT+2]\r\n"
 # endif
 
-# define HELP_GENERIC_TAG0 "** Help System **"
+# define HELP_GENERIC_TAG0 "HELP command"
 # define HELP_GENERIC_TAG1 "Try /HELP <command> for specific help"
-# define HELP_GENERIC_TAG2 "Command enable : NICK, PASS, USER"
+# define HELP_GENERIC_TAG2 "End of Help Command"
  
-# define HELP_NOTFOUND_TAG "I do not know anything about this"
+# define HELP_NOTFOUND_TAG "No help available on this topic"
 
 typedef struct S_ChannelSpecifiers {
 	std::string	channelType;
@@ -179,6 +179,8 @@ class Server {
 		std::vector<std::string>	helpAway(void);
 		std::vector<std::string>	helpOper(void);
 		std::vector<std::string>	helpCap(void);
+		std::vector<std::string>	helpList(void);
+		std::vector<std::string>	helpNames(void);
 		// c'est horrible
 		bool	handle_admin(Client &c, std::istringstream &rest);
 		bool	handleAway(Client &c, std::istringstream &rest);

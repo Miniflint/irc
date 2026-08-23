@@ -154,10 +154,9 @@ bool	Server::handle_error(Client &c, std::istringstream &iss)
 }
 
 static void		handleHelpCmd(Server *server, Client &c, std::string &subject, std::vector<std::string> &lines) {
-	std::string	banner = "** Help " + subject + " command **";
+	std::string	banner = "Help '" + subject + "' command";
 
 	server->handleRplHelpstart(c, subject, banner);
-	server->handleRplHelptxt(c, subject, "");
 	for(unsigned int i = 0; i < lines.size() -1; i++) {
 		server->handleRplHelptxt(c, subject, lines[i]);
 	}
@@ -171,7 +170,6 @@ bool	Server::handleHelp(Client &c, std::istringstream &iss)
 	iss >> subject;
 	if (subject.empty()) {
 		this->handleRplHelpstart(c, "*", HELP_GENERIC_TAG0);
-		this->handleRplHelptxt(c, "*", "");
 		this->handleRplHelptxt(c, "*", HELP_GENERIC_TAG1);
 		this->handleRplEndofhelp(c, "*", HELP_GENERIC_TAG2);
 		this->poolOut.push(c.getFd());
