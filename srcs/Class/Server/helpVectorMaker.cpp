@@ -52,7 +52,7 @@ std::vector<std::string>	Server::helpJoin(void) {
 "475 ERR_BADCHANNELKEY : sent when the key provided does not match the channel key",
 "476 ERR_BADCHANMASK : sent when the channel name does not start with a valid channel prefix",
 "479 ERR_BADCHANNAME : sent when the channel name exceeds the maximum allowed length"};
-	return (HelpTextVectorMaker(lines, 16));
+		return (HelpTextVectorMaker(lines, 16));
 }
 
 std::vector<std::string>	Server::helpInvite(void) {
