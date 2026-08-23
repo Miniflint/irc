@@ -44,28 +44,28 @@ Server::Server(uint16_t port, std::string password) : _port(port), _password(pas
 	this->_motd.announcements.push_back("Please Respect the rules !");
 	this->_clientSpecifiers.nickLenMax = 12;
 	this->_clientSpecifiers.userMode = "ixdRgBoOaA";
-	this->_helpTrie.add("NICK", this->helpNick());
-	this->_helpTrie.add("PASS", this->helpPass());
-	this->_helpTrie.add("USER", this->helpUser());
-	this->_helpTrie.add("JOIN", this->helpJoin());
-	this->_helpTrie.add("INVITE", this->helpInvite());
-	this->_helpTrie.add("PRIVMSG", this->helpPrivmsg());
-	this->_helpTrie.add("MODE", this->helpMode());
-	this->_helpTrie.add("TOPIC", this->helpTopic());
-	this->_helpTrie.add("KICK", this->helpKick());
-	this->_helpTrie.add("QUIT", this->helpQuit());
-	this->_helpTrie.add("PART", this->helpPart());
-	this->_helpTrie.add("PING", this->helpPing());
-	this->_helpTrie.add("KILL", this->helpKill());
+	this->_helpTrie.add("AWAY", this->helpAway());
+	this->_helpTrie.add("CAP", this->helpCap());
 	this->_helpTrie.add("DIE", this->helpDie());
 	this->_helpTrie.add("RESTART", this->helpRestart());
 	this->_helpTrie.add("INFO", this->helpInfo());
-	this->_helpTrie.add("WHO", this->helpWho());
-	this->_helpTrie.add("AWAY", this->helpAway());
-	this->_helpTrie.add("CAP", this->helpCap());
-	this->_helpTrie.add("OPER", this->helpOper());
+	this->_helpTrie.add("INVITE", this->helpInvite());
+	this->_helpTrie.add("JOIN", this->helpJoin());
+	this->_helpTrie.add("KICK", this->helpKick());
+	this->_helpTrie.add("KILL", this->helpKill());
 	this->_helpTrie.add("LIST", this->helpList());
+	this->_helpTrie.add("MODE", this->helpMode());
 	this->_helpTrie.add("NAMES", this->helpNames());
+	this->_helpTrie.add("NICK", this->helpNick());
+	this->_helpTrie.add("OPER", this->helpOper());
+	this->_helpTrie.add("PART", this->helpPart());
+	this->_helpTrie.add("PASS", this->helpPass());
+	this->_helpTrie.add("PING", this->helpPing());
+	this->_helpTrie.add("PRIVMSG", this->helpPrivmsg());
+	this->_helpTrie.add("QUIT", this->helpQuit());
+	this->_helpTrie.add("TOPIC", this->helpTopic());
+	this->_helpTrie.add("USER", this->helpUser());
+	this->_helpTrie.add("WHO", this->helpWho());
 }
 
 Server::~Server()
