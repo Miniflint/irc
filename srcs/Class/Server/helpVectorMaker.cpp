@@ -41,15 +41,19 @@ std::vector<std::string>	Server::helpJoin(void) {
 "The JOIN command is used to make a client start listening on a specific channel.",
 "If the channel does not exist, it is created and the client automatically becomes an operator.",
 "If the channel has a key set, the client must provide the matching key to join.",
+"On success, the JOIN message itself is echoed back to the client, with the channel as its first parameter",
+"332 RPL_TOPIC : sent after a successful join if the channel has a topic set",
+"331 RPL_NOTOPIC : sent after a successful join if the channel has no topic set",
+"353 RPL_NAMREPLY : sent one or more times after a successful join, listing the channel members",
+"366 RPL_ENDOFNAMES : sent once after all RPL_NAMREPLY lines, to indicate the end of the list",
 "461 ERR_NEEDMOREPARAMS : sent when no channel parameter is given",
-"403 ERR_NOSUCHCHANNEL : sent when the channel name is invalid",
-"405 ERR_TOOMANYCHANNELS : sent when the client has already joined the maximum allowed number of channels",
 "471 ERR_CHANNELISFULL : sent when the channel has reached its user limit",
 "473 ERR_INVITEONLYCHAN : sent when the channel is invite-only and the client has not been invited",
 "474 ERR_BANNEDFROMCHAN : sent when the client is banned from the channel",
 "475 ERR_BADCHANNELKEY : sent when the key provided does not match the channel key",
-"476 ERR_BADCHANMASK : sent when the channel name does not respect the expected format"};
-		return (HelpTextVectorMaker(lines, 12));
+"476 ERR_BADCHANMASK : sent when the channel name does not start with a valid channel prefix",
+"479 ERR_BADCHANNAME : sent when the channel name exceeds the maximum allowed length"};
+		return (HelpTextVectorMaker(lines, 16));
 }
 
 std::vector<std::string>	Server::helpInvite(void) {
@@ -204,13 +208,14 @@ std::vector<std::string>	Server::helpInfo(void) {
 }
 
 std::vector<std::string>	Server::helpWho(void) {
-	const char	*lines[] = {"WHO [<mask>] [<o>]",
-"The WHO command is used to return a list of users matching a mask.",
-"If the o parameter is given, only server operators are returned.",
-"If no mask is given, all visible users are returned.",
+	const char	*lines[] = {"WHO <channel>",
+"The WHO command is used to list the users currently on a channel.",
+"The parameter must be the exact name of an existing channel, no wildcard or pattern matching is supported.",
+"WHO only works for channels in this server, searching by nickname is not implemented.",
 "352 RPL_WHOREPLY : sent for each user matching the request",
-"315 RPL_ENDOFWHO : sent to indicate the end of the WHO reply"};
-		return (HelpTextVectorMaker(lines, 6));
+"315 RPL_ENDOFWHO : sent to indicate the end of the WHO reply, whether or not any results were found",
+"461 ERR_NEEDMOREPARAMS : sent when no channel parameter is given"};
+		return (HelpTextVectorMaker(lines, 7));
 }
 
 std::vector<std::string>	Server::helpAway(void) {
