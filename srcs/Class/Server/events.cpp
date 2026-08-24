@@ -130,16 +130,18 @@ bool	Server::run() {
 		int nEvents = kevent(evfd, NULL, 0, events, MAX_EVENTS, NULL);
 		for (int i = 0; i < nEvents; ++i) {
 			int currFd = events[i].ident;
-			if (events[i].flags & EV_ERROR) {
-				serverLogError(this->_clients[currFd]->getNick(), "Connection error: EV_ERROR");
-				delKqueueClient(*this, evfd, currFd);
-				continue;
-			}
 			if (currFd == this->_sockServerFD) {
 				int	newClientFd = this->newConnection();
 				if (newClientFd != -1)
 					setKqueueMode(evfd, newClientFd, EVFILT_READ, EV_ADD);
 			} else {
+				if (!this->_clients[currFd])
+					continue;
+				if (events[i].flags & EV_ERROR) {
+					serverLogError(this->_clients[currFd]->getNick(), "Connection error: EV_ERROR");
+					delKqueueClient(*this, evfd, currFd);
+					continue;
+				}
 				if (events[i].filter == EVFILT_READ) {
 					char	buffer[MAX_PACKET_SIZE + 1];
 					ssize_t	readN = recv(currFd, buffer, MAX_PACKET_SIZE, 0);
@@ -172,7 +174,8 @@ bool	Server::run() {
 		}
 		while (!this->poolOut.empty()) {
 			int	outFd = this->poolOut.front();
-			setKqueueMode(evfd, outFd, EVFILT_WRITE, EV_ADD);
+			if (this->_clients[outFd])
+				setKqueueMode(evfd, outFd, EVFILT_WRITE, EV_ADD);
 			this->poolOut.pop();
 		}
 		for (std::vector<int>::iterator it = this->poolQuit.begin(); it != this->poolQuit.end();) {
@@ -182,7 +185,7 @@ bool	Server::run() {
 				continue;
 			}
 			if (c->quitRequest == CLIENT_QUIT_ACCEPT) {
-				serverLogError(c->getNick(), "Server shutdown or restart");
+				serverLogError(c->getNick(), "Properly disconnected");
 				delKqueueClient(*this, evfd, *it);
 				it = this->poolQuit.erase(it);
 			} else
@@ -290,7 +293,8 @@ bool	Server::run() {
 		}
 		while (!this->poolOut.empty()) {
 			int	outFd = this->poolOut.front();
-			setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+			if (this->_clients[outFd])
+				setEpollMode(epfd, outFd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
 			this->poolOut.pop();
 		}
 		if (sigIntQuit)
@@ -298,8 +302,8 @@ bool	Server::run() {
 	}
 	for (std::vector<Client *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 		if (*it) {
-			delEpollClient(*this, epfd, (*it)->getFd());
 			serverLogError((*it)->getNick(), "Server shutdown or restart");
+			delEpollClient(*this, epfd, (*it)->getFd());
 		}
 	close(epfd);
 	close(this->_sockServerFD);

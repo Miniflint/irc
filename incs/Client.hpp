@@ -55,7 +55,7 @@ class Client {
 		std::string		_bufferQuit;
 		int				_port;
 		int				_avertissements;
-		AccessType		_userStatus; // if away
+		AccessType		_userStatus;
 		Trie<std::pair<Channel *, AccessType> >	_channel;
 	public:
 		Client(int socket, std::string host, int port);
