@@ -303,11 +303,7 @@ bool	Server::handleKick(Client &c, std::istringstream &iss)
 		}
 		std::string	suffix(*it);
 		suffix.append(" :").append(comment).append("\r\n");
-		std::cout << (targetClient)->getNick() << std::endl;
-		std::cout << clientTrieAccess->getElem().first << std::endl;
-		std::cout << rplMessageConst + suffix << std::endl;
-
-		this->delClientToChannel(*(targetClient), *(clientTrieAccess->getElem().first), rplMessageConst + suffix);
+		this->delClientToChannel(*(targetClient), *(clientTrieAccess->getElem().first), rplMessageConst + clientTrieAccess->getElem().first->getNick() + " " + suffix);
 	}
 	this->poolOut.push(c.getFd());
 	return (true);
