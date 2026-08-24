@@ -424,7 +424,6 @@ void	Server::handleRplListStart(Client &c)
 {
 	std::string rplMessage(this->_rplPrefix("321", c.getNick()));
 	rplMessage.append("\r\n");
-	// std::cout << rplMessage << std::endl;
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleRplList(Client &c)
@@ -449,7 +448,6 @@ void	Server::handleRplListEnd(Client &c)
 {
 	std::string rplMessage(this->_rplPrefix("323", c.getNick()));
 	rplMessage.append(":End of LIST\r\n");
-	// std::cout << rplMessage << std::endl;
 	c.addBufferOut(rplMessage);
 }
 void	Server::handleRplChannelModeIs(Client &c, Channel &channel)
@@ -1019,7 +1017,6 @@ void	Server::handleErrInviteOnlyChan(Client &c, std::string channelName)
 }
 void	Server::handleErrBannedFromChan(Client &c, std::string channelName)
 {
-	// "<client> <channel> :Cannot join channel (+b)"
 	std::string rplMessage(this->_rplPrefix("474", c.getNick()));
 	rplMessage.append(channelName).append(" :Cannot join channel (+b)\r\n");
 	c.addBufferOut(rplMessage);

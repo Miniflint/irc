@@ -3,12 +3,6 @@
 # include <stdlib.h>
 # include <ostream>
 # include <csignal>
-
-// int	key_print(std::string word)
-// {
-// 	std::ostream << word;
-// }
-
 # include <iostream>
 # include <string>
 
@@ -43,16 +37,6 @@ int	parse_av(int ac, char **argv)
 		return (display_help(argv[0]), 1);
 	return (0);
 }
-/* 
-void	createUserAndRegister(Server &serv, size_t fd, std::string first, std::string sec)
-{
-	serv.setClient(fd);
-	serv.getClient(fd).buffer = first + "\r\n";
-	(void)serv.doCommand(fd);
-	serv.getClient(fd).buffer = sec + "\r\n";
-	(void)serv.doCommand(fd);
-}
-*/ 
 int	main(int ac, char **argv)
 {
 	unsigned int i = parse_av(ac, argv);
@@ -74,17 +58,5 @@ int	main(int ac, char **argv)
 		else
 			std::cout << "\033[1;33m!!! => [Server: Restart]\033[0m" << std::endl;
 	} while (serv.runStatus != RUN_SHUTDOWN);
-	//serv.setClient(0);
-	//createUserAndRegister(serv, 5, "NICK Xavier", "USER Xav * * :Dup");
-	//createUserAndRegister(serv, 0, "NICK amy", "USER am * * :dupdup");
-	//while (1)
-	//{
-	//	std::cout << "Enter your command: ";
-	//	std::string input;
-	//	std::getline(std::cin, input);
-	//	serv.getClient(0).buffer = input + "\r\n";
-	//	(void)serv.doCommand(0);
-	//	std::cout << std::endl;
-	//}
 	return (0);
 }

@@ -1,15 +1,5 @@
 #include "Server.hpp"
 
-// const AccessType CHANNEL_INVITE_ONLY			= 0x1;	 // i
-// const AccessType CHANNEL_SECRET 				= 0x2;	 // s
-// const AccessType CHANNEL_MODERATED 			= 0x4;	 // m
-// const AccessType CHANNEL_NOT_EXTERNAL		= 0x8;	 // n
-// const AccessType CHANNEL_TOPIC_PROTECTION	= 0x10;	 // t
-// const AccessType CHANNEL_KEY					= 0x20;  // k
-// const AccessType CHANNEL_LIMIT_USER			= 0x40;  // l
-// const AccessType CHANNEL_USER_VOICE			= 0x80;  // v
-// const AccessType CHANNEL_USER_OPERATOR		= 0x100; // o
-
 static inline Channel	*sendRet(Client &c, Server &serv, Channel *chan) {
 	serv.poolOut.push(c.getFd());
 	return (chan);
@@ -19,7 +9,6 @@ void	Server::delClientToChannel(Client &c, std::list<Channel>::iterator &chan, s
 	std::vector<int>	&clients = chan->getClientsFD();
 	for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); ) {
 		this->sendToClient(this->getClient(*it), message);
-		// this->poolOut.push(*it);
 		if (*it == c.getFd())
 			it = clients.erase(it);
 		else
@@ -91,7 +80,7 @@ Channel	*Server::addClientToChannel(Client &client, std::string channelName, std
 		chan = this->_channelTrie[channelName];
 		try {
 			client.getChannel()[channelName];
-			return (NULL); //déjà dans le channel
+			return (NULL);
 		} catch (std::exception &e) {
 			AccessType clientAccess = chan->getAccessClient(client.getFd());
 			if (client.getStatus() < CLIENT_ACCESS_OPERATOR) {

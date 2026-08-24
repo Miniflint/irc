@@ -137,7 +137,7 @@ void	Server::_autoKill(Client &c, std::string message)
 	this->disconnectClient(c.getFd(), rplError, rplQuit);
 }
 
-bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
+bool	Server::doCommand(size_t fd)
 {
 	Client *c = this->_clients[fd];
 	if (!c)
@@ -166,13 +166,11 @@ bool	Server::doCommand(size_t fd) //Est-ce qu'il y a une commande fini
 		std::string			cmd;
 		cmdFn				func;
 		iss >> cmd;
-		// std::cout << sanitizedClientBuffer << std::endl; 
 		if (!this->_validateAccess(*c, cmd) || !this->_validateCommand(*c, func, cmd))
 		{
 			serverReceivesLogError(c->buffer.substr(0, index), "not valid");
 			const int warnings = c->getWarning() + 1;
 			c->setWarning(warnings);
-			// kick user
 			#ifndef UNITTEST
 			if (warnings >= WARNING_LIMIT)
 				this->_autoKill(*c, "Killed by server, too many bad commands");
@@ -287,11 +285,6 @@ void							Server::setIp(std::string ip)
 	this->_host = ip;
 }
 
-// std::string		Server::_makeHostMask(Client &c) {
-// 	std::string	hostMask(":");
-// 	return (hostMask.append(c.getNick()).append(1, '!').append(c.getUserName()).append(1, '@').append(c.getHostName()));
-// }
-
 bool	Server::sendToChannel(Channel &source, std::string message)
 {
 	std::vector<int>	&clients = source.getClientsFD();
@@ -326,7 +319,6 @@ void					Server::_sendAllWelcome(Client &c)
 	this->handleRplMotd(c);
 	this->handleRplEndofmotd(c);
 	this->addClientToChannel(c, "&general");
-	// c.addStatus(CLIENT_ACCESS_FULL);
 	this->poolOut.push(c.getFd());
 }
 
