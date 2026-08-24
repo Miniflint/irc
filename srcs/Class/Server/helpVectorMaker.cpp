@@ -277,10 +277,3 @@ std::vector<std::string>	Server::helpList(void) {
 "323 RPL_LISTEND : sent to mark the end of the channel list"};
 	return (HelpTextVectorMaker(lines, 5));
 }
-/*
-
-std::vector<std::string>	Server::help(void) {
-	const char	*lines[] = {};
-		return (HelpTextVectorMaker(lines, ));
-}
-*/

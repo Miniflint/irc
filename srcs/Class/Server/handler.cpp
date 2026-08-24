@@ -14,18 +14,6 @@ std::string	Server::_makeHostMask(Client &c, std::string functionName)
 		.append(1, ' ');
 	return (rtn);
 }
-/* 
-static std::string	_formatBaseServerMessage(Server &serv, Client &c, std::string code)
-{
-	std::string rtn;
-
-	const size_t totalSize = 5 + serv.getIp().size() + code.size() + c.getNick().size();
-	rtn.reserve(totalSize);
-	rtn.append(1, ' ').append(serv.getIp()).append(1, ' ').append(code)
-		.append(1, ' ').append(c.getNick()).append(1, ' ').append(1, ':');
-	return (rtn);
-}
-*/
 bool	Server::handle_admin(Client &c, std::istringstream &iss) 
 {
 	std::string token;
@@ -401,22 +389,6 @@ bool	Server::handle_lusers(Client &c, std::istringstream &iss)
 	this->poolOut.push(c.getFd());
 	return (true);
 }
-
-/*
-
-+qXgk-r
-while (mode)
-switch (mode[i])
-{
-	'+':
-		FONCTION_PLUS(mode, i, iss)
-	'-':
-		FONCTION_MOINS
-	default:
-		FONCTION_NON_PLUS
-}
-*/
-
 bool	Server::handleMode(Client &c, std::istringstream &iss) 
 {
 	std::string 				targetName, modeType;
@@ -590,8 +562,6 @@ bool	Server::handleOper(Client &c, std::istringstream &iss)
 	return (true);
 }
 
-//PART &chan 	      	:je part maintenant
-
 bool	Server::handlePart(Client &c, std::istringstream &iss)
 {
 	std::string token, reasonLeave;
@@ -700,8 +670,6 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 				return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		}
 		AccessType t = c.getChannelAccess(target);
-		// std::cout << "client channel access =>" << t << " client status =>" << c.getStatus() << " channel mode =>" << targetChannel->getMode() << std::endl;
-		// std::cout << "bool resulet : client channel access =>" << bool(t < USER_VOICE) << "client status =>" << bool(c.getStatus() < CLIENT_ACCESS_OPERATOR) << "channel mode =>" << bool(targetChannel->getMode() & CHANNEL_MODERATED) << std::endl;
 		if (c.getStatus() < CLIENT_ACCESS_OPERATOR && targetChannel->getMode() & CHANNEL_MODERATED && t < USER_VOICE)
 			return (this->handleErrCannotSendToChan(c, target), this->poolOut.push(c.getFd()), false);
 		std::vector<int>::const_iterator end = targetChannel->getClientsFD().end();
@@ -732,7 +700,6 @@ bool	Server::handlePrivMsg(Client &c, std::istringstream &iss)
 		}
 	}
 	std::string		full(_makeHostMask(c, "PRIVMSG"));
-	// message.erase(0, 1);
 	full.append(target).append(1, ' ').append(message).append("\r\n");
 	std::vector<size_t>::const_iterator end = clients.end();
 	for (std::vector<size_t>::const_iterator it = clients.begin(); it != end; it++) {
@@ -915,10 +882,9 @@ bool	Server::handleUser(Client &c, std::istringstream &iss)
 	realName.erase(0, indexTrim);
 	if (!realName.empty() && realName[0] == ':')
 		realName.erase(0, 1);
-	if (/*userName.empty() || hostName.empty() || serverName.empty() || */realName.empty())
+	if (realName.empty())
 		return (this->handleErrNeedMoreParams(c, "USER"), this->poolOut.push(c.getFd()), false);
 	c.setUserName(userName);
-	// c.setHostName(hostName);
 	c.setServerName(serverName);
 	c.setRealName(realName);
 	c.flagsLogin |= FLAG_CLIENT_USER;
@@ -995,23 +961,13 @@ bool	Server::handleWho(Client &c, std::istringstream &iss)
 		Trie<Channel *> *trieClientChan = this->_channelTrie.find(token);
 		if (trieClientChan) {
 			Channel	&chan = *(trieClientChan->getElem());
-			// if (c.getStatus() < CLIENT_ACCESS_OPERATOR && !c.getChannel().isIn(token))
-			// 	return (this->handleErrNotOnChannel(c, token), this->poolOut.push(c.getFd()), false);
 			for (std::vector<int>::iterator it = chan.getClientsFD().begin(); it != chan.getClientsFD().end(); ++it) {
 				if (c.getStatus() < CLIENT_ACCESS_OPERATOR && c.getChannelAccess(token) < USER_HALFOP && this->_clients[*it]->checkStatus(CLIENT_ACCESS_INVISIBLE))
 					continue ;
 				this->handleRplWhoReply(c, this->getClient(*it), chan);
 			}
-		}/* else
-			return (this->handleErrNoSuchChannel(c, token), this->poolOut.push(c.getFd()), false); */
-	}/* else {
-		Trie<int> *trieClient = this->_clientTrie.find(token);
-		if (trieClient) {
-			Client	&whoClient = *(this->_clients[trieClient->getElem()]);
-			if (!(c.getStatus() < CLIENT_ACCESS_OPERATOR && whoClient.checkStatus(CLIENT_ACCESS_INVISIBLE)))
-				this->handleRplWhoReply(c, whoClient, chan);
 		}
-	} */
+	}
 	this->handleRplEndOfWho(c, token);
 	this->poolOut.push(c.getFd());
 	return (true);

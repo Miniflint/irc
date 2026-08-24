@@ -1,15 +1,5 @@
 #include "Server.hpp"
 
-// const AccessType CHANNEL_INVITE_ONLY			= 0x1;	 // i
-// const AccessType CHANNEL_SECRET 				= 0x2;	 // s
-// const AccessType CHANNEL_MODERATED 			= 0x4;	 // m
-// const AccessType CHANNEL_NOT_EXTERNAL		= 0x8;	 // n
-// const AccessType CHANNEL_TOPIC_PROTECTION	= 0x10;	 // t
-// const AccessType CHANNEL_KEY					= 0x20;  // k
-// const AccessType CHANNEL_LIMIT_USER			= 0x40;  // l
-// const AccessType CHANNEL_USER_VOICE			= 0x80;  // v
-// const AccessType CHANNEL_USER_OPERATOR		= 0x100; // o
-
 static inline Channel	*sendRet(Client &c, Server &serv, Channel *chan) {
 	serv.poolOut.push(c.getFd());
 	return (chan);

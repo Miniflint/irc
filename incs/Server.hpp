@@ -135,7 +135,6 @@ class Server {
 	public:
 		Server(uint16_t port, std::string password);
 		~Server();
-		// std::pair<size_t, std::string>	getVals();
 		int 							newConnection();
 		void							delClient(int fd);
 		void							delClientToChannel(Client &c, Channel &chan, std::string message);

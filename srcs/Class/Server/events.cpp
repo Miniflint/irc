@@ -12,7 +12,7 @@
 #elif defined(__linux__)
 # include <sys/epoll.h>
 #endif
-# define MAX_EVENTS 40
+# define MAX_EVENTS 10
 
 static volatile sig_atomic_t	sigIntQuit = 0;
 
